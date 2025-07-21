@@ -1,0 +1,131 @@
+/* inter-300 - cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  src: url('/assets/fonts/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-300.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* inter-regular - cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/assets/fonts/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* inter-500 - cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/assets/fonts/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-500.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* inter-600 - cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/assets/fonts/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* inter-700 - cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/assets/fonts/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* inter-900 - cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  src: url('/assets/fonts/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese/inter-v19-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-900.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+.modal-content {
+  background-color: transparent;
+  border: none;
+}
+
+.modal-btn {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0.5rem;
+  width: 48px; /* Lebih besar */
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Hover lebih terang */
+  border-radius: 50%;
+}
+
+.modal-btn {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0.25rem !important;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-btn .material-symbols-rounded {
+  font-size: 32px !important; /* Ukuran ikon */
+  color: #cacaca !important;  /* Warna terang */
+}
+
+.modal-btn .material-symbols-rounded:hover {
+  color: #f3f3f3 !important;  /* Warna terang */
+}
+
+.modal-backdrop {
+  z-index: 9999; /* default */
+}
+
+.modal {
+  z-index: 9999 !important; /* pastikan di atas navbar */
+}
+
+.carousel-item img {
+  max-height: 90vh;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.carousel-item img {
+  transition: transform 0.3s ease-in-out;
+}
+
+.dt-search input {
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.dt-search input:focus {
+  border: 1px solid #e91e63;
+}
+
+.dt-length select {
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.dt-length select:focus {
+  border: 1px solid #e91e63;
+}
+
+.page-item.active .page-link {
+  color: #fff !important;
+}
