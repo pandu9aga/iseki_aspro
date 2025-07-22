@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.member')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -556,7 +556,7 @@
         formData.append('pdf', new Blob([mergedBytes], { type: 'application/pdf' }));
         formData.append('timestamp', now);
 
-        fetch(`{{ route('report_list_user.pdf.editor.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
+        fetch(`{{ route('report_list_member.pdf.editor.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'

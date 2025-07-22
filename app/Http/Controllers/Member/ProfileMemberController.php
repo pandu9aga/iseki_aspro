@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Type_User;
 
-class ProfileUserController extends Controller
+class ProfileMemberController extends Controller
 {
     public function index()
     {
@@ -18,7 +18,7 @@ class ProfileUserController extends Controller
         $user = User::find($Id_User);
 
         $type_user = Type_User::all();
-        return view('users.profile.index', compact('page', 'user','type_user'));
+        return view('members.profile.index', compact('page', 'user','type_user'));
     }
 
     public function update(Request $request, string $Id_User)
@@ -39,6 +39,6 @@ class ProfileUserController extends Controller
             'Password_User' => $request->input('Password_User')
         ]);
                 
-        return redirect()->route('profile_user');
+        return redirect()->route('profile_member');
     }
 }

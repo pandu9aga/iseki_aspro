@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.member')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg9.jpg') }}')">
@@ -33,7 +33,7 @@
             <div class="row">
                 <div class="col-lg-6">
                     <div class="card">
-                        <form role="form" action="{{ route('profile.update', ['Id_User' => $user->Id_User]) }}" method="POST" enctype="multipart/form-data">
+                        <form role="form" action="{{ route('profile_member.update', ['Id_User' => $user->Id_User]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
                             <div class="card-header bg-primary border-radius-xl">

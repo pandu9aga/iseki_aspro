@@ -68,14 +68,14 @@
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}""
-                                        href="{{ route('report_user') }}">
+                                        href="{{ route('report_member') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">assignment</i>
                                         Report
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'profile' ? 'text-primary' : '' }}""
-                                        href="{{ route('profile_user') }}">
+                                        href="{{ route('profile_member') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">account_circle</i>
                                         Profile
                                     </a>
@@ -117,12 +117,12 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('report_user') }}">
+                                <a class="nav-link" href="{{ route('report_member') }}">
                                     Report
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('profile_user') }}">
+                                <a class="nav-link" href="{{ route('profile_member') }}">
                                     Profile
                                 </a>
                             </li>

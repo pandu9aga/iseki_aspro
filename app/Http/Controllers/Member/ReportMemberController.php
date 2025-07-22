@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -12,7 +12,7 @@ use App\Models\Tractor;
 use App\Models\Procedure;
 use App\Models\List_Report;
 
-class ReportUserController extends Controller
+class ReportMemberController extends Controller
 {
     public function index()
     {
@@ -23,7 +23,7 @@ class ReportUserController extends Controller
 
         $tractors = Tractor::orderBy('Name_Tractor')->get();
 
-        return view('users.reports.index', compact('page', 'reports', 'tractors'));
+        return view('members.reports.index', compact('page', 'reports', 'tractors'));
     }
 
     public function store_report(Request $request)
@@ -95,15 +95,15 @@ class ReportUserController extends Controller
             List_Report::insert($data);
         }
 
-        return redirect()->route('report_user')->with('success', 'Report dan list berhasil dibuat');
+        return redirect()->route('report_member')->with('success', 'Report dan list berhasil dibuat');
     }
 
-    public function report_list_user($Id_Report){
+    public function report_list_member($Id_Report){
         $page = "report";
 
         $list_reports = List_Report::where('Id_Report', $Id_Report)->orderBy('Name_Procedure', 'asc')->get();
 
-        return view('users.reports.list_report', compact('page', 'list_reports'));
+        return view('members.reports.list_report', compact('page', 'list_reports'));
     }
 
     public function pdfEditor($Id_List_Report)
@@ -118,7 +118,7 @@ class ReportUserController extends Controller
         $fileName = $listReport->Id_Report . '-' . $listReport->Name_Procedure . '-' . $listReport->report->user->Name_User . '.pdf';
         $pdfPath = 'storage/reports/' . $listReport->Id_Report . '/' . $listReport->Name_Procedure. '/' . $fileName;
 
-        return view('users.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
+        return view('members.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
     }
 
     public function savePdfEditor(Request $request, $Id_List_Report)
@@ -130,7 +130,7 @@ class ReportUserController extends Controller
         // (di sini kamu bisa pakai library seperti dompdf, TCPDF, snappy, atau client-side pdf-lib / pdf.js)
         
         // Simulasi: redirect dengan success
-        return redirect()->route('report_list_user.pdf.editor', ['Id_List_Report' => $Id_List_Report])->with('success', 'PDF updated successfully');
+        return redirect()->route('report_list_member.pdf.editor', ['Id_List_Report' => $Id_List_Report])->with('success', 'PDF updated successfully');
     }
 
     public function submitReport(Request $request, $Id_List_Report)

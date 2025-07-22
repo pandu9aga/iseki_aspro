@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -19,6 +19,6 @@ class HomeController extends Controller
 
         $reports = Report::where('Id_User', $Id_User)->count();
 
-        return view('users.home', compact('page', 'today', 'user', 'reports'));
+        return view('members.home', compact('page', 'today', 'user', 'reports'));
     }    
 }

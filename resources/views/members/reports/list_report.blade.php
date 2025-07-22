@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.member')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -56,42 +56,42 @@
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_user.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-primary">
+                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-primary">
                                         {{ $l->Name_Tractor }} - {{ $l->Name_Area }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_user.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-primary">
+                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-primary">
                                         {{ $l->Name_Procedure }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-left">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_user.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
+                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
                                         {{ $l->Item_Procedure }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_user.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
+                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
                                         {{ $l->Time_List_Report }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_user.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
+                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
                                         {{ $l->Time_Approvement }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <div class="d-flex justify-content-center">
-                                    <a href="{{ route('report_list_user.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-primary text-xs mx-1">
+                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-primary text-xs mx-1">
                                         <i class="material-symbols-rounded">app_registration</i>
                                     </a>
                                 </div>

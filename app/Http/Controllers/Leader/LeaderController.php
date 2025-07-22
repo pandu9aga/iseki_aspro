@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -9,7 +9,7 @@ use App\Models\Tractor;
 use App\Models\Procedure;
 use Carbon\Carbon;
 
-class AdminController extends Controller
+class LeaderController extends Controller
 {
     public function index(){
         $page = "dashboard";
@@ -22,6 +22,6 @@ class AdminController extends Controller
         $procedures = Procedure::count();
         $users = User::count();
 
-        return view('admins.dashboard', compact('page', 'today', 'user', 'tractors', 'procedures', 'users'));
+        return view('leaders.dashboard', compact('page', 'today', 'user', 'tractors', 'procedures', 'users'));
     }    
 }

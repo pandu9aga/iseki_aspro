@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ class UserController extends Controller
 
         $user = User::all();
         $type_user = Type_User::all();
-        return view('admins.users.index', compact('page', 'user', 'type_user'));
+        return view('leaders.users.index', compact('page', 'user', 'type_user'));
     }
     
     public function create(Request $request)

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ class ProfileController extends Controller
         $user = User::find($Id_User);
 
         $type_user = Type_User::all();
-        return view('admins.profile.index', compact('page', 'user','type_user'));
+        return view('leaders.profile.index', compact('page', 'user','type_user'));
     }
 
     public function update(Request $request, string $Id_User)

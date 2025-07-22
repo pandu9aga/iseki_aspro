@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.member')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -54,28 +54,28 @@
                             </td>
                             <td class="align-middle text-center">
                                 <p class="text-xs mb-0">
-                                    <a href="{{ route('report_list_user', ['Id_Report' => $r->Id_Report]) }}" class="text-primary text-xs mx-1">
+                                    <a href="{{ route('report_list_member', ['Id_Report' => $r->Id_Report]) }}" class="text-primary text-xs mx-1">
                                         {{ $r->Name_Tractor }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="text-xs mb-0">
-                                    <a href="{{ route('report_list_user', ['Id_Report' => $r->Id_Report]) }}" class="text-primary text-xs mx-1">
+                                    <a href="{{ route('report_list_member', ['Id_Report' => $r->Id_Report]) }}" class="text-primary text-xs mx-1">
                                         {{ $r->Name_Area }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="text-xs mb-0">
-                                    <a href="{{ route('report_list_user', ['Id_Report' => $r->Id_Report]) }}" class="text-secondary text-xs mx-1">
+                                    <a href="{{ route('report_list_member', ['Id_Report' => $r->Id_Report]) }}" class="text-secondary text-xs mx-1">
                                         {{ $r->Time_Report }}
                                     </a>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <div class="d-flex justify-content-center">
-                                    <a href="{{ route('report_list_user', ['Id_Report' => $r->Id_Report]) }}" class="text-primary text-xs mx-1">
+                                    <a href="{{ route('report_list_member', ['Id_Report' => $r->Id_Report]) }}" class="text-primary text-xs mx-1">
                                         <i class="material-symbols-rounded">app_registration</i>
                                     </a>
                                 </div>
@@ -93,7 +93,7 @@
 <div class="modal fade" id="addReportModal" tabindex="-1" aria-labelledby="addReportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="{{ route('report_user.store') }}" role="form" method="POST">
+            <form action="{{ route('report_member.store') }}" role="form" method="POST">
                 @csrf
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white" id="addReportModalLabel">Add Report</h5>

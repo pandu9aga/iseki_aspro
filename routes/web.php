@@ -1,24 +1,24 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\AdminMiddleware;
-use App\Http\Middleware\AuthMiddleware;
+use App\Http\Middleware\LeaderMiddleware;
+use App\Http\Middleware\MemberMiddleware;
 use App\Http\Controllers\MainController;
-use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\ProfileController;
-use App\Http\Controllers\Admin\ProcedureController;
-use App\Http\Controllers\User\HomeController;
-use App\Http\Controllers\User\ProfileUserController;
-use App\Http\Controllers\User\ReportUserController;
+use App\Http\Controllers\Leader\LeaderController;
+use App\Http\Controllers\Leader\UserController;
+use App\Http\Controllers\Leader\ProfileController;
+use App\Http\Controllers\Leader\ProcedureController;
+use App\Http\Controllers\Member\HomeController;
+use App\Http\Controllers\Member\ProfileMemberController;
+use App\Http\Controllers\Member\ReportMemberController;
 
 Route::get('/', [MainController::class, 'index'])->name('/');
 Route::get('/login', [MainController::class, 'index'])->name('login');
 Route::post('/login/auth', [MainController::class, 'login'])->name('login.auth');
 Route::get('/logout', [MainController::class, 'logout'])->name('logout');
 
-Route::middleware(AdminMiddleware::class)->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+Route::middleware(LeaderMiddleware::class)->group(function () {
+    Route::get('/dashboard', [LeaderController::class, 'index'])->name('dashboard');
 
     Route::get('/user', [UserController::class, 'index'])->name('user');
     Route::post('/user/create', [UserController::class, 'create'])->name('user.create');
@@ -46,20 +46,20 @@ Route::middleware(AdminMiddleware::class)->group(function () {
     Route::delete('/procedure/tractor/area/procedure/delete/{Id_Procedure}', [ProcedureController::class, 'destroy_procedure'])->name('procedure.procedure.destroy');
 });
 
-Route::middleware(AuthMiddleware::class)->group(function () {
+Route::middleware(MemberMiddleware::class)->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-    Route::get('/profile_user', [ProfileUserController::class, 'index'])->name('profile_user');
-    Route::put('/profile_user/update/{Id_User}', [ProfileUserController::class, 'update'])->name('profile_user.update');
+    Route::get('/profile_member', [ProfileMemberController::class, 'index'])->name('profile_member');
+    Route::put('/profile_member/update/{Id_User}', [ProfileMemberController::class, 'update'])->name('profile_member.update');
 
-    Route::get('/report_user', [ReportUserController::class, 'index'])->name('report_user');
+    Route::get('/report_member', [ReportMemberController::class, 'index'])->name('report_member');
     Route::get('/get-areas/{Name_Tractor}', function($Name_Tractor) {
         $areas = \App\Models\Area::where('Name_Tractor', $Name_Tractor)->orderBy('Name_Area')->get(['Name_Area']);
         return response()->json($areas);
     });
-    Route::post('/report_user/store', [ReportUserController::class, 'store_report'])->name('report_user.store');
-    Route::get('/report_list_user/{Id_Report}', [ReportUserController::class, 'report_list_user'])->name('report_list_user');
-    Route::get('/report_list_user/report/{Id_List_Report}', [ReportUserController::class, 'pdfEditor'])->name('report_list_user.pdf.editor');
-    Route::post('/report_list_user/report/save/{Id_List_Report}', [ReportUserController::class, 'savePdfEditor'])->name('report_list_user.pdf.editor.save');
-    Route::post('/report_list_user/report/submit/{Id_List_Report}', [ReportUserController::class, 'submitReport'])->name('report_list_user.pdf.editor.submit');
+    Route::post('/report_member/store', [ReportMemberController::class, 'store_report'])->name('report_member.store');
+    Route::get('/report_list_member/{Id_Report}', [ReportMemberController::class, 'report_list_member'])->name('report_list_member');
+    Route::get('/report_list_member/report/{Id_List_Report}', [ReportMemberController::class, 'pdfEditor'])->name('report_list_member.pdf.editor');
+    Route::post('/report_list_member/report/save/{Id_List_Report}', [ReportMemberController::class, 'savePdfEditor'])->name('report_list_member.pdf.editor.save');
+    Route::post('/report_list_member/report/submit/{Id_List_Report}', [ReportMemberController::class, 'submitReport'])->name('report_list_member.pdf.editor.submit');
 });

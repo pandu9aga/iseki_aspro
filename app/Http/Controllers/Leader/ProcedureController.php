@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -16,7 +16,7 @@ class ProcedureController extends Controller
         $page = "procedure";
 
         $tractors = Tractor::orderBy('Name_Tractor', 'asc')->get();
-        return view('admins.procedures.index', compact('page', 'tractors'));
+        return view('leaders.procedures.index', compact('page', 'tractors'));
     }
     
     public function create_tractor(Request $request)
@@ -109,7 +109,7 @@ class ProcedureController extends Controller
 
         $tractor = $Name_Tractor;
         $areas = Area::where('Name_Tractor', $Name_Tractor)->orderBy('Name_Area', 'asc')->get();
-        return view('admins.procedures.areas', compact('page', 'tractor', 'areas'));
+        return view('leaders.procedures.areas', compact('page', 'tractor', 'areas'));
     }
 
     public function create_area(Request $request)
@@ -253,7 +253,7 @@ class ProcedureController extends Controller
             ->where('Name_Area', $Name_Area)
             ->orderBy('Name_Procedure', 'asc')
             ->get();
-        return view('admins.procedures.procedures', compact('page', 'tractor', 'area', 'procedures'));
+        return view('leaders.procedures.procedures', compact('page', 'tractor', 'area', 'procedures'));
     }
 
     public function create_procedure(Request $request)

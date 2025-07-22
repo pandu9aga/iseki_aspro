@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.leader')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-65 relative" style="background-image: url('{{ asset('assets/img/bg5.jpg') }}')">

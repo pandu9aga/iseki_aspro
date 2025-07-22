@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.member')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-65 relative" style="background-image: url('{{ asset('assets/img/bg5.jpg') }}')">
@@ -38,7 +38,7 @@
                                     <p class="text-white opacity-8">
                                         Check for your reports here.
                                     </p>
-                                    <a href="{{ route('report_user') }}" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
+                                    <a href="{{ route('report_member') }}" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
                                 </div>
                             </div>
                         </div>
