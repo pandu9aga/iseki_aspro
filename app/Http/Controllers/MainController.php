@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Type_User;
+use App\Models\Member;
 
 class MainController extends Controller
 {
@@ -18,17 +19,17 @@ class MainController extends Controller
                 return redirect()->route('home');
             }
         }
-        return view('auth.login');
+        return view('auth.login2');
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'NIK_User' => 'required',
+            'Username_User' => 'required',
             'Password_User' => 'required'
         ]);
 
-        $user = User::where('NIK_User', $request->NIK_User)->first();
+        $user = User::where('Username_User', $request->Username_User)->first();
 
         if (!$user) {
             return back()->withErrors(['loginError' => 'Invalid username or password']);
@@ -37,7 +38,7 @@ class MainController extends Controller
         if ($request->Password_User == $user->Password_User) {
             session(['Id_User' => $user->Id_User]);
             session(['Id_Type_User' => $user->Id_Type_User]);
-            session(['NIK_User' => $user->NIK_User]);
+            session(['Username_User' => $user->Username_User]);
             if (session('Id_Type_User') == 2){
                 return redirect()->route('dashboard');
             }
@@ -49,11 +50,38 @@ class MainController extends Controller
         return back()->withErrors(['loginError' => 'Invalid username or password']);
     }
 
+    public function login_member(Request $request)
+    {
+        $request->validate([
+            'NIK_Member' => 'required'
+        ]);
+
+        $member = Member::where('NIK_Member', $request->NIK_Member)->first();
+
+        if (!$member) {
+            return back()->withErrors(['loginError' => 'Invalid NIK']);
+        }
+
+        session(['Id_Member' => $member->Id_Member]);
+        session(['NIK_Member' => $member->NIK_Member]);
+        session(['Name_Member' => $member->Name_Member]);
+
+        return redirect()->route('home');
+    }
+
     public function logout()
     {
         session()->forget('Id_User');
         session()->forget('Id_Type_User');
-        session()->forget('NIK_User');
+        session()->forget('Username_User');
+        return redirect()->route('/');
+    }
+
+    public function logout_member()
+    {
+        session()->forget('Id_Member');
+        session()->forget('NIK_Member');
+        session()->forget('Name_Member');
         return redirect()->route('/');
     }
 
@@ -66,14 +94,14 @@ class MainController extends Controller
         // melakukan validasi data
         $request->validate([
             'Name_User' => 'required',
-            'NIK_User' => 'required|unique:users,NIK_User',
+            'Username_User' => 'required|unique:users,Username_User',
             'Password_User' => 'required',
             'Id_Type_User' => 'required'
         ],
         [
             'Name_User.required' => 'Nama wajib diisi',
-            'NIK_User.required' => 'Username wajib diisi',
-            'NIK_User.unique' => 'Username sudah digunakan, pilih yang lain',
+            'Username_User.required' => 'Username wajib diisi',
+            'Username_User.unique' => 'Username sudah digunakan, pilih yang lain',
             'Password_User.required' => 'Password wajib diisi',
             'Id_Type_User.required' => 'Type User wajib diisi'
         ]);
@@ -81,7 +109,7 @@ class MainController extends Controller
         //tambah data user
         DB::table('users')->insert([
             'Name_User' => $request->input('Name_User'),
-            'NIK_User' => $request->input('NIK_User'),
+            'Username_User' => $request->input('Username_User'),
             'Password_User' => $request->input('Password_User'),
             'Id_Type_User' => $request->input('Id_Type_User')
         ]);

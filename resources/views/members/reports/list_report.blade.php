@@ -30,10 +30,19 @@
                 </div>
             @endif
 
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 mx-auto">
+                        <div>Member - <span class="text-primary">{{ $member->Name_Member }}</span></div>
+                    </div>
+                </div>
+            </div>
+            <br>
+
             <!-- Tombol Back -->
-            <button class="btn btn-primary mx-3" onclick="history.back()">
+            <a class="btn btn-primary mx-3" href="{{ route('report_member') }}">
                 <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Back</span>
-            </button>
+            </a>
 
             <div class="table-responsive p-0">
                 <table id="example" class="table align-items-center mb-0">
@@ -44,57 +53,57 @@
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Name Procedure</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Item Procedure</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Time Report</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Time Approvement</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Leader Approvement</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Auditor Approvement</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ( $list_reports as $l )
-                        <tr>
+                        <tr onclick="window.location='{{ route('report_list_member.detail', ['Id_List_Report' => $l->Id_List_Report]) }}'" class="row-data">
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-primary">
+                                    <span class="text-xs">
                                         {{ $l->Name_Tractor }} - {{ $l->Name_Area }}
-                                    </a>
+                                    </span>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-primary">
+                                    <span class="text-xs">
                                         {{ $l->Name_Procedure }}
-                                    </a>
+                                    </span>
                                 </p>
                             </td>
                             <td class="align-middle text-left">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
+                                    <span class="text-xs">
                                         {{ $l->Item_Procedure }}
-                                    </a>
+                                    </span>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
+                                    <span class="text-xs">
                                         {{ $l->Time_List_Report }}
-                                    </a>
+                                    </span>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="mb-0">
-                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-xs text-secondary">
-                                        {{ $l->Time_Approvement }}
-                                    </a>
+                                    <span class="text-xs">
+                                        {{ $l->Time_Approved_Leader }}
+                                    </span>
                                 </p>
                             </td>
                             <td class="align-middle text-center">
-                                <div class="d-flex justify-content-center">
-                                    <a href="{{ route('report_list_member.pdf.editor', ['Id_List_Report' => $l->Id_List_Report]) }}" class="text-primary text-xs mx-1">
-                                        <i class="material-symbols-rounded">app_registration</i>
-                                    </a>
-                                </div>
+                                <p class="mb-0">
+                                    <span class="text-xs">
+                                        {{ $l->Time_Approved_Auditor }}
+                                    </span>
+                                </p>
                             </td>
                         </tr>
                         @endforeach
@@ -108,6 +117,20 @@
 
 @section('style')
 <link href="{{asset('assets/datatables/datatables.min.css')}}" rel="stylesheet">
+<style>
+    .row-data {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .row-data:hover {
+        background-color: #e91e63 !important;
+    }
+
+    .row-data:hover td {
+        color: white !important;
+    }
+</style>
 @endsection
 
 @section('script')

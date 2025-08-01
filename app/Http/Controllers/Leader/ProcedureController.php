@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Tractor;
 use App\Models\Area;
 use App\Models\Procedure;
+use App\Models\User;
 
 class ProcedureController extends Controller
 {

@@ -17,17 +17,16 @@
 
     <section class="pt-3 pb-4" id="count-stats">
         <div class="container">
+            <!-- Tombol Back -->
+            <a class="btn btn-primary mx-3" href="{{ route('report_list_member', ['Id_Report' => $listReport->Id_Report]) }}">
+                <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Back</span>
+            </a>
+            <br><br>
+
             <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h4>
             <br>
 
-            <!-- Tombol Back -->
-            <button class="btn btn-primary mx-3" onclick="window.history.back()">
-                <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Back</span>
-            </button>
-            <br><br>
-
-            {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button>
-            <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download Edited PDF</button> --}}
+            {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
             
             @if (is_null($listReport->Time_List_Report))
                 <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist()">
@@ -45,9 +44,12 @@
             @endif
 
             @if ($listReport->Time_List_Report)
-                <h5>Time Report : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></h5>
-                <h5>Time Approvement : <span class="text-primary">{{ $listReport->Time_Approvement }}</span></h5>
+                <div><b>Time Report : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
+                <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b></div>
+                <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b></div>
                 <br>
+
+                <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
             @endif
 
             <div id="pdf-container" style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
@@ -81,7 +83,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script>
-    let pdfUrl = "{{ asset($pdfPath) }}";
+    let pdfUrl = "{{ asset($pdfPath) }}?t=" + new Date().getTime();
     let pdfCanvas = document.getElementById('pdf-canvas');
     let editorLayer = document.getElementById('editor-layer');
     let checklistMode = false;
@@ -231,7 +233,7 @@
         let y = e.clientY - rect.top;
 
         let div = createDraggableDiv('V', 'green');
-        div.style.fontSize = '16px';
+        div.style.fontSize = '24px';
 
         // Tempel dulu ke DOM biar bisa ukur ukuran div
         editorLayer.appendChild(div);
@@ -288,33 +290,11 @@
     async function downloadPdf() {
         const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
         const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-        const page = pdfDoc.getPages()[0];
-
-        const pageWidth = page.getWidth();
-        const pageHeight = page.getHeight();
-        const canvasWidth = pdfCanvas.width;
-        const canvasHeight = pdfCanvas.height;
-
-        editorLayer.querySelectorAll('div').forEach(div => {
-            let x = parseFloat(div.style.left);
-            let y = parseFloat(div.style.top);
-            let scaledX = x * (pageWidth / canvasWidth);
-            let scaledY = y * (pageHeight / canvasHeight);
-            let finalY = pageHeight - scaledY - 12;
-
-            page.drawText(div.textContent, {
-                x: scaledX,
-                y: finalY,
-                size: 12,
-                color: div.style.color === 'green' ? PDFLib.rgb(0, 0.6, 0) : PDFLib.rgb(0, 0, 0)
-            });
-        });
-
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'Edited-{{ $listReport->Name_Procedure }}.pdf';
+        link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->report->process->Name_Process }}-{{ $listReport->Name_Procedure }}.pdf';
         link.click();
     }
 </script>
@@ -468,12 +448,33 @@
         const page = pdfDoc.getPages()[0];
 
         // Tambahkan tanggal dan nama user di pojok atas kiri
-        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        page.drawText(`${now} - {{ $user->Name_User }}`, {
-            x: 30,
-            y: page.getHeight() - 20,
-            size: 12,
-            color: PDFLib.rgb(0, 0.6, 0)
+        const nowUTC = new Date();
+        const offsetWIB = 7 * 60; // WIB = UTC+7 dalam menit
+        const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
+        const now = localWIB.toISOString().slice(0, 19).replace('T', ' ');
+        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const fontSize = 8;
+
+        // Pisah teks menjadi array baris
+        const lines = [now, "{{ $member->Name_Member }}"];
+        const lineHeight = fontSize + 2;
+
+        // Hitung total tinggi teks untuk bisa mengatur posisi vertikal awal secara dinamis (jika mau)
+        const totalHeight = lines.length * lineHeight;
+
+        // Mulai dari Y tertentu
+        let startY = page.getHeight() - 10;
+
+        // Tulis setiap baris
+        lines.forEach((line, i) => {
+            const textWidth = font.widthOfTextAtSize(line, fontSize);
+            page.drawText(line, {
+                x: 20,
+                y: startY - i * lineHeight,
+                size: fontSize,
+                font: font,
+                color: PDFLib.rgb(0, 0.6, 0),
+            });
         });
 
         // Tambahkan text/checklist di editor layer
@@ -487,11 +488,11 @@
             let y = parseFloat(div.style.top);
             let scaledX = x * (pageWidth / canvasWidth);
             let scaledY = y * (pageHeight / canvasHeight);
-            let finalY = pageHeight - scaledY - 12;
+            let finalY = pageHeight - scaledY - 18;
 
             // Hitung panjang teks (kira-kira, tidak super presisi)
-            const textWidth = 12 * div.textContent.length * 0.6; 
-            const textHeight = 14; // tinggi line kira-kira
+            const textWidth = 20 * div.textContent.length * 0.6; 
+            const textHeight = 18; // tinggi line kira-kira
 
             // Gambar kotak background putih 50%
             page.drawRectangle({
@@ -507,7 +508,7 @@
             page.drawText(div.textContent, {
                 x: scaledX,
                 y: finalY,
-                size: 12,
+                size: 18,
                 color: div.style.color === 'green' ? PDFLib.rgb(0, 0.6, 0) : PDFLib.rgb(0, 0, 0)
             });
         });
@@ -516,9 +517,10 @@
         const imgPdfDoc = await PDFLib.PDFDocument.create();
         const PAGE_WIDTH = 841.89;
         const PAGE_HEIGHT = 595.28;
+        const MARGIN = 20;
         const SLOT_COLS = 2, SLOT_ROWS = 2;
-        const SLOT_W = PAGE_WIDTH / SLOT_COLS;
-        const SLOT_H = PAGE_HEIGHT / SLOT_ROWS;
+        const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
+        const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
 
         let imgPage = null, slotIndex = 0;
         for (let file of images) {
@@ -536,8 +538,8 @@
             const scale = Math.min(SLOT_W / width, SLOT_H / height);
             const col = slotIndex % 2;
             const row = Math.floor((slotIndex % 4) / 2);
-            const x = col * SLOT_W + (SLOT_W - width * scale) / 2;
-            const y = PAGE_HEIGHT - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
+            const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
+            const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
 
             imgPage.drawImage(imgEmbed, { x, y, width: width * scale, height: height * scale });
             slotIndex++;
@@ -556,7 +558,7 @@
         formData.append('pdf', new Blob([mergedBytes], { type: 'application/pdf' }));
         formData.append('timestamp', now);
 
-        fetch(`{{ route('report_list_member.pdf.editor.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
+        fetch(`{{ route('report_list_member.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'

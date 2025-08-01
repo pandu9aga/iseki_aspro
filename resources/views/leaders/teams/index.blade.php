@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">User</h3>
+                    <h3 class="text-white pt-3 mt-n2">Team</h3>
                 </div>
             </div>
         </div>
@@ -30,9 +30,20 @@
                 </div>
             @endif
 
+            <!-- Tombol Data Team -->
+            <a class="btn btn-primary mx-3" href="{{ route('team_data') }}">
+                <span style="padding-left: 50px; padding-right: 50px;">Data Team</span>
+            </a>
+            <br><br>
+
             <!-- Tombol Add -->
-            <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#addMemberModal">
                 <span style="padding-left: 50px; padding-right: 50px;"><b>+</b> Add</span>
+            </button>
+
+            <!-- Tombol Add -->
+            <button class="btn btn-secondary mx-3" data-bs-toggle="modal" data-bs-target="#importMemberModal">
+                <span style="padding-left: 50px; padding-right: 50px;"><b>++</b> Import</span>
             </button>
 
             <div class="table-responsive p-0">
@@ -40,38 +51,31 @@
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Type</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Username</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">NIK</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Name</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ( $user as $u )
+                        @foreach ( $members as $member )
                         <tr>
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
                             <td class="align-middle text-center">
-                                @php
-                                    $type = $type_user->firstWhere('Id_Type_User', $u->Id_Type_User);
-                                @endphp
-                                <p class="text-xs text-secondary mb-0">{{ $type ? $type->Name_Type_User : 'Unknown' }}</p>
-                            </td>
-                            <td class="align-middle text-center" style="text-align: left;">
-                                <p class="text-xs text-primary mb-0">{{ $u->Username_User }}</p>
+                                <p class="text-xs text-primary mb-0">{{ $member->NIK_Member }}</p>
                             </td>
                             <td class="align-middle text-center">
-                                <p class="text-xs text-secondary mb-0">{{ $u->Name_User }}</p>
+                                <p class="text-xs text-secondary mb-0">{{ $member->Name_Member }}</p>
                             </td>
                             <td class="align-middle text-center">
                                 <div class="d-flex justify-content-center">
-                                    <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#editUserModal"
-                                        onclick="setEditUser({{ $u }})">
+                                    <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#editMemberModal"
+                                        onclick="setEditMember({{ $member }})">
                                         <i class="material-symbols-rounded">app_registration</i>
                                     </a>
-                                    <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#deleteUserModal"
-                                        onclick="setDeleteUser({{ $u }})">
+                                    <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#deleteMemberModal"
+                                        onclick="setDeleteMember({{ $member }})">
                                         <i class="material-symbols-rounded">delete</i>
                                     </a>
                                 </div>
@@ -85,38 +89,24 @@
     </section>
 </div>
 
-<!-- Modal Add User -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+<!-- Modal Add Member -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="{{ route('user.create') }}" role="form" method="POST">
+            <form action="{{ route('member.create') }}" role="form" method="POST">
                 @csrf
                 <div class="modal-header bg-primary">
-                    <h5 class="modal-title text-white" id="addUserModalLabel">Add User</h5>
+                    <h5 class="modal-title text-white" id="addMemberModalLabel">Add Member</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="input-group input-group-outline my-3">
+                        <label class="form-label">NIK</label>
+                        <input type="text" class="form-control" name="NIK_Member" value="" required>
+                    </div>
+                    <div class="input-group input-group-outline my-3">
                         <label class="form-label">Name</label>
-                        <input type="text" class="form-control" name="Name_User" value="" required>
-                    </div>
-                    <div class="input-group input-group-outline my-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" name="Username_User" value="" required>
-                    </div>
-                    <div class="input-group input-group-outline my-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-control" name="Password_User" value="" required>
-                    </div>
-                    <div class="input-group input-group-outline my-3 is-filled">
-                        <label class="form-label">Type</label>
-                        <select class="form-control" name="Id_Type_User">
-                            @foreach ($type_user as $type)
-                                <option value="{{ $type->Id_Type_User }}">
-                                    {{ $type->Name_Type_User }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <input type="text" class="form-control" name="Name_Member" value="" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -128,39 +118,27 @@
     </div>
 </div>
 
-<!-- Modal Edit User -->
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+<!-- Modal Edit Member -->
+<div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="editUserForm" method="POST">
+            <form id="editMemberForm" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="modal-header bg-primary">
-                    <h5 class="modal-title text-white" id="editUserModalLabel">Edit User</h5>
+                    <h5 class="modal-title text-white" id="editMemberModalLabel">Edit Member</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" name="Id_User" id="edit-id">
+                    <input type="hidden" name="Id_Member" id="edit-id">
 
                     <div class="input-group input-group-outline my-3">
+                        <label class="form-label">NIK</label>
+                        <input type="text" class="form-control" name="NIK_Member" id="edit-nik" required>
+                    </div>
+                    <div class="input-group input-group-outline my-3">
                         <label class="form-label">Name</label>
-                        <input type="text" class="form-control" name="Name_User" id="edit-name" required>
-                    </div>
-                    <div class="input-group input-group-outline my-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" name="Username_User" id="edit-Username" required>
-                    </div>
-                    <div class="input-group input-group-outline my-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-control" name="Password_User" id="edit-password" required>
-                    </div>
-                    <div class="input-group input-group-outline my-3 is-filled">
-                        <label class="form-label">Type</label>
-                        <select class="form-control" name="Id_Type_User" id="edit-type">
-                            @foreach ($type_user as $type)
-                                <option value="{{ $type->Id_Type_User }}">{{ $type->Name_Type_User }}</option>
-                            @endforeach
-                        </select>
+                        <input type="text" class="form-control" name="Name_Member" id="edit-name" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -172,34 +150,59 @@
     </div>
 </div>
 
-<!-- Modal Delete User -->
-<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+<!-- Modal Delete Member -->
+<div class="modal fade" id="deleteMemberModal" tabindex="-1" aria-labelledby="deleteMemberModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="deleteUserForm" method="POST">
+            <form id="deleteMemberForm" method="POST">
                 @csrf
                 @method('DELETE')
                 <div class="modal-header bg-danger">
-                    <h4 class="modal-title text-white" id="deleteUserModalLabel">Delete User</h4>
+                    <h4 class="modal-title text-white" id="deleteMemberModalLabel">Delete Member</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure to delete this user:</p>
+                    <p>Are you sure to delete this member:</p>
                     <table>
+                        <tr>
+                            <td>NIK</td>
+                            <td>:</td>
+                            <td><b class="text-danger" id="delete-member-nik"></b></td>
+                        </tr>
                         <tr>
                             <td>Name</td>
                             <td>:</td>
-                            <td><b class="text-danger" id="delete-user-name"></b></td>
-                        </tr>
-                        <tr>
-                            <td>Username</td>
-                            <td>:</td>
-                            <td><b class="text-danger" id="delete-user-Username"></b></td>
+                            <td><b class="text-danger" id="delete-member-name"></b></td>
                         </tr>
                     </table>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn bg-gradient-danger w-100 my-2">Delete</button>
+                    <button type="button" class="btn bg-gradient-secondary w-100 my-2 mb-2" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Import Member -->
+<div class="modal fade" id="importMemberModal" tabindex="-1" aria-labelledby="importMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ route('member.import') }}" role="form" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white" id="importMemberModalLabel">Import Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group input-group-outline my-3 is-filled">
+                        <label class="form-label">Import Excel</label>
+                        <input type="file" class="form-control" name="excel" required accept=".xls,.xlsx">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn bg-gradient-primary w-100 my-2">Submit</button>
                     <button type="button" class="btn bg-gradient-secondary w-100 my-2 mb-2" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>
@@ -219,32 +222,30 @@
 new DataTable('#example');
 </script>
 <script>
-    function setEditUser(user) {
+    function setEditMember(member) {
         // Set form action
-        const form = document.getElementById('editUserForm');
-        form.action = '/user/update/' + user.Id_User; // Sesuaikan route-mu
+        const form = document.getElementById('editMemberForm');
+        form.action = '/member/update/' + member.Id_Member; // Sesuaikan route-mu
 
         // Isi data
-        document.getElementById('edit-id').value = user.Id_User;
-        document.getElementById('edit-name').value = user.Name_User;
-        document.getElementById('edit-Username').value = user.Username_User;
-        document.getElementById('edit-password').value = user.Password_User; // kosongkan
-        document.getElementById('edit-type').value = user.Id_Type_User;
+        document.getElementById('edit-id').value = member.Id_Member;
+        document.getElementById('edit-nik').value = member.NIK_Member;
+        document.getElementById('edit-name').value = member.Name_Member;
 
         // Tambahkan class is-filled agar label naik
-        document.querySelectorAll('#editUserModal .input-group').forEach(group => {
+        document.querySelectorAll('#editMemberModal .input-group').forEach(group => {
             group.classList.add('is-filled');
         });
     }
 
-    function setDeleteUser(user) {
+    function setDeleteMember(member) {
         // Set nama ke <b>
-        document.getElementById('delete-user-name').textContent = user.Name_User;
-        document.getElementById('delete-user-Username').textContent = user.Username_User;
+        document.getElementById('delete-member-nik').textContent = member.NIK_Member;
+        document.getElementById('delete-member-name').textContent = member.Name_Member;
 
         // Set action form
-        const form = document.getElementById('deleteUserForm');
-        form.action = `/user/delete/${user.Id_User}`; // Sesuaikan dengan rute sebenarnya jika beda
+        const form = document.getElementById('deleteMemberForm');
+        form.action = `/member/delete/${member.Id_Member}`; // Sesuaikan dengan rute sebenarnya jika beda
     }
 </script>
 @endsection

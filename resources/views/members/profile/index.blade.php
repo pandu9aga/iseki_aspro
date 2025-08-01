@@ -33,25 +33,18 @@
             <div class="row">
                 <div class="col-lg-6">
                     <div class="card">
-                        <form role="form" action="{{ route('profile_member.update', ['Id_User' => $user->Id_User]) }}" method="POST" enctype="multipart/form-data">
+                        <form role="form" action="{{ route('profile_member.update', ['Id_Member' => $member->Id_Member]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
                             <div class="card-header bg-primary border-radius-xl">
                                 <h5 class="card-title text-white">Profile</h5>
                             </div>
                             <div class="card-body">
-                                <div class="input-group input-group-outline my-3 {{ $user->Name_User ? 'is-filled' : '' }}">
+                                <div class="input-group input-group-outline my-3 {{ $member->Name_Member ? 'is-filled' : '' }}">
                                     <label class="form-label">Name</label>
-                                    <input type="text" class="form-control @error('Name_User') is-invalid @enderror" name="Name_User" value="{{ $user->Name_User }}">
+                                    <input type="text" class="form-control @error('Name_Member') is-invalid @enderror" name="Name_Member" value="{{ $member->Name_Member }}">
                                 </div>
-                                @error('Name_User')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div class="input-group input-group-outline my-3 {{ $user->Password_User ? 'is-filled' : '' }}">
-                                    <label class="form-label">Password</label>
-                                    <input type="password" class="form-control @error('Password_User') is-invalid @enderror" name="Password_User" value="{{ $user->Password_User }}">
-                                </div>
-                                @error('Password_User')
+                                @error('Name_Member')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

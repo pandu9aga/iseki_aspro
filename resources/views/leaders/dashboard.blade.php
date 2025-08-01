@@ -38,7 +38,7 @@
                                     <p class="text-white opacity-8">
                                         Check for some daily reports here.
                                     </p>
-                                    <a href="#" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
+                                    <a href="{{ route('report') }}" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
                                 </div>
                             </div>
                         </div>
@@ -140,7 +140,7 @@
                              View and manage reports submitted by training members regarding the assembling procedures they have completed or reviewed. 
                              This section provides structured documentation of feedback, observations, and potential issues encountered during the training process.
                         </p>
-                        <a href="#" class="text-primary icon-move-right">
+                        <a href="{{ route('report') }}" class="text-primary icon-move-right">
                             Read more
                             <i class="fas fa-arrow-right text-sm ms-1"></i>
                         </a>

@@ -75,8 +75,8 @@
                 <form role="form" class="text-start" action="{{ route('login.auth') }}" method="POST" enctype="multipart/form-data">
                   @csrf
                   <div class="input-group input-group-outline my-3">
-                    <label class="form-label">NIK</label>
-                    <input type="text" class="form-control" name="NIK_User" value="">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" name="Username_User" value="">
                   </div>
                   <div class="input-group input-group-outline mb-3">
                     <label class="form-label">Password</label>

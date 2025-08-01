@@ -10,7 +10,19 @@ class List_Report extends Model
     protected $primaryKey = 'Id_List_Report';
     public $timestamps = false;
 
-    protected $fillable = ['Id_Report', 'Name_Procedure', 'Name_Area', 'Name_Tractor', 'Time_List_Report', 'Time_Approvement'];
+    protected $fillable = [
+        'Id_Report',
+        'Name_Procedure',
+        'Name_Area',
+        'Name_Tractor',
+        'Item_Procedure',
+        'Time_List_Report',
+        'Time_Approved_Leader',
+        'Time_Approved_Auditor',
+        'Reporter_Name',
+        'Leader_Name',
+        'Auditor_Name'
+    ];
 
     public function report()
     {

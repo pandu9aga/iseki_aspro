@@ -69,8 +69,15 @@
                                 <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'user' ? 'text-primary' : '' }}""
                                         href="{{ route('user') }}">
-                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">badge</i>
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">remember_me</i>
                                         User
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown dropdown-hover mx-2">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'team' ? 'text-primary' : '' }}""
+                                        href="{{ route('team') }}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">badge</i>
+                                        Team
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
@@ -82,7 +89,7 @@
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}""
-                                        href="{{ route('dashboard') }}">
+                                        href="{{ route('report') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">assignment</i>
                                         Report
                                     </a>
@@ -136,12 +143,17 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="{{ route('team') }}">
+                                    Team
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ route('procedure') }}">
                                     Procedure
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#">
+                                <a class="nav-link" href="{{ route('report') }}">
                                     Report
                                 </a>
                             </li>

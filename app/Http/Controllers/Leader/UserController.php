@@ -23,14 +23,14 @@ class UserController extends Controller
         // melakukan validasi data
         $request->validate([
             'Name_User' => 'required',
-            'NIK_User' => 'required|unique:users,NIK_User',
+            'Username_User' => 'required|unique:users,Username_User',
             'Password_User' => 'required',
             'Id_Type_User' => 'required'
         ],
         [
             'Name_User.required' => 'Nama wajib diisi',
-            'NIK_User.required' => 'NIK wajib diisi',
-            'NIK_User.unique' => 'NIK sudah digunakan, pilih yang lain',
+            'Username_User.required' => 'Username wajib diisi',
+            'Username_User.unique' => 'Username sudah digunakan, pilih yang lain',
             'Password_User.required' => 'Password wajib diisi',
             'Id_Type_User.required' => 'Type User wajib diisi'
         ]);
@@ -38,7 +38,7 @@ class UserController extends Controller
         //tambah data user
         DB::table('users')->insert([
             'Name_User' => $request->input('Name_User'),
-            'NIK_User' => $request->input('NIK_User'),
+            'Username_User' => $request->input('Username_User'),
             'Password_User' => $request->input('Password_User'),
             'Id_Type_User' => $request->input('Id_Type_User')
         ]);
@@ -51,14 +51,14 @@ class UserController extends Controller
         // melakukan validasi data
         $request->validate([
             'Name_User' => 'required',
-            'NIK_User' => 'required|unique:users,NIK_User,' . $Id_User . ',Id_User',
+            'Username_User' => 'required|unique:users,Username_User,' . $Id_User . ',Id_User',
             'Password_User' => 'required',
             'Id_Type_User' => 'required'
         ],
         [
             'Name_User.required' => 'Nama wajib diisi',
-            'NIK_User.required' => 'NIK wajib diisi',
-            'NIK_User.unique' => 'NIK sudah digunakan, pilih yang lain',
+            'Username_User.required' => 'Username wajib diisi',
+            'Username_User.unique' => 'Username sudah digunakan, pilih yang lain',
             'Password_User.required' => 'Password wajib diisi',
             'Id_Type_User.required' => 'Type User wajib diisi'
         ]);
@@ -66,7 +66,7 @@ class UserController extends Controller
         //update data user
         DB::table('users')->where('Id_User',$Id_User)->update([
             'Name_User' => $request->input('Name_User'),
-            'NIK_User' => $request->input('NIK_User'),
+            'Username_User' => $request->input('Username_User'),
             'Password_User' => $request->input('Password_User'),
             'Id_Type_User' => $request->input('Id_Type_User')
         ]);

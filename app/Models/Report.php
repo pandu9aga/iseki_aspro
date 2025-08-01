@@ -10,11 +10,16 @@ class Report extends Model
     protected $primaryKey = 'Id_Report';
     public $timestamps = false;
 
-    protected $fillable = ['Id_User', 'Name_Area', 'Name_Tractor', 'Time_Report', 'Reporter_Name', 'Approver_Name'];
+    protected $fillable = ['Id_Process', 'Id_Member', 'Time_Created_Report'];
 
-    public function user()
+    public function member()
     {
-        return $this->belongsTo(User::class, 'Id_User', 'Id_User');
+        return $this->belongsTo(Member::class, 'Id_Member', 'Id_Member');
+    }
+
+    public function process()
+    {
+        return $this->belongsTo(Process::class, 'Id_Process', 'Id_Process');
     }
 
     public function list_report()
