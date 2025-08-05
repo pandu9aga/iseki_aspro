@@ -330,7 +330,7 @@ new DataTable('#example');
     function setEdit(data) {
         // Set form action
         const form = document.getElementById('editForm');
-        form.action = '/procedure/tractor/area/procedure/update/' + data.Id_Procedure; // Sesuaikan route-mu
+        form.action = '/iseki_aspro/public/procedure/tractor/area/procedure/update/' + data.Id_Procedure; // Sesuaikan route-mu
 
         // Isi data
         document.getElementById('edit-tractor').value = data.Name_Tractor;
@@ -350,13 +350,13 @@ new DataTable('#example');
 
         // Set action form
         const form = document.getElementById('deleteForm');
-        form.action = `/procedure/tractor/area/procedure/delete/${data.Id_Procedure}`; // Sesuaikan dengan rute sebenarnya jika beda
+        form.action = `/iseki_aspro/public/procedure/tractor/area/procedure/delete/${data.Id_Procedure}`; // Sesuaikan dengan rute sebenarnya jika beda
     }
 
     function setUpload(data) {
         // Set form action
         const form = document.getElementById('uploadForm');
-        form.action = '/procedure/tractor/area/procedure/upload/' + data.Id_Procedure; // Sesuaikan route-mu
+        form.action = '/iseki_aspro/public/procedure/tractor/area/procedure/upload/' + data.Id_Procedure; // Sesuaikan route-mu
 
         // Isi data
         document.getElementById('upload-tractor').value = data.Name_Tractor;
