@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Leader;
+namespace App\Http\Controllers\Auditor;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Tractor;
 use App\Models\Procedure;
 use Carbon\Carbon;
 
-class LeaderController extends Controller
+class BaseController extends Controller
 {
     public function index(){
-        $page = "dashboard";
+        $page = "home";
         $today = Carbon::today();
 
         $Id_User = session('Id_User');
@@ -20,6 +19,6 @@ class LeaderController extends Controller
 
         $procedures = Procedure::count();
 
-        return view('leaders.dashboard', compact('page', 'today', 'user', 'procedures'));
+        return view('auditors.home', compact('page', 'today', 'user', 'procedures'));
     }    
 }

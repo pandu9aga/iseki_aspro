@@ -10,7 +10,7 @@ class Tractor extends Model
     protected $primaryKey = 'Id_Tractor';
     public $timestamps = false;
 
-    protected $fillable = ['Name_Tractor'];
+    protected $fillable = ['Name_Tractor', 'Photo_Tractor'];
 
     public function areas()
     {

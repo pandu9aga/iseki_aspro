@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Training</h3>
+                    <h3 class="text-white pt-3 mt-n2">Report</h3>
                 </div>
             </div>
         </div>
@@ -30,7 +30,15 @@
                 </div>
             @endif
 
-            <h5 class="text-center text-secondary mb-4">List of Training Reports in : <span class="text-primary">{{ $month }} - {{ $year }}</span></h5>
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 mx-auto">
+                        <div>Team - <a class="text-primary" href="{{ route('process', ['Id_Team' => $process->team->Id_Team]) }}">{{ $process->team->Name_Team }}</a></div>
+                        <div>Process - <a class="text-primary" href="{{ route('reporter', ['Id_Process' => $process->Id_Process]) }}">{{ $process->Name_Process }}</a></div>
+                    </div>
+                </div>
+            </div>
+            <br>
 
             <!-- Tombol Add -->
             <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#addReportModal">
@@ -42,7 +50,6 @@
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Training</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Name Member</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
                         </tr>
@@ -52,9 +59,6 @@
                         <tr>
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
-                            </td>
-                            <td class="align-middle text-center">
-                                <p class="text-xs text-primary mb-0">{{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}</p>
                             </td>
                             <td class="align-middle text-center">
                                 <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member }}</p>
@@ -86,9 +90,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <input type="hidden" name="Id_Process" value="{{ $process->Id_Process }}">
                     <div class="input-group input-group-outline my-3 is-filled">
-                        <label class="form-label">Start Training</label>
-                        <input type="date" class="form-control" name="Start_Report" required>
+                        <label class="form-label">Name Team</label>
+                        <input type="text" class="form-control" name="Name_Team" value="{{ $process->team->Name_Team }}" required readonly>
+                    </div>
+                    <div class="input-group input-group-outline my-3 is-filled">
+                        <label class="form-label">Name Process</label>
+                        <input type="text" class="form-control" name="Name_Process" value="{{ $process->Name_Process }}" required readonly>
                     </div>
                     <div class="input-group input-group-outline my-3 is-filled">
                         <label class="form-label">Members</label>

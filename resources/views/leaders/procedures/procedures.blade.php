@@ -39,6 +39,13 @@
                 </div>
             @endif
 
+            <div class="row mb-4">
+                <div class="col-6">
+                    <img src="{{ asset($photoTractor ?? 'storage/tractors/default.png') }}" alt="{{ $tractor }}" 
+                        style="max-width: 100px; max-height: 100px; width: auto; height: auto;">
+                </div>
+            </div>
+
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12 col-md-3 mb-2 mb-md-0">
@@ -61,8 +68,8 @@
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Tractor</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Area</th>
+                            {{-- <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Tractor</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Area</th> --}}
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Procedure</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Item</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
@@ -74,7 +81,7 @@
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
-                            <td class="align-middle text-center">
+                            {{-- <td class="align-middle text-center">
                                 <p class="text-xs">
                                     <a href="{{ route('procedure.area.index', ['Name_Tractor' => $p->Name_Tractor]) }}" class="text-primary">
                                         {{ $p->Name_Tractor }}
@@ -87,7 +94,7 @@
                                         {{ $p->Name_Area }}
                                     </a>
                                 </p>
-                            </td>
+                            </td> --}}
                             <td class="align-middle text-center">
                                 <p class="text-xs">
                                     <a href="#" class="text-primary"

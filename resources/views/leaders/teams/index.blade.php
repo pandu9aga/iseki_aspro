@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Team</h3>
+                    <h3 class="text-white pt-3 mt-n2">Member</h3>
                 </div>
             </div>
         </div>

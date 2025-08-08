@@ -44,7 +44,7 @@
                     class="navbar navbar-expand-lg  blur border-radius-xl top-0 z-index-fixed shadow position-absolute my-3 p-2 start-0 end-0 mx-4">
                     <div class="container-fluid px-0">
                         <a class="navbar-brand font-weight-bolder ms-sm-3 text-sm"
-                            href="{{ route('dashboard') }}" rel="tooltip"
+                            href="{{ route('base') }}" rel="tooltip"
                             title="Designed and Coded by Creative Tim" data-placement="bottom">
                             <span class="text-primary">Iseki Aspro</span> <small>- Assembling Procedure</small>
                         </a>
@@ -60,43 +60,22 @@
                         <div class="collapse navbar-collapse pt-3 pb-2 py-lg-0 w-100" id="navigation">
                             <ul class="navbar-nav navbar-nav-hover ms-auto">
                                 <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'dashboard' ? 'text-primary' : '' }}"
-                                        href="{{ route('dashboard') }}">
-                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">dashboard</i>
-                                        Dashboard
-                                    </a>
-                                </li>
-                                <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'user' ? 'text-primary' : '' }}""
-                                        href="{{ route('user') }}">
-                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">remember_me</i>
-                                        User
-                                    </a>
-                                </li>
-                                <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'team' ? 'text-primary' : '' }}""
-                                        href="{{ route('team') }}">
-                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">badge</i>
-                                        Member
-                                    </a>
-                                </li>
-                                <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'procedure' ? 'text-primary' : '' }}""
-                                        href="{{ route('procedure') }}">
-                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">format_list_numbered</i>
-                                        Procedure
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'home' ? 'text-primary' : '' }}"
+                                        href="{{ route('base') }}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">home</i>
+                                        Home
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}""
-                                        href="{{ route('report') }}">
+                                        href="{{ route('report_auditor') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">assignment</i>
                                         Training
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'profile' ? 'text-primary' : '' }}""
-                                        href="{{ route('profile') }}">
+                                        href="{{ route('profile_auditor') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">account_circle</i>
                                         Profile
                                     </a>
@@ -133,32 +112,17 @@
                         <h6 class="text-sm text-primary">Menu</h6>
                         <ul class="flex-column ms-n3 nav">
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('dashboard') }}">
-                                    Dashboard
+                                <a class="nav-link" href="{{ route('base') }}">
+                                    Home
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('user') }}">
-                                    User
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('team') }}">
-                                    Member
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('procedure') }}">
-                                    Procedure
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('report') }}">
+                                <a class="nav-link" href="{{ route('report_auditor') }}">
                                     Training
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('profile') }}">
+                                <a class="nav-link" href="{{ route('profile_auditor') }}">
                                     Profile
                                 </a>
                             </li>

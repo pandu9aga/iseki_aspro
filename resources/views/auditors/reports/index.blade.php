@@ -1,4 +1,4 @@
-@extends('layouts.leader')
+@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -61,7 +61,7 @@
                 <div class="row">
                     @foreach ($months as $num => $name)
                         <div class="col-6 col-md-3 col-lg-2 mb-3">
-                            <a href="{{ route('reporter', ['year' => $selectedYear, 'month' => $num]) }}">
+                            <a href="{{ route('report_auditor.list', ['year' => $selectedYear, 'month' => $num]) }}">
                                 <div class="border rounded text-center py-3 bg-light card-hover">
                                     <strong>{{ $name }} {{ $selectedYear }}</strong>
                                 </div>

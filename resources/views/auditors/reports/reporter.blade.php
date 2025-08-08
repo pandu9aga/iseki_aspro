@@ -1,7 +1,7 @@
-@extends('layouts.member')
+@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
-    <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
+    <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
         <span class="mask bg-gradient-dark opacity-4"></span>
         <div class="container">
             <div class="row">
@@ -30,14 +30,7 @@
                 </div>
             @endif
 
-            <div class="container">
-                <div class="row">
-                    <div class="col-12 mx-auto">
-                        <div>Member - <span class="text-primary">{{ $member->Name_Member }}</span></div>
-                    </div>
-                </div>
-            </div>
-            <br>
+            <h5 class="text-center text-secondary mb-4">List of Training Reports in : <span class="text-primary">{{ $month }} - {{ $year }}</span></h5>
 
             <div class="table-responsive p-0">
                 <table id="example" class="table align-items-center mb-0">
@@ -45,16 +38,20 @@
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Training</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Name Member</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ( $reports as $r )
-                        <tr onclick="window.location='{{ route('report_list_member', ['Id_Report' => $r->Id_Report]) }}'" class="row-data">
+                        @foreach ( $reports as $report )
+                        <tr onclick="window.location='{{ route('list_report_auditor', ['Id_Report' => $report->Id_Report]) }}'" class="row-data">
                             <td class="align-middle text-center">
-                                <p class="text-xs font-weight-bold mb-0">{{ $loop->iteration }}</p>
+                                <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
                             <td class="align-middle text-center">
-                                <p class="text-xs mb-0">{{ \Carbon\Carbon::parse($r->Start_Report)->format('d-m-Y') }}</p>
+                                <p class="text-xs text-primary mb-0">{{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}</p>
+                            </td>
+                            <td class="align-middle text-center">
+                                <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member }}</p>
                             </td>
                         </tr>
                         @endforeach
@@ -78,10 +75,12 @@
         background-color: #e91e63 !important;
     }
 
-    .row-data:hover td {
+    .row-data:hover td,
+    .row-data:hover p {
         color: white !important;
     }
 </style>
+
 @endsection
 
 @section('script')

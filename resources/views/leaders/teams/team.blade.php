@@ -32,7 +32,7 @@
 
             <!-- Tombol Data Team -->
             <a class="btn btn-primary mx-3" href="{{ route('team') }}">
-                <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Team List</span>
+                <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Member List</span>
             </a>
             <br><br>
 

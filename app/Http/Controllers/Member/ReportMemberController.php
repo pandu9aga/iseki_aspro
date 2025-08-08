@@ -18,8 +18,7 @@ class ReportMemberController extends Controller
 
         $Id_Member = session('Id_Member');
         $reports = Report::where('Id_Member', $Id_Member)
-            ->orderBy('Time_Created_Report', 'desc')
-            ->with('process')
+            ->orderBy('Start_Report', 'desc')
             ->with('member')
             ->get();
         $member = Member::find($Id_Member);
@@ -30,11 +29,12 @@ class ReportMemberController extends Controller
     public function report_list_member($Id_Report){
         $page = "report";
 
+        $report = Report::findOrFail($Id_Report);
         $list_reports = List_Report::where('Id_Report', $Id_Report)->orderBy('Name_Procedure', 'asc')->get();
         $Id_Member = session('Id_Member');
         $member = Member::find($Id_Member);
 
-        return view('members.reports.list_report', compact('page', 'list_reports', 'member'));
+        return view('members.reports.list_report', compact('page', 'report', 'list_reports', 'member'));
     }
 
     public function detail($Id_List_Report)
@@ -46,14 +46,10 @@ class ReportMemberController extends Controller
 
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $nameTeam = $listReport->report->process->team->Name_Team ?? 'Unknown';
-        $nameProcess = $listReport->report->process->Name_Process ?? 'Unknown';
         $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d_H-i-s');
+        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d');
 
-        $teamPath = 'storage/reports/' . $nameTeam;
-        $processPath = $teamPath . '/' . $nameProcess;
-        $fullPath = $processPath . '/' . $id_member . '_' . $timeReport;
+        $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
 
         $fileName = $listReport->Name_Procedure . '.pdf';
         $pdfPath = $fullPath . '/' . $fileName;
@@ -65,16 +61,14 @@ class ReportMemberController extends Controller
     {
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $nameTeam = $listReport->report->process->team->Name_Team ?? 'Unknown';
-        $nameProcess = $listReport->report->process->Name_Process ?? 'Unknown';
         $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d_H-i-s');
+        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
             $pdf = $request->file('pdf');
 
             // Path target di public/storage/reports/...
-            $path = 'storage/reports/' . $nameTeam . '/' . $nameProcess . '/' . $id_member . '_' . $timeReport;
+            $path = 'storage/reports/' . $timeReport . '_' . $id_member;
             $filename = $listReport->Name_Procedure . '.pdf';
 
             // Pastikan direktori ada

@@ -38,6 +38,13 @@
                 </div>
             @endif
 
+            <div class="row mb-4">
+                <div class="col-6">
+                    <img src="{{ asset($photoTractor ?? 'storage/tractors/default.png') }}" alt="{{ $tractor }}" 
+                        style="max-width: 100px; max-height: 100px; width: auto; height: auto;">
+                </div>
+            </div>
+
             <!-- Tombol Add -->
             <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#addModal">
                 <span style="padding-left: 50px; padding-right: 50px;"><b>+</b> Add</span>
@@ -48,8 +55,9 @@
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Tractor</th>
+                            {{-- <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Tractor</th> --}}
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Area</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Total Procedure</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
                         </tr>
                     </thead>
@@ -59,18 +67,23 @@
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
-                            <td class="align-middle text-center">
+                            {{-- <td class="align-middle text-center">
                                 <p class="text-xs">
                                     <a href="{{ route('procedure.area.index', ['Name_Tractor' => $a->Name_Tractor]) }}" class="text-primary">
                                         {{ $a->Name_Tractor }}
                                     </a>
                                 </p>
-                            </td>
+                            </td> --}}
                             <td class="align-middle text-center">
                                 <p class="text-xs">
                                     <a href="{{ route('procedure.procedure.index', ['Name_Tractor' => $a->Name_Tractor, 'Name_Area' => $a->Name_Area]) }}" class="text-primary">
                                         {{ $a->Name_Area }}
                                     </a>
+                                </p>
+                            </td>
+                            <td class="align-middle text-center">
+                                <p class="text-xs">
+                                    {{ \App\Models\Procedure::where('Name_Tractor', $a->Name_Tractor)->where('Name_Area', $a->Name_Area)->count() }}
                                 </p>
                             </td>
                             <td class="align-middle text-center">

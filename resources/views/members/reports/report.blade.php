@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Report</h3>
+                    <h3 class="text-white pt-3 mt-n2">Training</h3>
                 </div>
             </div>
         </div>
@@ -44,7 +44,7 @@
             @endif
 
             @if ($listReport->Time_List_Report)
-                <div><b>Time Report : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
+                <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
                 <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b></div>
                 <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b></div>
                 <br>
@@ -294,7 +294,7 @@
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->report->process->Name_Process }}-{{ $listReport->Name_Procedure }}.pdf';
+        link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
         link.click();
     }
 </script>
@@ -469,7 +469,7 @@
         lines.forEach((line, i) => {
             const textWidth = font.widthOfTextAtSize(line, fontSize);
             page.drawText(line, {
-                x: 20,
+                x: 200,
                 y: startY - i * lineHeight,
                 size: fontSize,
                 font: font,

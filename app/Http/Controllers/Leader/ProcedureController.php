@@ -24,22 +24,39 @@ class ProcedureController extends Controller
     {
         // Validasi
         $request->validate([
-            'Name_Tractor' => 'required|unique:tractors,Name_Tractor'
+            'Name_Tractor' => 'required|unique:tractors,Name_Tractor',
+            'Photo_Tractor' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048'
         ], [
-            'Name_Tractor.required' => 'Nama wajib diisi'
+            'Name_Tractor.required' => 'Nama wajib diisi',
+            'Photo_Tractor.required' => 'Foto wajib diunggah',
+            'Photo_Tractor.image' => 'File harus berupa gambar',
+            'Photo_Tractor.mimes' => 'Format gambar harus jpg, jpeg, png, atau webp',
+            'Photo_Tractor.max' => 'Ukuran maksimal gambar adalah 2MB',
         ]);
 
         $name = $request->input('Name_Tractor');
+        $photoPath = null;
+
+        // Proses upload gambar
+        if ($request->hasFile('Photo_Tractor')) {
+            $file = $request->file('Photo_Tractor');
+            $filename = uniqid('tractor_') . '.' . $file->getClientOriginalExtension();
+            $photoPath = 'storage/tractors/' . $filename;
+
+            // Simpan ke public/storage/tractors
+            $file->move(public_path('storage/tractors'), $filename);
+        }
 
         // Simpan ke database
         DB::table('tractors')->insert([
-            'Name_Tractor' => $name
+            'Name_Tractor' => $name,
+            'Photo_Tractor' => $photoPath
         ]);
 
         // Buat folder: storage/app/public/procedures/{Name_Tractor}
         Storage::disk('public')->makeDirectory('procedures/' . $name);
 
-        return redirect()->route('procedure')->with('success', 'Tractor berhasil ditambahkan dan folder dibuat');
+        return redirect()->route('procedure')->with('success', 'Tractor berhasil ditambahkan dan foto disimpan');
     }
 
     public function update_tractor(Request $request, string $Id_Tractor)
@@ -47,6 +64,7 @@ class ProcedureController extends Controller
         // Ambil data tractor sebelum diubah
         $oldTractor = DB::table('tractors')->where('Id_Tractor', $Id_Tractor)->first();
         $oldName = $oldTractor->Name_Tractor;
+        $oldPhoto = $oldTractor->Photo_Tractor;
 
         // Validasi
         $request->validate([
@@ -56,10 +74,29 @@ class ProcedureController extends Controller
         ]);
 
         $newName = $request->input('Name_Tractor');
+        $photoPath = $oldPhoto;
+
+        // Cek jika ada file baru diupload
+        if ($request->hasFile('Photo_Tractor')) {
+            $file = $request->file('Photo_Tractor');
+
+            // Hapus file lama jika bukan default
+            if ($oldPhoto && $oldPhoto !== 'storage/tractors/default.png' && Storage::disk('public')->exists(str_replace('storage/', '', $oldPhoto))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $oldPhoto));
+            }
+
+            // Simpan file baru dengan nama unik
+            $fileName = uniqid('tractor_') . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('storage/tractors'), $fileName);
+
+            // Update path untuk disimpan di DB
+            $photoPath = 'storage/tractors/' . $fileName;
+        }
 
         // Update di database
         DB::table('tractors')->where('Id_Tractor', $Id_Tractor)->update([
-            'Name_Tractor' => $newName
+            'Name_Tractor' => $newName,
+            'Photo_Tractor' => $photoPath
         ]);
 
         // Ubah nama folder jika nama berubah
@@ -109,8 +146,9 @@ class ProcedureController extends Controller
         $page = "procedure";
 
         $tractor = $Name_Tractor;
+        $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
         $areas = Area::where('Name_Tractor', $Name_Tractor)->orderBy('Name_Area', 'asc')->get();
-        return view('leaders.procedures.areas', compact('page', 'tractor', 'areas'));
+        return view('leaders.procedures.areas', compact('page', 'tractor', 'photoTractor', 'areas'));
     }
 
     public function create_area(Request $request)
@@ -249,12 +287,13 @@ class ProcedureController extends Controller
         $page = "procedure";
 
         $tractor = $Name_Tractor;
+        $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
         $area = $Name_Area;
         $procedures = Procedure::where('Name_Tractor', $Name_Tractor)
             ->where('Name_Area', $Name_Area)
             ->orderBy('Name_Procedure', 'asc')
             ->get();
-        return view('leaders.procedures.procedures', compact('page', 'tractor', 'area', 'procedures'));
+        return view('leaders.procedures.procedures', compact('page', 'tractor', 'photoTractor', 'area', 'procedures'));
     }
 
     public function create_procedure(Request $request)

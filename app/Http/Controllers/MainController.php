@@ -16,7 +16,7 @@ class MainController extends Controller
                 return redirect()->route('dashboard');
             }
             else if (session('Id_Type_User') == 1){
-                return redirect()->route('home');
+                return redirect()->route('base');
             }
         }
         return view('auth.login2');
@@ -43,7 +43,7 @@ class MainController extends Controller
                 return redirect()->route('dashboard');
             }
             else if (session('Id_Type_User') == 1){
-                return redirect()->route('home');
+                return redirect()->route('base');
             }
         }
 

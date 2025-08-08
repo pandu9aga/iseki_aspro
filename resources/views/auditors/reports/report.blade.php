@@ -1,4 +1,4 @@
-@extends('layouts.leader')
+@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -18,7 +18,7 @@
     <section class="pt-3 pb-4" id="count-stats">
         <div class="container">
             <!-- Tombol Back -->
-            <a class="btn btn-primary mx-3" href="{{ route('list_report_detail', ['Id_Report' => $listReport->Id_Report, 'Name_Tractor' => $listReport->Name_Tractor]) }}">
+            <a class="btn btn-primary mx-3" href="{{ route('list_report_detail_auditor', ['Id_Report' => $listReport->Id_Report, 'Name_Tractor' => $listReport->Name_Tractor]) }}">
                 <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Back</span>
             </a>
             <br><br>
@@ -28,7 +28,7 @@
 
             {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
             
-            @if (is_null($listReport->Time_Approved_Leader))
+            @if (is_null($listReport->Time_Approved_Auditor))
                 <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist()">
                     <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
                 </button>
@@ -58,7 +58,7 @@
             </div>
 
             <br><br>
-            @if (is_null($listReport->Time_Approved_Leader))
+            @if (is_null($listReport->Time_Approved_Auditor))
             {{-- <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
             <div class="input-group input-group-outline my-3 is-filled">
                 <label class="form-label">Photos</label>
@@ -197,7 +197,7 @@ editorLayer.addEventListener('click', function(e) {
     const rect = editorLayer.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const div = createDraggableDiv('V', 'red');
+    const div = createDraggableDiv('V', 'blue');
     editorLayer.appendChild(div);
 
     const w = div.offsetWidth / 2, h = div.offsetHeight / 2;
@@ -263,11 +263,11 @@ async function submitReport() {
     lines.forEach((line, idx) => {
         const width = font.widthOfTextAtSize(line, fontSize);
         pages[0].drawText(line, {
-            x: (pages[0].getWidth() - width) / 2,
+            x: 500,
             y: yStart - idx * lineHeight,
             size: fontSize,
             font,
-            color: PDFLib.rgb(1, 0, 0)
+            color: PDFLib.rgb(0, 0, 1)
         });
     });
 
@@ -314,7 +314,7 @@ async function submitReport() {
             x: finalX,
             y: finalY,
             size: div.textContent === 'V' ? 18 : 12,
-            color: div.style.color === 'red' ? PDFLib.rgb(1, 0, 0) : PDFLib.rgb(0, 0, 0),
+            color: div.style.color === 'blue' ? PDFLib.rgb(0, 0, 1) : PDFLib.rgb(0, 0, 0),
             font
         });
     });
@@ -324,7 +324,7 @@ async function submitReport() {
     formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
     formData.append('timestamp', now);
 
-    fetch(`{{ route('report.detail.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
+    fetch(`{{ route('report_auditor.detail.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: formData

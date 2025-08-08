@@ -35,18 +35,18 @@
                     <div class="col-12 mx-auto">
                         <div>
                             Start Training - 
-                            <span class="text-primary">
+                            <a class="text-primary" href="{{ route('report_auditor.list', ['year' => \Carbon\Carbon::parse($report->Start_Report)->format('Y'), 'month' => \Carbon\Carbon::parse($report->Start_Report)->format('m')]) }}">
                                 {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}
-                            </span>
+                            </a>
                         </div>
-                        <div>Member - <span class="text-primary">{{ $member->Name_Member }}</span></div>
+                        <div>Member - <a class="text-primary" href="{{ route('list_report_auditor', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->Name_Member }}</a></div>
                     </div>
                 </div>
             </div>
             <br>
 
             <!-- Tombol Back -->
-            <a class="btn btn-primary mx-3" href="{{ route('report_member') }}">
+            <a class="btn btn-primary mx-3" href="{{ route('list_report_auditor', ['Id_Report' => $report->Id_Report]) }}">
                 <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Back</span>
             </a>
 
@@ -65,7 +65,7 @@
                     </thead>
                     <tbody>
                         @foreach ( $list_reports as $l )
-                        <tr onclick="window.location='{{ route('report_list_member.detail', ['Id_List_Report' => $l->Id_List_Report]) }}'" class="row-data">
+                        <tr onclick="window.location='{{ route('report_auditor.detail', ['Id_List_Report' => $l->Id_List_Report]) }}'" class="row-data">
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>

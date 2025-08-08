@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Member;
 use App\Models\Report;
+use App\Models\List_Report;
 use Carbon\Carbon;
 
 class HomeController extends Controller
@@ -17,7 +18,11 @@ class HomeController extends Controller
         $Id_Member = session('Id_Member');
         $member = Member::find($Id_Member);
 
-        $reports = Report::where('Id_Member', $Id_Member)->count();
+        $reports = List_Report::with('report')
+            ->whereHas('report', function ($query) use ($Id_Member) {
+                $query->where('Id_Member', $Id_Member);
+            })
+            ->count();
 
         return view('members.home', compact('page', 'today', 'member', 'reports'));
     }    

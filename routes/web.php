@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\LeaderMiddleware;
+use App\Http\Middleware\AuditorMiddleware;
 use App\Http\Middleware\MemberMiddleware;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\Leader\LeaderController;
@@ -13,6 +14,9 @@ use App\Http\Controllers\Leader\ProcedureController;
 use App\Http\Controllers\Member\HomeController;
 use App\Http\Controllers\Member\ProfileMemberController;
 use App\Http\Controllers\Member\ReportMemberController;
+use App\Http\Controllers\Auditor\BaseController;
+use App\Http\Controllers\Auditor\ProfileAuditorController;
+use App\Http\Controllers\Auditor\ReportAuditorController;
 
 Route::get('/', [MainController::class, 'index'])->name('/');
 Route::get('/login', [MainController::class, 'index'])->name('login');
@@ -60,11 +64,10 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
     Route::delete('/procedure/tractor/area/procedure/delete/{Id_Procedure}', [ProcedureController::class, 'destroy_procedure'])->name('procedure.procedure.destroy');
 
     Route::get('/report', [ReportController::class, 'index'])->name('report');
-    Route::get('/process/{Id_Team}', [ReportController::class, 'process'])->name('process');
-    Route::post('/process', [ReportController::class, 'create_process'])->name('process.create');
-    Route::get('/reporter/{Id_Process}', [ReportController::class, 'reporter'])->name('reporter');
+    Route::get('/reporter/{year}/{month}', [ReportController::class, 'reporter'])->name('reporter');
     Route::post('/reporter', [ReportController::class, 'create_reporter'])->name('reporter.create');
     Route::get('/list_report/{Id_Report}', [ReportController::class, 'list_report'])->name('list_report');
+    Route::get('/list_report_detail/{Id_Report}/{Name_Tractor}', [ReportController::class, 'list_report_detail'])->name('list_report_detail');
     Route::post('/report/store', [ReportController::class, 'store'])->name('report.store');
     Route::get('/report/{Id_List_Report}', [ReportController::class, 'report'])->name('report.detail');
     Route::post('/report/submit/{Id_List_Report}', [ReportController::class, 'submit_report'])->name('report.detail.submit');
@@ -80,4 +83,18 @@ Route::middleware(MemberMiddleware::class)->group(function () {
     Route::get('/report_list_member/{Id_Report}', [ReportMemberController::class, 'report_list_member'])->name('report_list_member');
     Route::get('/report_list_member/report/{Id_List_Report}', [ReportMemberController::class, 'detail'])->name('report_list_member.detail');
     Route::post('/report_list_member/submit/{Id_List_Report}', [ReportMemberController::class, 'submit_report'])->name('report_list_member.submit');
+});
+
+Route::middleware(AuditorMiddleware::class)->group(function () {
+    Route::get('/base', [BaseController::class, 'index'])->name('base');
+
+    Route::get('/profile_auditor', [ProfileAuditorController::class, 'index'])->name('profile_auditor');
+    Route::put('/profile_auditor/update/{Id_User}', [ProfileAuditorController::class, 'update'])->name('profile_auditor.update');
+
+    Route::get('/report_auditor', [ReportAuditorController::class, 'index'])->name('report_auditor');
+    Route::get('/report_auditor/{year}/{month}', [ReportAuditorController::class, 'reporter'])->name('report_auditor.list');
+    Route::get('/list_report_auditor/{Id_Report}', [ReportAuditorController::class, 'list_report'])->name('list_report_auditor');
+    Route::get('/list_report_detail_auditor/{Id_Report}/{Name_Tractor}', [ReportAuditorController::class, 'list_report_detail'])->name('list_report_detail_auditor');
+    Route::get('/report_auditor/{Id_List_Report}', [ReportAuditorController::class, 'report'])->name('report_auditor.detail');
+    Route::post('/report_auditor/submit/{Id_List_Report}', [ReportAuditorController::class, 'submit_report'])->name('report_auditor.detail.submit');
 });

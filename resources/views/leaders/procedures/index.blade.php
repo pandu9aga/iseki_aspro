@@ -41,7 +41,36 @@
                 <span style="padding-left: 50px; padding-right: 50px;"><b>+</b> Add</span>
             </button>
 
-            <div class="table-responsive p-0">
+            <div class="row mt-4">
+                @foreach ( $tractors as $t )
+                <div class="col-md-3 col-lg-2">
+                    <div class="bg-gray-100 border-radius-xl p-2 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <a href="{{ route('procedure.area.index', ['Name_Tractor' => $t->Name_Tractor]) }}">
+                            <div class="hover-card bg-white border-radius-xl align-items-center d-flex flex-column justify-content-center w-100 p-1 shadow-lg">
+                                <div style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
+                                    <img src="{{ asset($t->Photo_Tractor ?? 'storage/tractors/default.png') }}"
+                                        alt="{{ $t->Name_Tractor }}"
+                                        style="max-width: 180px; max-height: 180px; width: auto; height: auto;">
+                                </div>
+                                <b class="text-primary">{{ $t->Name_Tractor }}</b>
+                            </div>
+                        </a>
+                        <span class="mt-3">
+                            <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#editModal"
+                                onclick="setEdit({{ $t }})">
+                                <i class="material-symbols-rounded">app_registration</i>
+                            </a>
+                            <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                onclick="setDelete({{ $t }})">
+                                <i class="material-symbols-rounded">delete</i>
+                            </a>
+                        </span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- <div class="table-responsive p-0">
                 <table id="example" class="table align-items-center mb-0">
                     <thead>
                         <tr>
@@ -79,7 +108,7 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
+            </div> --}}
         </div>
     </section>
 </div>
@@ -88,7 +117,7 @@
 <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="{{ route('procedure.tractor.create') }}" role="form" method="POST">
+            <form action="{{ route('procedure.tractor.create') }}" role="form" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white" id="addModalLabel">Add Tractor</h5>
@@ -98,6 +127,10 @@
                     <div class="input-group input-group-outline my-3">
                         <label class="form-label">Name Tractor</label>
                         <input type="text" class="form-control" name="Name_Tractor" value="" required>
+                    </div>
+                    <div class="input-group input-group-outline my-3 is-filled">
+                        <label class="form-label">Photo Tractor</label>
+                        <input type="file" class="form-control" name="Photo_Tractor" accept="image/*" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -113,7 +146,7 @@
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="editForm" method="POST">
+            <form id="editForm" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="modal-header bg-primary">
@@ -124,6 +157,10 @@
                     <div class="input-group input-group-outline my-3">
                         <label class="form-label">Name Tractor</label>
                         <input type="text" class="form-control" name="Name_Tractor" id="edit-name" required>
+                    </div>
+                    <div class="input-group input-group-outline my-3 is-filled">
+                        <label class="form-label">Photo Tractor</label>
+                        <input type="file" class="form-control" name="Photo_Tractor" accept="image/*">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -166,8 +203,26 @@
 </div>
 @endsection
 
-@section('style')
+{{-- @section('style')
 <link href="{{asset('assets/datatables/datatables.min.css')}}" rel="stylesheet">
+@endsection --}}
+
+@section('style')
+<style>
+    .hover-card {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .hover-card:hover {
+        background-color: #e91e63 !important; /* Biru Bootstrap */
+        color: white !important;
+        transform: translateY(-5px);
+    }
+
+    .hover-card:hover b {
+        color: white !important;
+    }
+</style>
 @endsection
 
 @section('script')
@@ -180,7 +235,7 @@ new DataTable('#example');
     function setEdit(data) {
         // Set form action
         const form = document.getElementById('editForm');
-        form.action = '/iseki_aspro/public/procedure/tractor/update/' + data.Id_Tractor; // Sesuaikan route-mu
+        form.action = '/iseki_aspro/public/procedure/tractor/update/' + data.Id_Tractor; // Sesuaikan route-mu // kalau di server /iseki_aspro/public/procedure/tractor/update/
 
         // Isi data
         document.getElementById('edit-name').value = data.Name_Tractor;
@@ -197,7 +252,7 @@ new DataTable('#example');
 
         // Set action form
         const form = document.getElementById('deleteForm');
-        form.action = `/iseki_aspro/public/procedure/tractor/delete/${data.Id_Tractor}`; // Sesuaikan dengan rute sebenarnya jika beda
+        form.action = `/iseki_aspro/public/procedure/tractor/delete/${data.Id_Tractor}`; // Sesuaikan dengan rute sebenarnya jika beda // kalau di server /iseki_aspro/public/procedure/tractor/delete/
     }
 </script>
 @endsection

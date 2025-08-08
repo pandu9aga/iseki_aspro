@@ -1,7 +1,7 @@
 @extends('layouts.leader')
 @section('content')
 <header class="header-2">
-    <div class="page-header min-vh-65 relative" style="background-image: url('{{ asset('assets/img/bg5.jpg') }}')">
+    <div class="page-header min-vh-65 relative" style="background-image: url('{{ asset('assets/img/bg-dashboard.jpg') }}')">
         <span class="mask bg-gradient-dark opacity-4"></span>
         <div class="container">
             <div class="row">
@@ -17,9 +17,97 @@
 
 <div class="card card-body blur shadow-blur mx-3 mx-md-4 mt-n6">
 
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 mt-lg-0 mt-4">
+                <a href="{{ route('user') }}" class="text-decoration-none">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <i class="material-symbols-rounded text-primary" style="font-size: 100px;">remember_me</i>
+                        <br>
+                        <div class="mt-3 mt-md-0">
+                            <h4>User</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 mt-lg-0 mt-4">
+                <a href="{{ route('team') }}" class="text-decoration-none">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <i class="material-symbols-rounded text-primary" style="font-size: 100px;">badge</i>
+                        <br>
+                        <div class="mt-3 mt-md-0">
+                            <h4>Member</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 mt-lg-0 mt-4">
+                <a href="{{ route('procedure') }}" class="text-decoration-none">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <i class="material-symbols-rounded text-primary" style="font-size: 100px;">format_list_numbered</i>
+                        <br>
+                        <div class="mt-3 mt-md-0">
+                            <h4>Procedure</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 mt-lg-0 mt-4">
+                <a href="{{ route('report') }}" class="text-decoration-none">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <i class="material-symbols-rounded text-primary" style="font-size: 100px;">assignment</i>
+                        <br>
+                        <div class="mt-3 mt-md-0">
+                            <h4>Training</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <section class="py-1">
         <div class="container">
             <div class="row align-items-center">
+                <section class="col-lg-8 pt-3 pb-4" id="count-stats">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-9 mx-auto py-3">
+                                <div class="row">
+                                    <div class="col-md-2 position-relative">
+                                        {{-- <div class="p-3 text-center">
+                                            <h1 class="text-gradient text-primary"><span id="state1" countTo="{{ $tractors }}">0</span></h1>
+                                            <h5 class="mt-3">Tractors</h5>
+                                            <p class="text-sm font-weight-normal">
+                                                Number of tractor types available on this website
+                                            </p>
+                                        </div> --}}
+                                        <hr class="vertical dark">
+                                    </div>
+                                    <div class="col-md-8 position-relative">
+                                        <div class="p-3 text-center">
+                                            <h1 class="text-gradient text-primary display-3"><b id="state2" countTo="{{ $procedures }}">0</b></h1>
+                                            <h3 class="mt-3 fw-bold">Procedures</h3>
+                                            <p class="fs-5 fw-semibold">
+                                                Total procedures for all existing tractor types
+                                            </p>
+                                        </div>
+                                        <hr class="vertical dark">
+                                    </div>
+                                    {{-- <div class="col-md-4">
+                                        <div class="p-3 text-center">
+                                            <h1 class="text-gradient text-primary"><span id="state3" countTo="{{ $users }}">0</span></h1>
+                                            <h5 class="mt-3">Users</h5>
+                                            <p class="text-sm font-weight-normal">
+                                                Number of registered users on this website
+                                            </p>
+                                        </div>
+                                    </div> --}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
                 <div class="col-lg-4 ms-auto me-auto p-lg-4 mt-lg-0 mt-4">
                     <div class="rotating-card-container">
                         <div class="card card-rotate card-background card-background-mask-primary shadow-dark mt-md-0 mt-5">
@@ -36,53 +124,14 @@
                                 <div class="card-body pt-7 text-center">
                                     <h3 class="text-white">Discover More</h3>
                                     <p class="text-white opacity-8">
-                                        Check for some daily reports here.
+                                        Check for some procedures here.
                                     </p>
-                                    <a href="{{ route('report') }}" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
+                                    <a href="{{ route('procedure') }}" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <section class="col-lg-8 pt-3 pb-4" id="count-stats">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-lg-9 mx-auto py-3">
-                                <div class="row">
-                                    <div class="col-md-4 position-relative">
-                                        <div class="p-3 text-center">
-                                            <h1 class="text-gradient text-primary"><span id="state1" countTo="{{ $tractors }}">0</span></h1>
-                                            <h5 class="mt-3">Tractors</h5>
-                                            <p class="text-sm font-weight-normal">
-                                                Number of tractor types available on this website
-                                            </p>
-                                        </div>
-                                        <hr class="vertical dark">
-                                    </div>
-                                    <div class="col-md-4 position-relative">
-                                        <div class="p-3 text-center">
-                                            <h1 class="text-gradient text-primary"><span id="state2" countTo="{{ $procedures }}">0</span></h1>
-                                            <h5 class="mt-3">Procedures</h5>
-                                            <p class="text-sm font-weight-normal">
-                                                Total procedures for all existing tractor types
-                                            </p>
-                                        </div>
-                                        <hr class="vertical dark">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="p-3 text-center">
-                                            <h1 class="text-gradient text-primary"><span id="state3" countTo="{{ $users }}">0</span></h1>
-                                            <h5 class="mt-3">Users</h5>
-                                            <p class="text-sm font-weight-normal">
-                                                Number of registered users on this website
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
             </div>
         </div>
     </section>
@@ -135,7 +184,7 @@
                 <div class="info-horizontal bg-gray-100 border-radius-xl d-block d-md-flex p-4">
                     <i class="material-symbols-rounded text-gradient text-primary text-3xl">receipt_long</i>
                     <div class="ps-0 ps-md-3 mt-3 mt-md-0">
-                        <h5>Report</h5>
+                        <h5>Training</h5>
                         <p>
                              View and manage reports submitted by training members regarding the assembling procedures they have completed or reviewed. 
                              This section provides structured documentation of feedback, observations, and potential issues encountered during the training process.
@@ -164,6 +213,25 @@
     </section>
 
 </div>
+@endsection
+
+@section('style')
+<style>
+    .hover-card {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .hover-card:hover {
+        background-color: #e91e63 !important; /* Biru Bootstrap */
+        color: white !important;
+        transform: translateY(-5px);
+    }
+
+    .hover-card:hover i,
+    .hover-card:hover h4 {
+        color: white !important;
+    }
+</style>
 @endsection
 
 @section('script')

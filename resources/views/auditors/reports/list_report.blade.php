@@ -1,4 +1,4 @@
-@extends('layouts.leader')
+@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -49,7 +49,7 @@
                 @foreach ( $tractorReports as $tractor )
                 <div class="col-md-3 col-lg-2">
                     <div class="bg-gray-100 border-radius-xl p-2 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
-                        <a href="{{ route('list_report_detail', ['Id_Report' => $Id_Report, 'Name_Tractor' => $tractor['Name_Tractor']]) }}">
+                        <a href="{{ route('list_report_detail_auditor', ['Id_Report' => $Id_Report, 'Name_Tractor' => $tractor['Name_Tractor']]) }}">
                             <div class="hover-card bg-white border-radius-xl align-items-center d-flex flex-column justify-content-center w-100 p-1 shadow-lg">
                                 <div style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
                                     <img src="{{ asset($tractor['Photo_Tractor']) }}"

@@ -18,7 +18,7 @@
     <section class="pt-3 pb-4" id="count-stats">
         <div class="container">
             <!-- Tombol Back -->
-            <a class="btn btn-primary mx-3" href="{{ route('list_report_detail', ['Id_Report' => $listReport->Id_Report, 'Name_Tractor' => $listReport->Name_Tractor]) }}">
+            <a class="btn btn-primary mx-3" href="{{ route('list_report', ['Id_Report' => $listReport->Id_Report]) }}">
                 <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Back</span>
             </a>
             <br><br>
@@ -44,7 +44,7 @@
             @endif
 
             @if ($listReport->Time_Approved_Leader)
-                <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
+                <div><b>Time Report : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
                 <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b></div>
                 <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b></div>
                 <br>
@@ -242,7 +242,7 @@ async function downloadPdf() {
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
+    link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->report->process->Name_Process }}-{{ $listReport->Name_Procedure }}.pdf';
     link.click();
 }
 

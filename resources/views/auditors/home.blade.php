@@ -1,4 +1,4 @@
-@extends('layouts.member')
+@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-65 relative" style="background-image: url('{{ asset('assets/img/bg-dashboard.jpg') }}')">
@@ -20,7 +20,7 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-4 mt-lg-0 mt-4">
-                <a href="{{ route('home') }}" class="text-decoration-none">
+                <a href="{{ route('base') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">home</i>
                         <br>
@@ -31,7 +31,7 @@
                 </a>
             </div>
             <div class="col-lg-4 mt-lg-0 mt-4">
-                <a href="{{ route('report_member') }}" class="text-decoration-none">
+                <a href="{{ route('report_auditor') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">assignment</i>
                         <br>
@@ -42,7 +42,7 @@
                 </a>
             </div>
             <div class="col-lg-4 mt-lg-0 mt-4">
-                <a href="{{ route('profile_member') }}" class="text-decoration-none">
+                <a href="{{ route('profile_auditor') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">account_circle</i>
                         <br>
@@ -65,10 +65,10 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <div class="p-3 text-center">
-                                            <h1 class="text-gradient text-primary display-3"><b id="state3" countTo="{{ $reports }}">0</b></h1>
-                                            <h3 class="mt-3 fw-bold">Training</h3>
+                                            <h1 class="text-gradient text-primary display-3"><b id="state3" countTo="{{ $procedures }}">0</b></h1>
+                                            <h3 class="mt-3 fw-bold">Procedures</h3>
                                             <p class="fs-5 fw-semibold">
-                                                Number of your training process
+                                                Total procedures for all existing tractor types
                                             </p>
                                         </div>
                                     </div>
@@ -84,7 +84,7 @@
                                 style="background-image: url('{{ asset('assets/img/rotate-1.jpg') }}'); background-size: cover;">
                                 <div class="card-body py-7 text-center">
                                     <i class="material-symbols-rounded text-white text-4xl my-3">account_circle</i>
-                                    <h3 class="text-white">Hi,<br/>{{ $member->Name_Member }}</h3>
+                                    <h3 class="text-white">Hi,<br/>{{ $user->Name_User }}</h3>
                                     <p class="text-white opacity-8">Welcome to Iseki Aspro (Assembling Procedure) website.</p>
                                 </div>
                             </div>
@@ -93,9 +93,9 @@
                                 <div class="card-body pt-7 text-center">
                                     <h3 class="text-white">Discover More</h3>
                                     <p class="text-white opacity-8">
-                                        Check for your training here.
+                                        Check for member training here.
                                     </p>
-                                    <a href="{{ route('report_member') }}" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
+                                    <a href="{{ route('report_auditor') }}" class="btn btn-white btn-sm w-50 mx-auto mt-3">Check it out</a>
                                 </div>
                             </div>
                         </div>
