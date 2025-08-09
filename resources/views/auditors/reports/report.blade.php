@@ -43,7 +43,7 @@
                 </button>
             @endif
 
-            @if ($listReport->Time_Approved_Leader)
+            @if ($listReport->Time_Approved_Auditor)
                 <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
                 <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b></div>
                 <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b></div>

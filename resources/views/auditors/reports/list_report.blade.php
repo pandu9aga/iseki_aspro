@@ -52,7 +52,7 @@
                         <a href="{{ route('list_report_detail_auditor', ['Id_Report' => $Id_Report, 'Name_Tractor' => $tractor['Name_Tractor']]) }}">
                             <div class="hover-card bg-white border-radius-xl align-items-center d-flex flex-column justify-content-center w-100 p-1 shadow-lg">
                                 <div style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
-                                    <img src="{{ asset($tractor['Photo_Tractor']) }}"
+                                    <img src="{{ asset($tractor['Photo_Tractor'] ?? 'storage/tractors/default.png') }}"
                                         alt="{{ $tractor['Name_Tractor'] }}"
                                         style="max-width: 180px; max-height: 180px; width: auto; height: auto;">
                                 </div>

@@ -61,23 +61,23 @@
                         <div class="nav-wrapper position-relative end-0">
                           <ul class="nav nav-pills nav-fill p-1 bg-light rounded" role="tablist">
                             <li class="nav-item">
-                              <a id="show-admin" class="nav-link mb-0 px-0 py-1 active fw-bold rounded" 
+                              <a id="show-member" class="nav-link mb-0 px-0 py-1 active fw-bold rounded" 
                                 data-bs-toggle="tab" 
                                 href="#profile-tabs-simple" 
                                 role="tab" 
                                 aria-controls="profile" 
                                 aria-selected="true">
-                                <span id="item-admin" class="text-primary">Admin</span>
+                                <span id="item-member" class="text-primary">Member</span>
                               </a>
                             </li>
                             <li class="nav-item">
-                              <a id="show-member" class="nav-link mb-0 px-0 py-1 fw-bold" 
+                              <a id="show-admin" class="nav-link mb-0 px-0 py-1 fw-bold" 
                                 data-bs-toggle="tab" 
                                 href="#dashboard-tabs-simple" 
                                 role="tab" 
                                 aria-controls="dashboard" 
                                 aria-selected="false">
-                                <span id="item-member">Member</span>
+                                <span id="item-admin">Admin</span>
                               </a>
                             </li>
                           </ul>
@@ -100,6 +100,24 @@
                 <div class="position-relative" style="overflow: hidden; height: auto;">
                   <div class="form-slider d-flex transition-slide" style="width: 200%;">
 
+                    <!-- Member Form -->
+                    <form id="member-form" class="text-start w-100 px-2" action="{{ route('login.member') }}" method="POST">
+                      @csrf
+                      <h5 class="text-primary">Login Member</h5>
+                      <div class="input-group input-group-outline my-3">
+                        <label class="form-label">NIK</label>
+                        <input type="text" id="NIK_Input" name="NIK_Member" class="form-control">
+                      </div>
+                      <div class="text-center">
+                        <button type="submit" class="btn bg-gradient-primary w-100 my-4 mb-2">Login</button>
+                      </div>
+                      <br>
+                      <div>
+                          <button id="scanNIK" type="button" class="btn btn-primary w-100">Scan</button>
+                      </div>
+                      <div id="reader_nik" style="width: 100%; margin-top: 20px;"></div>
+                    </form>
+
                     <!-- Admin Form -->
                     <form id="admin-form" class="text-start w-100 px-2" action="{{ route('login.auth') }}" method="POST">
                       @csrf
@@ -111,19 +129,6 @@
                       <div class="input-group input-group-outline mb-3">
                         <label class="form-label">Password</label>
                         <input type="password" name="Password_User" class="form-control">
-                      </div>
-                      <div class="text-center">
-                        <button type="submit" class="btn bg-gradient-primary w-100 my-4 mb-2">Login</button>
-                      </div>
-                    </form>
-
-                    <!-- Member Form -->
-                    <form id="member-form" class="text-start w-100 px-2" action="{{ route('login.member') }}" method="POST">
-                      @csrf
-                      <h5 class="text-primary">Login Member</h5>
-                      <div class="input-group input-group-outline my-3">
-                        <label class="form-label">NIK</label>
-                        <input type="text" name="NIK_Member" class="form-control">
                       </div>
                       <div class="text-center">
                         <button type="submit" class="btn bg-gradient-primary w-100 my-4 mb-2">Login</button>
@@ -175,7 +180,7 @@
 
     showAdminBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      slider.classList.remove('slide-left');
+      slider.classList.add('slide-left');
 
       showAdminItem.classList.add('text-primary');
       showAdminItem.classList.remove('text-dark');
@@ -185,7 +190,7 @@
 
     showMemberBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      slider.classList.add('slide-left');
+      slider.classList.remove('slide-left');
 
       showMemberItem.classList.add('text-primary');
       showMemberItem.classList.remove('text-dark');
@@ -193,5 +198,45 @@
       showAdminItem.classList.add('text-dark');
     });
   </script>
+  <!-- QR Code Library -->
+    <script src="{{ asset('assets/js/html5-qrcode.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/js/qrcode.min.js') }}"></script>
+    {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script> --}}
+
+    <!-- QR Code Generation Script -->
+    <!-- QR Code Scan NIK -->
+    <script>
+        var element = document.getElementById('member-form');
+        var width = element.offsetWidth;
+
+        const nikScanner = new Html5QrcodeScanner("reader_nik", {
+            fps: 10,
+            qrbox: {
+                width: width,
+                height: width,
+            },
+        });
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Ambil bagian pertama dari decodedText sebelum ;
+            const nik = decodedText.split(';')[0].trim();
+
+            // Isi input NIK
+            const input = document.getElementById("NIK_Input");
+            input.value = nik;
+
+            // Hapus scanner
+            nikScanner.clear();
+
+            // Submit form
+            document.getElementById("memberLoginForm").submit();
+        }
+
+        document.getElementById("scanNIK").addEventListener("click", () => {
+            nikScanner.render(onScanSuccess);
+        });
+    </script>
 </body>
 </html>

@@ -81,6 +81,7 @@ class ReportController extends Controller
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
         $tractors = Tractor::select('Name_Tractor', 'Photo_Tractor')
             ->distinct()
+            ->orderBy('Name_Tractor')
             ->get();
 
         $tractorReports = [];
