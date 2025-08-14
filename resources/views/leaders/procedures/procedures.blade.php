@@ -98,7 +98,7 @@
                             <td class="align-middle text-center">
                                 <p class="text-xs">
                                     <a href="#" class="text-primary"
-                                        onclick="previewPdf('{{ asset('storage/procedures/' . $p->Name_Tractor . '/' . $p->Name_Area . '/' . $p->Name_Procedure . '.pdf') }}', '{{ $p->Name_Procedure }}')">
+                                        onclick="previewPdf('{{ asset('storage/procedures/' . $p->Name_Tractor . '/' . $p->Name_Area . '/' . $p->Name_Procedure . '.pdf') }}?t={{ time() }}', '{{ $p->Name_Procedure }}')">
                                         {{ $p->Name_Procedure }}
                                     </a>
                                 </p>
@@ -106,7 +106,7 @@
                             <td class="align-middle text-left">
                                 <p class="text-xs">
                                     <a href="#" class="text-secondary"
-                                        onclick="previewPdf('{{ asset('storage/procedures/' . $p->Name_Tractor . '/' . $p->Name_Area . '/' . $p->Name_Procedure . '.pdf') }}', '{{ $p->Name_Procedure }}')">
+                                        onclick="previewPdf('{{ asset('storage/procedures/' . $p->Name_Tractor . '/' . $p->Name_Area . '/' . $p->Name_Procedure . '.pdf') }}?t={{ time() }}', '{{ $p->Name_Procedure }}')">
                                         {{ $p->Item_Procedure }}
                                     </a>
                                 </p>

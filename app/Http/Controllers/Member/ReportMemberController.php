@@ -47,7 +47,7 @@ class ReportMemberController extends Controller
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
         $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d');
+        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
 
@@ -62,7 +62,7 @@ class ReportMemberController extends Controller
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
         $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d');
+        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
             $pdf = $request->file('pdf');

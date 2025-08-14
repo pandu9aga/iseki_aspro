@@ -322,8 +322,8 @@ class ProcedureController extends Controller
                     [
                         'Name_Tractor' => $tractor,
                         'Name_Area' => $area,
-                        'Name_Procedure' => $nameProcedure,
-                        'Item_Procedure' => ''
+                        'Name_Procedure' => $nameProcedure
+                        // 'Item_Procedure' => ''
                     ]
                 );
             }

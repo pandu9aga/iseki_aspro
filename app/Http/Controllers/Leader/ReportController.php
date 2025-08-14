@@ -87,7 +87,7 @@ class ReportController extends Controller
         $tractorReports = [];
 
         foreach ($tractors as $tractor) {
-            $count = List_Report::where('Name_Tractor', $tractor->Name_Tractor)->count();
+            $count = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $tractor->Name_Tractor)->count();
             $tractorReports[] = [
                 'Name_Tractor' => $tractor->Name_Tractor,
                 'Photo_Tractor' => $tractor->Photo_Tractor,
@@ -102,7 +102,7 @@ class ReportController extends Controller
         $page = "report";
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
-        $list_reports = List_Report::where('Id_Report', $Id_Report)->with('report')->orderBy('Name_Procedure')->get();
+        $list_reports = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $Name_Tractor)->with('report')->orderBy('Name_Procedure')->get();
 
         $tractor = Tractor::where('Name_Tractor', $Name_Tractor)->first();
 
@@ -184,11 +184,12 @@ class ReportController extends Controller
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
         $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d');
+        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
 
         $fileName = $listReport->Name_Procedure . '.pdf';
+        // $fileName = rawurlencode($listReport->Name_Procedure . '.pdf');
         $pdfPath = $fullPath . '/' . $fileName;
 
         return view('leaders.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
@@ -199,7 +200,7 @@ class ReportController extends Controller
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
         $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Time_Created_Report)->format('Y-m-d');
+        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
             $pdf = $request->file('pdf');

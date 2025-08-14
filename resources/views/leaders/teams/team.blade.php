@@ -178,7 +178,7 @@ new DataTable('#example');
     function setEditTeam(team) {
         // Set form action
         const form = document.getElementById('editTeamForm');
-        form.action = '/team_data/update/' + team.Id_Team; // Sesuaikan route-mu
+        form.action = '/iseki_aspro/public/team_data/update/' + team.Id_Team; // Sesuaikan route-mu
 
         // Isi data
         document.getElementById('edit-id').value = team.Id_Team;
@@ -196,7 +196,7 @@ new DataTable('#example');
 
         // Set action form
         const form = document.getElementById('deleteTeamForm');
-        form.action = `/team_data/delete/${team.Id_Team}`; // Sesuaikan dengan rute sebenarnya jika beda
+        form.action = `/iseki_aspro/public/team_data/delete/${team.Id_Team}`; // Sesuaikan dengan rute sebenarnya jika beda
     }
 </script>
 @endsection

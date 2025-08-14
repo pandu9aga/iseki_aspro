@@ -225,7 +225,7 @@ new DataTable('#example');
     function setEditMember(member) {
         // Set form action
         const form = document.getElementById('editMemberForm');
-        form.action = '/member/update/' + member.Id_Member; // Sesuaikan route-mu
+        form.action = '/iseki_aspro/public/member/update/' + member.Id_Member; // Sesuaikan route-mu
 
         // Isi data
         document.getElementById('edit-id').value = member.Id_Member;
@@ -245,7 +245,7 @@ new DataTable('#example');
 
         // Set action form
         const form = document.getElementById('deleteMemberForm');
-        form.action = `/member/delete/${member.Id_Member}`; // Sesuaikan dengan rute sebenarnya jika beda
+        form.action = `/iseki_aspro/public/member/delete/${member.Id_Member}`; // Sesuaikan dengan rute sebenarnya jika beda
     }
 </script>
 @endsection
