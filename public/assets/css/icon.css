@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Material Symbols Rounded';
-  src: url('/assets/fonts/material-symbols/MaterialSymbolsRounded.woff2') format('woff2');
+  src: url('/iseki_aspro/public/assets/fonts/material-symbols/MaterialSymbolsRounded.woff2') format('woff2');
   font-weight: 100 700; /* Rentang weight kalau pakai variable font */
   font-style: normal;
   font-display: block;
