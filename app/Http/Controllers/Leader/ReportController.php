@@ -27,8 +27,10 @@ class ReportController extends Controller
     {
         $page = "report";
 
-        $reports = Report::whereYear('Start_Report', $year)
-            ->whereMonth('Start_Report', $month)
+        // Buat tanggal akhir bulan yang dipilih
+        $endOfMonth = Carbon::create($year, $month, 1)->endOfMonth();
+
+        $reports = Report::whereDate('Start_Report', '<=', $endOfMonth)
             ->orderBy('Start_Report')
             ->with('member')
             ->get();
