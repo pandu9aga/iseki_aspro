@@ -22,24 +22,19 @@ class ReportAuditorController extends Controller
         return view('auditors.reports.index', compact('page'));
     }
 
-    public function reporter($year, $month)
-    {
+    public function reporter($year, $month) {
         $page = "report";
-
-        // Buat tanggal akhir bulan yang dipilih
-        $endOfMonth = Carbon::create($year, $month, 1)->endOfMonth();
-
-        $reports = Report::whereDate('Start_Report', '<=', $endOfMonth)
-            ->orderBy('Start_Report')
-            ->with('member')
-            ->get();
-
+        $reports = Report::whereYear('Start_Report', $year)
+        ->whereMonth('Start_Report', $month) ->orderBy('Start_Report')
+        ->with('member')
+        ->get();
+        
         $members = Member::all();
-
         return view('leaders.reports.reporter', compact('page', 'reports', 'members', 'year', 'month'));
     }
 
-    public function list_report(string $Id_Report){
+    public function list_report(string $Id_Report)
+    {
         $page = "report";
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
@@ -62,7 +57,8 @@ class ReportAuditorController extends Controller
         return view('auditors.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report'));
     }
 
-    public function list_report_detail(string $Id_Report, string $Name_Tractor){
+    public function list_report_detail(string $Id_Report, string $Name_Tractor)
+    {
         $page = "report";
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();

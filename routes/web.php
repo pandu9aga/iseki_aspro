@@ -18,6 +18,12 @@ use App\Http\Controllers\Auditor\BaseController;
 use App\Http\Controllers\Auditor\ProfileAuditorController;
 use App\Http\Controllers\Auditor\ReportAuditorController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', [MainController::class, 'index'])->name('/');
 Route::get('/login', [MainController::class, 'index'])->name('login');
 Route::post('/login/auth', [MainController::class, 'login'])->name('login.auth');
@@ -63,6 +69,7 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
     Route::put('/procedure/tractor/area/procedure/upload/{Id_Procedure}', [ProcedureController::class, 'upload_procedure'])->name('procedure.procedure.upload');
     Route::delete('/procedure/tractor/area/procedure/delete/{Id_Procedure}', [ProcedureController::class, 'destroy_procedure'])->name('procedure.procedure.destroy');
 
+    // 🔹 Routes untuk Report
     Route::get('/report', [ReportController::class, 'index'])->name('report');
     Route::get('/reporter/{year}/{month}', [ReportController::class, 'reporter'])->name('reporter');
     Route::post('/reporter', [ReportController::class, 'create_reporter'])->name('reporter.create');
@@ -71,6 +78,11 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
     Route::post('/report/store', [ReportController::class, 'store'])->name('report.store');
     Route::get('/report/{Id_List_Report}', [ReportController::class, 'report'])->name('report.detail');
     Route::post('/report/submit/{Id_List_Report}', [ReportController::class, 'submit_report'])->name('report.detail.submit');
+    Route::put('/reporter/{id}', [ReportController::class, 'update'])->name('reporter.update');
+    Route::delete('/reporter/{id}', [ReportController::class, 'destroy'])->name('reporter.destroy');
+    // ✅ 🔥 ROUTE BARU: Buat template dari bulan lalu
+    Route::post('/report/create-template', [ReportController::class, 'createMonthlyTemplate'])
+        ->name('report.create.template');
 });
 
 Route::middleware(MemberMiddleware::class)->group(function () {

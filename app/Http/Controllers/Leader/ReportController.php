@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Storage; // Pastikan diimpor
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Tractor;
@@ -12,14 +12,15 @@ use App\Models\User;
 use App\Models\Procedure;
 use App\Models\Member;
 use App\Models\Process;
-use App\Models\Report;
-use App\Models\List_Report;
+use App\Models\Report; // Pastikan model ini diimpor
+use App\Models\List_Report; // Pastikan model ini diimpor
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         $page = "report";
-
         return view('leaders.reports.index', compact('page'));
     }
 
@@ -27,12 +28,10 @@ class ReportController extends Controller
     {
         $page = "report";
 
-        // Buat tanggal akhir bulan yang dipilih
-        $endOfMonth = Carbon::create($year, $month, 1)->endOfMonth();
-
-        $reports = Report::whereDate('Start_Report', '<=', $endOfMonth)
+        $reports = Report::whereYear('Start_Report', $year)
+            ->whereMonth('Start_Report', $month)
             ->orderBy('Start_Report')
-            ->with('member')
+            ->with('member') // Pastikan relasi 'member' didefinisikan di model Report
             ->get();
 
         $members = Member::all();
@@ -77,7 +76,8 @@ class ReportController extends Controller
         return redirect()->back()->with('success', 'Reporter berhasil disimpan.');
     }
 
-    public function list_report(string $Id_Report){
+    public function list_report(string $Id_Report)
+    {
         $page = "report";
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
@@ -100,7 +100,8 @@ class ReportController extends Controller
         return view('leaders.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report'));
     }
 
-    public function list_report_detail(string $Id_Report, string $Name_Tractor){
+    public function list_report_detail(string $Id_Report, string $Name_Tractor)
+    {
         $page = "report";
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
@@ -191,7 +192,6 @@ class ReportController extends Controller
         $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
 
         $fileName = $listReport->Name_Procedure . '.pdf';
-        // $fileName = rawurlencode($listReport->Name_Procedure . '.pdf');
         $pdfPath = $fullPath . '/' . $fileName;
 
         return view('leaders.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
@@ -228,5 +228,157 @@ class ReportController extends Controller
         }
 
         return response()->json(['success' => false], 400);
+    }
+
+    public function createMonthlyTemplate()
+    {
+        // ... (kode fungsi createMonthlyTemplate) ...
+        // (Kode dari sebelumnya bisa tetap di sini)
+        $firstDayThisMonth = now()->startOfMonth();
+        $firstDayLastMonth = $firstDayThisMonth->copy()->subMonth()->startOfMonth();
+        $lastDayLastMonth = $firstDayThisMonth->copy()->subDay();
+
+        $memberIds = Report::whereBetween('Start_Report', [$firstDayLastMonth, $lastDayLastMonth])
+            ->distinct()
+            ->pluck('Id_Member');
+
+        if ($memberIds->isEmpty()) {
+            return redirect()->back()->with('warning', 'Tidak ada data di bulan lalu untuk dijadikan template.');
+        }
+
+        $createdCount = 0;
+
+        foreach ($memberIds as $idMember) {
+            if (Report::where('Id_Member', $idMember)
+                ->whereDate('Start_Report', $firstDayThisMonth)
+                ->exists()
+            ) {
+                continue;
+            }
+
+            $lastReport = Report::where('Id_Member', $idMember)
+                ->whereBetween('Start_Report', [$firstDayLastMonth, $lastDayLastMonth])
+                ->orderBy('Start_Report', 'desc')
+                ->first();
+
+            if (!$lastReport) continue;
+
+            $newFolder = $firstDayThisMonth->format('Y-m-d') . '_' . $idMember;
+            $newPath = 'reports/' . $newFolder;
+            if (!Storage::disk('public')->exists($newPath)) {
+                Storage::disk('public')->makeDirectory($newPath);
+            }
+
+            $newReport = Report::create([
+                'Id_Member' => $idMember,
+                'Start_Report' => $firstDayThisMonth->format('Y-m-d'),
+            ]);
+
+            $oldListReports = List_Report::where('Id_Report', $lastReport->Id_Report)->get();
+            if ($oldListReports->isNotEmpty()) {
+                $insertData = [];
+                foreach ($oldListReports as $item) {
+                    // $oldFolder = $lastReport->Start_Report . '_' . $idMember;
+                    $oldFolder = \Carbon\Carbon::parse($lastReport->Start_Report)->format('Y-m-d') . '_' . $idMember;
+                    // $sourcePdf = "reports/{$oldFolder}/{$item->Name_Procedure}.pdf";
+                    // $targetPdf = "{$newPath}/{$item->Name_Procedure}.pdf";
+                    $sourcePdf = "reports/{$oldFolder}/{$item->Name_Procedure}.pdf";
+                    $targetPdf = "{$newPath}/{$item->Name_Procedure}.pdf";
+
+                    // \Log::info("Copying file", [
+                    //     'source' => $sourcePdf,
+                    //     'target' => $targetPdf,
+                    //     'source_exists' => Storage::disk('public')->exists($sourcePdf)
+                    // ]);
+
+                    if (Storage::disk('public')->exists($sourcePdf)) {
+                        Storage::disk('public')->copy($sourcePdf, $targetPdf);
+                    }
+
+                    $insertData[] = [
+                        'Id_Report' => $newReport->Id_Report,
+                        'Name_Procedure' => $item->Name_Procedure,
+                        'Name_Area' => $item->Name_Area,
+                        'Name_Tractor' => $item->Name_Tractor,
+                        'Item_Procedure' => $item->Item_Procedure,
+                        'Time_List_Report' => null,
+                        'Time_Approved_Leader' => null,
+                        'Time_Approved_Auditor' => null,
+                        'Reporter_Name' => $item->Reporter_Name,
+                        'Leader_Name' => null,
+                        'Auditor_Name' => null,
+                    ];
+                }
+                List_Report::insert($insertData);
+            }
+
+            $createdCount++;
+        }
+
+        if ($createdCount > 0) {
+            return redirect()->back()->with('success', "Berhasil buat template untuk {$createdCount} member di tanggal 1 bulan ini.");
+        } else {
+            return redirect()->back()->with('info', 'Template bulan ini sudah ada. Tidak perlu duplikasi.');
+        }
+    }
+
+    // 🔥 Fungsi Update
+    public function update(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'Start_Report' => 'required|date',
+            'Id_Member' => 'required|integer|exists:members,Id_Member', // Validasi Id_Member ada di tabel members
+        ]);
+
+        // Temukan report berdasarkan ID
+        $report = Report::findOrFail($id);
+
+        // Ambil data lama sebelum diupdate
+        $oldStartReport = $report->Start_Report;
+        $oldIdMember = $report->Id_Member;
+
+        // Update data report
+        $report->Start_Report = $request->Start_Report;
+        $report->Id_Member = $request->Id_Member;
+        $report->save();
+
+        // Jika Start_Report atau Id_Member berubah, kita mungkin perlu memindahkan folder lama ke yang baru
+        // Jika tidak, bisa diabaikan
+        if ($oldStartReport !== $request->Start_Report || $oldIdMember !== $request->Id_Member) {
+            // $oldFolderName = $oldStartReport . '_' . $oldIdMember;
+            // $newFolderName = $request->Start_Report . '_' . $request->Id_Member;
+            $oldFolderName = Carbon::parse($oldStartReport)->format('Y-m-d') . '_' . $oldIdMember;
+            $newFolderName = Carbon::parse($request->Start_Report)->format('Y-m-d') . '_' . $request->Id_Member;
+
+            $oldPath = 'reports/' . $oldFolderName;
+            $newPath = 'reports/' . $newFolderName;
+
+            // Jika folder lama ada, coba pindahkan
+            if (Storage::disk('public')->exists($oldPath)) {
+                Storage::disk('public')->move($oldPath, $newPath);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Report updated successfully.');
+    }
+
+    // 🔥 Fungsi Destroy
+    public function destroy($id)
+    {
+        $report = Report::findOrFail($id);
+
+        // Format tanggal ke Y-m-d agar sesuai dengan nama folder sebenarnya
+        $folderName = Carbon::parse($report->Start_Report)->format('Y-m-d') . '_' . $report->Id_Member;
+        $fullPath = 'reports/' . $folderName;
+
+        if (Storage::disk('public')->exists($fullPath)) {
+            Storage::disk('public')->deleteDirectory($fullPath);
+        }
+
+        List_Report::where('Id_Report', $report->Id_Report)->delete();
+        $report->delete();
+
+        return redirect()->back()->with('success', 'Report deleted successfully.');
     }
 }
