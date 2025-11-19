@@ -3,16 +3,15 @@
 * Material Kit 3 - v3.1.0
 =========================================================
 
-* Product Page:  https://www.creative-tim.com/product/material-kit
+* Product Page:  https://www.creative-tim.com/product/material-kit 
 * Copyright 2024 Creative Tim (https://www.creative-tim.com)
 * Coded by www.creative-tim.com
 
-==========================================================
+ =========================================================
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -22,19 +21,16 @@
         Iseki Aspro - Assembling Procedure
     </title>
     <!--     Fonts and icons     -->
-    <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/style.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{asset('assets/css/style.css')}}" />
     <!-- Nucleo Icons -->
-    <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
-    <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
+    <link href="{{asset('assets/css/nucleo-icons.css')}}" rel="stylesheet" />
+    <link href="{{asset('assets/css/nucleo-svg.css')}}" rel="stylesheet" />
     <!-- Font Awesome Icons -->
-    <script src="{{ asset('assets/js/42d5adcbca.js') }}" crossorigin="anonymous"></script>
+    <script src="{{asset('assets/js/42d5adcbca.js')}}" crossorigin="anonymous"></script>
     <!-- Material Icons -->
-    <link rel="stylesheet" href="{{ asset('assets/css/icon.css') }}" />
+    <link rel="stylesheet" href="{{asset('assets/css/icon.css')}}" />
     <!-- CSS Files -->
-    <link id="pagestyle" href="{{ asset('assets/css/material-dashboard.css?v=3.2.0') }}" rel="stylesheet" />
-
-    <!-- Choices.js CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/styles/choices.min.css">
+    <link id="pagestyle" href="{{asset('assets/css/material-dashboard.css?v=3.2.0')}}" rel="stylesheet" />
 
     @yield('style')
 </head>
@@ -47,8 +43,9 @@
                 <nav
                     class="navbar navbar-expand-lg  blur border-radius-xl top-0 z-index-fixed shadow position-absolute my-3 p-2 start-0 end-0 mx-4">
                     <div class="container-fluid px-0">
-                        <a class="navbar-brand font-weight-bolder ms-sm-3 text-sm" href="{{ route('base') }}"
-                            rel="tooltip" title="Designed and Coded by Creative Tim" data-placement="bottom">
+                        <a class="navbar-brand font-weight-bolder ms-sm-3 text-sm"
+                            href="{{ route('base') }}" rel="tooltip"
+                            title="Designed and Coded by Creative Tim" data-placement="bottom">
                             <span class="text-primary">Iseki Aspro</span> <small>- Assembling Procedure</small>
                         </a>
                         <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse"
@@ -70,14 +67,14 @@
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}"
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}""
                                         href="{{ route('report_auditor') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">assignment</i>
                                         Training
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'profile' ? 'text-primary' : '' }}"
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'profile' ? 'text-primary' : '' }}""
                                         href="{{ route('profile_auditor') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">account_circle</i>
                                         Profile
@@ -143,11 +140,10 @@
                 <div class="col-12">
                     <div class="text-center">
                         <p class="text-dark my-4 text-sm font-weight-normal">
-                            ©
-                            <script>
+                            © <script>
                                 document.write(new Date().getFullYear())
                             </script>,
-                            <span class="text-primary">PT. Iseki Indonesia</span> - Assembling Procedure
+                             <span class="text-primary">PT. Iseki Indonesia</span> - Assembling Procedure
                         </p>
                     </div>
                 </div>
@@ -156,25 +152,22 @@
     </footer>
 
     <!--   Core JS Files   -->
-    <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
-    <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
-    <script src="{{ asset('assets/js/material-dashboard.min.js?v=3.2.0') }}"></script>
-    <!--  Plugin for TypedJS, full documentation here: https://github.com/inorganik/CountUp.js  -->
+    <script src="{{asset('assets/js/core/popper.min.js')}}"></script>
+    <script src="{{asset('assets/js/core/bootstrap.min.js')}}"></script>
+    <script src="{{asset('assets/js/plugins/perfect-scrollbar.min.js')}}"></script>
+    <script src="{{asset('assets/js/material-dashboard.min.js?v=3.2.0')}}"></script>
+    <!--  Plugin for TypedJS, full documentation here: https://github.com/inorganik/CountUp.js -->
     {{-- <script src="./assets/js/plugins/choices.min.js"></script>
     <script src="./assets/js/plugins/prism.min.js"></script>
     <script src="./assets/js/plugins/highlight.min.js"></script> --}}
-    <!--  Plugin for Parallax, full documentation here: https://github.com/dixonandmoe/rellax  -->
+    <!--  Plugin for Parallax, full documentation here: https://github.com/dixonandmoe/rellax -->
     {{-- <script src="./assets/js/plugins/rellax.min.js"></script> --}}
-    <!--  Plugin for TiltJS, full documentation here: https://gijsroge.github.io/tilt.js/  -->
+    <!--  Plugin for TiltJS, full documentation here: https://gijsroge.github.io/tilt.js/ -->
     {{-- <script src="./assets/js/plugins/tilt.min.js"></script> --}}
-    <!--  Plugin for Selectpicker - ChoicesJS, full documentation here: https://github.com/jshjohnson/Choices  -->
+    <!--  Plugin for Selectpicker - ChoicesJS, full documentation here: https://github.com/jshjohnson/Choices -->
     {{-- <script src="./assets/js/plugins/choices.min.js"></script> --}}
     <!-- Control Center for Material UI Kit: parallax effects, scripts for the example pages etc -->
     {{-- <script src="./assets/js/material-kit.min.js?v=3.1.0" type="text/javascript"></script> --}}
-
-    <!-- Choices.js JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/scripts/choices.min.js"></script>
 
     @yield('script')
 </body>

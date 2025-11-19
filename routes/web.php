@@ -76,6 +76,9 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
     Route::get('/list_report/{Id_Report}', [ReportController::class, 'list_report'])->name('list_report');
     Route::get('/list_report_detail/{Id_Report}/{Name_Tractor}', [ReportController::class, 'list_report_detail'])->name('list_report_detail');
     Route::post('/report/store', [ReportController::class, 'store'])->name('report.store');
+    // Tambahkan di bawah route 'report.store'
+    Route::delete('/list_report/{Id_List_Report}', [ReportController::class, 'destroy_list_report'])
+        ->name('list_report.destroy');
     Route::get('/report/{Id_List_Report}', [ReportController::class, 'report'])->name('report.detail');
     Route::post('/report/submit/{Id_List_Report}', [ReportController::class, 'submit_report'])->name('report.detail.submit');
     Route::put('/reporter/{id}', [ReportController::class, 'update'])->name('reporter.update');

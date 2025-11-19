@@ -22,15 +22,19 @@ class ReportAuditorController extends Controller
         return view('auditors.reports.index', compact('page'));
     }
 
-    public function reporter($year, $month) {
+    public function reporter($year, $month)
+    {
         $page = "report";
+
         $reports = Report::whereYear('Start_Report', $year)
-        ->whereMonth('Start_Report', $month) ->orderBy('Start_Report')
-        ->with('member')
-        ->get();
-        
+            ->whereMonth('Start_Report', $month)
+            ->orderBy('Start_Report')
+            ->with('member')
+            ->get();
+
         $members = Member::all();
-        return view('leaders.reports.reporter', compact('page', 'reports', 'members', 'year', 'month'));
+
+        return view('auditors.reports.reporter', compact('page', 'reports', 'members', 'year', 'month'));
     }
 
     public function list_report(string $Id_Report)
@@ -46,7 +50,7 @@ class ReportAuditorController extends Controller
         $tractorReports = [];
 
         foreach ($tractors as $tractor) {
-            $count = List_Report::where('Name_Tractor', $tractor->Name_Tractor)->count();
+            $count = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $tractor->Name_Tractor)->count();
             $tractorReports[] = [
                 'Name_Tractor' => $tractor->Name_Tractor,
                 'Photo_Tractor' => $tractor->Photo_Tractor,
@@ -62,7 +66,7 @@ class ReportAuditorController extends Controller
         $page = "report";
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
-        $list_reports = List_Report::where('Id_Report', $Id_Report)->with('report')->orderBy('Name_Procedure')->get();
+        $list_reports = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $Name_Tractor)->with('report')->orderBy('Name_Procedure')->get();
 
         $tractor = Tractor::where('Name_Tractor', $Name_Tractor)->first();
 
@@ -126,5 +130,25 @@ class ReportAuditorController extends Controller
         }
 
         return response()->json(['success' => false], 400);
+    }
+
+    public function destroy_list_report($Id_List_Report)
+    {
+        $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
+
+        // Ambil info untuk path folder
+        $id_member = $listReport->report->Id_Member;
+        $startReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
+        $pdfPath = "reports/{$startReport}_{$id_member}/{$listReport->Name_Procedure}.pdf";
+
+        // Hapus file PDF jika ada
+        if (Storage::disk('public')->exists($pdfPath)) {
+            Storage::disk('public')->delete($pdfPath);
+        }
+
+        // Hapus dari database
+        $listReport->delete();
+
+        return redirect()->back()->with('success', 'Prosedur berhasil dihapus dari laporan.');
     }
 }

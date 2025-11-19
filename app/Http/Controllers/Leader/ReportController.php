@@ -14,7 +14,6 @@ use App\Models\Member;
 use App\Models\Process;
 use App\Models\Report; // Pastikan model ini diimpor
 use App\Models\List_Report; // Pastikan model ini diimpor
-use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -380,5 +379,22 @@ class ReportController extends Controller
         $report->delete();
 
         return redirect()->back()->with('success', 'Report deleted successfully.');
+    }
+
+    public function destroy_list_report($Id_List_Report)
+    {
+        $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
+
+        $id_member = $listReport->report->Id_Member;
+        $startReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
+        $pdfPath = "reports/{$startReport}_{$id_member}/{$listReport->Name_Procedure}.pdf";
+
+        if (Storage::disk('public')->exists($pdfPath)) {
+            Storage::disk('public')->delete($pdfPath);
+        }
+
+        $listReport->delete();
+
+        return redirect()->back()->with('success', 'Prosedur berhasil dihapus dari laporan.');
     }
 }
