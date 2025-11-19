@@ -98,6 +98,7 @@ Route::middleware(MemberMiddleware::class)->group(function () {
     Route::get('/report_list_member/{Id_Report}', [ReportMemberController::class, 'report_list_member'])->name('report_list_member');
     Route::get('/report_list_member/report/{Id_List_Report}', [ReportMemberController::class, 'detail'])->name('report_list_member.detail');
     Route::post('/report_list_member/submit/{Id_List_Report}', [ReportMemberController::class, 'submit_report'])->name('report_list_member.submit');
+    Route::post('/report_list_member/upload-photos/{Id_List_Report}', [ReportMemberController::class, 'uploadPhotos'])->name('report_list_member.upload_photos');
 });
 
 Route::middleware(AuditorMiddleware::class)->group(function () {

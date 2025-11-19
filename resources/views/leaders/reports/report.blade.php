@@ -79,8 +79,8 @@
 @endsection
 
 @section('script')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
-<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="{{asset('assets/js/pdf.min.js')}}"></script>
+<script src="{{asset('assets/js/pdf-lib.min.js')}}"></script>
 <script>
 const pdfUrl = "{{ asset($pdfPath) }}?t=" + new Date().getTime();
 const pdfCanvas = document.getElementById('pdf-canvas');
