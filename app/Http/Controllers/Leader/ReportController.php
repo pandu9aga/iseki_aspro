@@ -231,12 +231,11 @@ class ReportController extends Controller
 
     public function createMonthlyTemplate()
     {
-        // ... (kode fungsi createMonthlyTemplate) ...
-        // (Kode dari sebelumnya bisa tetap di sini)
         $firstDayThisMonth = now()->startOfMonth();
         $firstDayLastMonth = $firstDayThisMonth->copy()->subMonth()->startOfMonth();
         $lastDayLastMonth = $firstDayThisMonth->copy()->subDay();
 
+        // Ambil ID Member yang memiliki laporan di bulan lalu
         $memberIds = Report::whereBetween('Start_Report', [$firstDayLastMonth, $lastDayLastMonth])
             ->distinct()
             ->pluck('Id_Member');
@@ -248,6 +247,7 @@ class ReportController extends Controller
         $createdCount = 0;
 
         foreach ($memberIds as $idMember) {
+            // Pastikan report untuk tanggal 1 bulan ini belum ada
             if (Report::where('Id_Member', $idMember)
                 ->whereDate('Start_Report', $firstDayThisMonth)
                 ->exists()
@@ -255,6 +255,7 @@ class ReportController extends Controller
                 continue;
             }
 
+            // Ambil data report bulan lalu untuk referensi nama member, dll.
             $lastReport = Report::where('Id_Member', $idMember)
                 ->whereBetween('Start_Report', [$firstDayLastMonth, $lastDayLastMonth])
                 ->orderBy('Start_Report', 'desc')
@@ -262,38 +263,45 @@ class ReportController extends Controller
 
             if (!$lastReport) continue;
 
+            // Buat folder baru untuk bulan ini
             $newFolder = $firstDayThisMonth->format('Y-m-d') . '_' . $idMember;
             $newPath = 'reports/' . $newFolder;
             if (!Storage::disk('public')->exists($newPath)) {
                 Storage::disk('public')->makeDirectory($newPath);
             }
 
+            // Buat entri Report baru
             $newReport = Report::create([
                 'Id_Member' => $idMember,
                 'Start_Report' => $firstDayThisMonth->format('Y-m-d'),
             ]);
 
+            // 🔥 GANTI: Ambil semua prosedur yang TERSIMPAN di List_Report bulan lalu
+            // agar kita tahu prosedur apa saja yang pernah ditambahkan ke report tersebut.
+            // Kita tidak mengambil dari tabel Procedure secara keseluruhan karena bisa jadi
+            // prosedur yang tersedia di tabel Procedure tidak semuanya digunakan/ditambahkan
+            // ke report bulan lalu.
             $oldListReports = List_Report::where('Id_Report', $lastReport->Id_Report)->get();
+
             if ($oldListReports->isNotEmpty()) {
                 $insertData = [];
                 foreach ($oldListReports as $item) {
-                    // $oldFolder = $lastReport->Start_Report . '_' . $idMember;
-                    $oldFolder = \Carbon\Carbon::parse($lastReport->Start_Report)->format('Y-m-d') . '_' . $idMember;
-                    // $sourcePdf = "reports/{$oldFolder}/{$item->Name_Procedure}.pdf";
-                    // $targetPdf = "{$newPath}/{$item->Name_Procedure}.pdf";
-                    $sourcePdf = "reports/{$oldFolder}/{$item->Name_Procedure}.pdf";
-                    $targetPdf = "{$newPath}/{$item->Name_Procedure}.pdf";
+                    // 🔥 GANTI: Ambil file dari folder master prosedur
+                    // Format path: procedures/{Name_Tractor}/{Name_Area}/{Name_Procedure}.pdf
+                    $masterSourcePdf = "procedures/{$item->Name_Tractor}/{$item->Name_Area}/{$item->Name_Procedure}.pdf";
+                    $newTargetPdf = "{$newPath}/{$item->Name_Procedure}.pdf";
 
-                    // \Log::info("Copying file", [
-                    //     'source' => $sourcePdf,
-                    //     'target' => $targetPdf,
-                    //     'source_exists' => Storage::disk('public')->exists($sourcePdf)
-                    // ]);
-
-                    if (Storage::disk('public')->exists($sourcePdf)) {
-                        Storage::disk('public')->copy($sourcePdf, $targetPdf);
+                    // Cek apakah file master ada
+                    if (Storage::disk('public')->exists($masterSourcePdf)) {
+                        // Salin dari master ke folder report baru
+                        Storage::disk('public')->copy($masterSourcePdf, $newTargetPdf);
+                        // \Log::info("Copying from master: {$masterSourcePdf} to {$newTargetPdf}");
+                    } else {
+                        // Jika file master tidak ditemukan, log atau lewati
+                        // \Log::warning("Master file not found: {$masterSourcePdf}");
                     }
 
+                    // Siapkan data untuk insert ke List_Report
                     $insertData[] = [
                         'Id_Report' => $newReport->Id_Report,
                         'Name_Procedure' => $item->Name_Procedure,
@@ -303,11 +311,12 @@ class ReportController extends Controller
                         'Time_List_Report' => null,
                         'Time_Approved_Leader' => null,
                         'Time_Approved_Auditor' => null,
-                        'Reporter_Name' => $item->Reporter_Name,
+                        'Reporter_Name' => $item->Reporter_Name, // Bisa diupdate jika perlu
                         'Leader_Name' => null,
                         'Auditor_Name' => null,
                     ];
                 }
+                // Masukkan semua data List_Report baru sekaligus
                 List_Report::insert($insertData);
             }
 
@@ -315,12 +324,11 @@ class ReportController extends Controller
         }
 
         if ($createdCount > 0) {
-            return redirect()->back()->with('success', "Berhasil buat template untuk {$createdCount} member di tanggal 1 bulan ini.");
+            return redirect()->back()->with('success', "Berhasil buat template untuk {$createdCount} member di tanggal 1 bulan ini dari file master.");
         } else {
-            return redirect()->back()->with('info', 'Template bulan ini sudah ada. Tidak perlu duplikasi.');
+            return redirect()->back()->with('info', 'Template bulan ini sudah ada atau tidak ada laporan bulan lalu untuk diproses.');
         }
     }
-
     // 🔥 Fungsi Update
     public function update(Request $request, $id)
     {
