@@ -270,7 +270,17 @@ class ProcedureController extends Controller
                 $filename = $originalName;
                 $path = 'procedures/' . $tractor . '/' . $area;
 
+                // Simpan file PDF versi baru
                 $file->storeAs($path, $filename, 'public');
+
+                // Pertahankan Item_Procedure di tabel procedures
+                $existingProcedure = \App\Models\Procedure::where([
+                    'Name_Tractor' => $tractor,
+                    'Name_Area' => $area,
+                    'Name_Procedure' => $nameProcedure
+                ])->first();
+
+                $itemProcedureValue = $existingProcedure ? $existingProcedure->Item_Procedure : '';
 
                 DB::table('procedures')->updateOrInsert(
                     [
@@ -279,11 +289,11 @@ class ProcedureController extends Controller
                         'Name_Procedure' => $nameProcedure
                     ],
                     [
-                        'Item_Procedure' => ''
+                        'Item_Procedure' => $itemProcedureValue
                     ]
                 );
 
-                // 🔥 Sinkronisasi List_Report
+                // 🔁 Sinkronisasi ke List_Report — hanya jika belum dikirim
                 $matchingListReports = \App\Models\List_Report::where([
                     'Name_Tractor' => $tractor,
                     'Name_Area' => $area,
@@ -291,28 +301,44 @@ class ProcedureController extends Controller
                 ])->get();
 
                 foreach ($matchingListReports as $listReport) {
-                    DB::table('list_reports')->where('Id_List_Report', $listReport->Id_List_Report)
-                        ->update([
-                            'Item_Procedure' => '',
-                            'Time_List_Report' => null,
-                            'Time_Approved_Leader' => null,
-                            'Time_Approved_Auditor' => null,
-                            'Leader_Name' => null,
-                            'Auditor_Name' => null,
-                        ]);
+                    // ✅ Cek: apakah laporan belum pernah dikirim?
+                    $isNotSubmitted = 
+                        is_null($listReport->Time_List_Report) &&
+                        is_null($listReport->Time_Approved_Leader) &&
+                        is_null($listReport->Time_Approved_Auditor);
 
-                    // Copy PDF ke reports
-                    $reportFolder = $listReport->report;
-                    if ($reportFolder) {
-                        $startDate = \Carbon\Carbon::parse($reportFolder->Start_Report)->format('Y-m-d');
-                        $targetFolder = "reports/{$startDate}_{$reportFolder->Id_Member}";
-                        Storage::disk('public')->makeDirectory($targetFolder);
+                    if ($isNotSubmitted) {
+                        // Ambil Item_Procedure lama (jangan reset jadi kosong)
+                        $oldItemProcedure = $listReport->Item_Procedure ?? '';
 
-                        Storage::disk('public')->copy(
-                            "procedures/{$tractor}/{$area}/{$listReport->Name_Procedure}.pdf",
-                            "{$targetFolder}/{$listReport->Name_Procedure}.pdf"
-                        );
+                        // Reset hanya jika belum dikirim
+                        DB::table('list_reports')
+                            ->where('Id_List_Report', $listReport->Id_List_Report)
+                            ->update([
+                                'Item_Procedure' => $oldItemProcedure,
+                                'Time_List_Report' => null,
+                                'Time_Approved_Leader' => null,
+                                'Time_Approved_Auditor' => null,
+                                'Leader_Name' => null,
+                                'Auditor_Name' => null,
+                            ]);
+
+                        // ✅ Timpa file PDF di folder report
+                        $reportFolder = $listReport->report;
+                        if ($reportFolder) {
+                            $startDate = \Carbon\Carbon::parse($reportFolder->Start_Report)->format('Y-m-d');
+                            $targetFolder = "reports/{$startDate}_{$reportFolder->Id_Member}";
+                            Storage::disk('public')->makeDirectory($targetFolder, 0755, true, true);
+
+                            $sourcePdf = "procedures/{$tractor}/{$area}/{$listReport->Name_Procedure}.pdf";
+                            $destPdf = "{$targetFolder}/{$listReport->Name_Procedure}.pdf";
+
+                            if (Storage::disk('public')->exists($sourcePdf)) {
+                                Storage::disk('public')->put($destPdf, Storage::disk('public')->readStream($sourcePdf));
+                            }
+                        }
                     }
+                    // Jika sudah dikirim → lewati (tidak update apa-apa)
                 }
             }
         }
@@ -349,6 +375,7 @@ class ProcedureController extends Controller
         $newNameProcedure = $request->input('Name_Procedure');
         $newItemProcedure = $request->input('Item_Procedure') ?? '';
 
+        // Cek duplikat (kecuali diri sendiri)
         if (DB::table('procedures')
             ->where('Name_Tractor', $newNameTractor)
             ->where('Name_Area', $newNameArea)
@@ -359,6 +386,7 @@ class ProcedureController extends Controller
             return back()->withErrors(['Nama procedure di area tractor ini sudah ada'])->withInput();
         }
 
+        // Update data procedure
         DB::table('procedures')->where('Id_Procedure', $Id_Procedure)->update([
             'Name_Tractor' => $newNameTractor,
             'Name_Area' => $newNameArea,
@@ -366,24 +394,23 @@ class ProcedureController extends Controller
             'Item_Procedure' => $newItemProcedure
         ]);
 
-        // Jika ada perubahan nama, rename file
+        // Rename file jika ada perubahan nama
         if (
             $oldNameTractor !== $newNameTractor ||
             $oldNameArea !== $newNameArea ||
             $oldNameProcedure !== $newNameProcedure
         ) {
-            $oldPath = 'procedures/' . $oldNameTractor . '/' . $oldNameArea . '/' . $oldNameProcedure . '.pdf';
-            $newDir = 'procedures/' . $newNameTractor . '/' . $newNameArea;
-            $newFileName = $newNameProcedure . '.pdf';
-            $newPath = $newDir . '/' . $newFileName;
+            $oldPath = "procedures/{$oldNameTractor}/{$oldNameArea}/{$oldNameProcedure}.pdf";
+            $newDir = "procedures/{$newNameTractor}/{$newNameArea}";
+            $newPath = "{$newDir}/{$newNameProcedure}.pdf";
 
             if (Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->makeDirectory($newDir);
+                Storage::disk('public')->makeDirectory($newDir, 0755, true, true);
                 Storage::disk('public')->move($oldPath, $newPath);
             }
         }
 
-        // 🔥 Sinkronisasi List_Report bila nama berubah
+        // 🔁 Sinkronisasi ke List_Report — hanya jika belum dikirim
         $matchingListReports = \App\Models\List_Report::where([
             'Name_Tractor' => $oldNameTractor,
             'Name_Area' => $oldNameArea,
@@ -391,39 +418,57 @@ class ProcedureController extends Controller
         ])->get();
 
         foreach ($matchingListReports as $listReport) {
+            // ✅ Cek: apakah laporan BELUM PERNAH dikirim?
+            $isNotSubmitted = 
+                is_null($listReport->Time_List_Report) &&
+                is_null($listReport->Time_Approved_Leader) &&
+                is_null($listReport->Time_Approved_Auditor);
 
-            // Update field List_Report
-            DB::table('list_reports')->where('Id_List_Report', $listReport->Id_List_Report)
-                ->update([
-                    'Name_Tractor' => $newNameTractor,
-                    'Name_Area' => $newNameArea,
-                    'Name_Procedure' => $newNameProcedure,
-                    'Item_Procedure' => $newItemProcedure,
+            if ($isNotSubmitted) {
+                // ✅ Gunakan Item_Procedure BARU (dari input)
+                DB::table('list_reports')
+                    ->where('Id_List_Report', $listReport->Id_List_Report)
+                    ->update([
+                        'Name_Tractor' => $newNameTractor,
+                        'Name_Area' => $newNameArea,
+                        'Name_Procedure' => $newNameProcedure,
+                        'Item_Procedure' => $newItemProcedure, // ← nilai baru
 
-                    // reset status
-                    'Time_List_Report' => null,
-                    'Time_Approved_Leader' => null,
-                    'Time_Approved_Auditor' => null,
-                    'Leader_Name' => null,
-                    'Auditor_Name' => null,
-                ]);
+                        // Reset status
+                        'Time_List_Report' => null,
+                        'Time_Approved_Leader' => null,
+                        'Time_Approved_Auditor' => null,
+                        'Leader_Name' => null,
+                        'Auditor_Name' => null,
+                    ]);
 
-            // Replace PDF di folder reports
-            $report = $listReport->report;
-            if ($report) {
-                $startDate = \Carbon\Carbon::parse($report->Start_Report)->format('Y-m-d');
-                $targetDir = "reports/{$startDate}_{$report->Id_Member}";
-                $sourcePdfPath = "procedures/{$newNameTractor}/{$newNameArea}/{$newNameProcedure}.pdf";
+                // ✅ Timpa file PDF di folder report dengan versi terbaru
+                $report = $listReport->report;
+                if ($report) {
+                    $startDate = \Carbon\Carbon::parse($report->Start_Report)->format('Y-m-d');
+                    $targetDir = "reports/{$startDate}_{$report->Id_Member}";
+                    $sourcePdfPath = "procedures/{$newNameTractor}/{$newNameArea}/{$newNameProcedure}.pdf";
+                    $destPdfPath = "{$targetDir}/{$newNameProcedure}.pdf";
 
-                Storage::disk('public')->makeDirectory($targetDir);
-                Storage::disk('public')->copy(
-                    $sourcePdfPath,
-                    "{$targetDir}/{$newNameProcedure}.pdf"
-                );
+                    Storage::disk('public')->makeDirectory($targetDir, 0755, true, true);
+
+                    if (Storage::disk('public')->exists($sourcePdfPath)) {
+                        // Gunakan put + readStream untuk menimpa dengan andal
+                        Storage::disk('public')->put(
+                            $destPdfPath,
+                            Storage::disk('public')->readStream($sourcePdfPath)
+                        );
+                    }
+                }
             }
+            // ❌ Jika sudah dikirim → jangan update apa pun (abaikan)
         }
 
-        return redirect()->route('procedure.procedure.index', ['Name_Tractor' => $newNameTractor, 'Name_Area' => $newNameArea])
+        return redirect()
+            ->route('procedure.procedure.index', [
+                'Name_Tractor' => $newNameTractor,
+                'Name_Area' => $newNameArea
+            ])
             ->with('success', 'Data dan file berhasil diedit');
     }
 
@@ -445,38 +490,60 @@ class ProcedureController extends Controller
         $folderPath = 'procedures/' . $nameTractor . '/' . $nameArea;
         $fileName = $nameProcedure . '.pdf';
 
+        // Simpan file PDF baru
         $file = $request->file('File_Procedure');
         Storage::disk('public')->putFileAs($folderPath, $file, $fileName);
 
-        // 🔥 PERBAIKAN: Sinkronisasi otomatis ke semua laporan
-        $matchingListReports = \App\Models\List_Report::where('Name_Procedure', $nameProcedure)
-            ->where('Name_Area', $nameArea)
-            ->where('Name_Tractor', $nameTractor)
-            ->get();
+        // 🔁 Sinkronisasi ke List_Report — hanya jika belum pernah dikirim
+        $matchingListReports = \App\Models\List_Report::where([
+            'Name_Procedure' => $nameProcedure,
+            'Name_Area' => $nameArea,
+            'Name_Tractor' => $nameTractor
+        ])->get();
 
         foreach ($matchingListReports as $listReport) {
-            DB::table('list_reports')->where('Id_List_Report', $listReport->Id_List_Report)
-                ->update([
-                    'Item_Procedure' => $procedure->Item_Procedure ?? '',
-                    'Time_List_Report' => null,
-                    'Time_Approved_Leader' => null,
-                    'Time_Approved_Auditor' => null,
-                    'Leader_Name' => null,
-                    'Auditor_Name' => null,
-                ]);
+            // ✅ Cek: apakah laporan BELUM PERNAH dikirim?
+            $isNotSubmitted = 
+                is_null($listReport->Time_List_Report) &&
+                is_null($listReport->Time_Approved_Leader) &&
+                is_null($listReport->Time_Approved_Auditor);
 
-            $report = $listReport->report;
-            if ($report) {
-                $startDate = \Carbon\Carbon::parse($report->Start_Report)->format('Y-m-d');
-                $targetDir = "reports/{$startDate}_{$report->Id_Member}";
-                $sourcePdfPath = "procedures/{$nameTractor}/{$nameArea}/{$nameProcedure}.pdf";
+            if ($isNotSubmitted) {
+                // Gunakan Item_Procedure dari data prosedur (tidak diubah, karena ini hanya upload file)
+                $itemProcedureValue = $procedure->Item_Procedure ?? '';
 
-                Storage::disk('public')->makeDirectory($targetDir);
-                Storage::disk('public')->copy(
-                    $sourcePdfPath,
-                    "{$targetDir}/{$nameProcedure}.pdf"
-                );
+                // Reset status, pertahankan Item_Procedure
+                DB::table('list_reports')
+                    ->where('Id_List_Report', $listReport->Id_List_Report)
+                    ->update([
+                        'Item_Procedure' => $itemProcedureValue,
+                        'Time_List_Report' => null,
+                        'Time_Approved_Leader' => null,
+                        'Time_Approved_Auditor' => null,
+                        'Leader_Name' => null,
+                        'Auditor_Name' => null,
+                    ]);
+
+                // ✅ Timpa file PDF di folder report dengan versi terbaru
+                $report = $listReport->report;
+                if ($report) {
+                    $startDate = \Carbon\Carbon::parse($report->Start_Report)->format('Y-m-d');
+                    $targetDir = "reports/{$startDate}_{$report->Id_Member}";
+                    $sourcePdfPath = "procedures/{$nameTractor}/{$nameArea}/{$nameProcedure}.pdf";
+                    $destPdfPath = "{$targetDir}/{$nameProcedure}.pdf";
+
+                    Storage::disk('public')->makeDirectory($targetDir, 0755, true, true);
+
+                    if (Storage::disk('public')->exists($sourcePdfPath)) {
+                        // Gunakan put + readStream untuk menimpa file yang mungkin sedang digunakan
+                        Storage::disk('public')->put(
+                            $destPdfPath,
+                            Storage::disk('public')->readStream($sourcePdfPath)
+                        );
+                    }
+                }
             }
+            // ❌ Jika laporan sudah dikirim (ada approval), jangan lakukan apa-apa
         }
 
         return redirect()
@@ -526,27 +593,62 @@ class ProcedureController extends Controller
             ->pluck('Name_Procedure')
             ->toArray();
 
-        $inserted = false;
+        $updated = false;
 
         foreach ($lines as $line) {
             $line = trim($line);
             if (!$line) continue;
 
+            // Pisahkan berdasarkan tab (\t)
             $parts = explode("\t", $line);
             $nameProcedure = trim($parts[0] ?? '');
             $itemProcedure = trim($parts[1] ?? '');
 
+            // Hanya proses jika nama prosedur valid dan ada di DB
             if ($nameProcedure && in_array($nameProcedure, $proceduresInDB)) {
+                // Update di tabel procedures
                 Procedure::where('Name_Tractor', $Name_Tractor)
                     ->where('Name_Area', $Name_Area)
                     ->where('Name_Procedure', $nameProcedure)
                     ->update(['Item_Procedure' => $itemProcedure]);
-                $inserted = true;
+
+                // 🔁 Sinkronisasi ke List_Report — hanya jika belum dikirim
+                $matchingListReports = \App\Models\List_Report::where([
+                    'Name_Tractor' => $Name_Tractor,
+                    'Name_Area' => $Name_Area,
+                    'Name_Procedure' => $nameProcedure
+                ])->get();
+
+                foreach ($matchingListReports as $listReport) {
+                    // ✅ Cek: apakah laporan BELUM PERNAH dikirim?
+                    $isNotSubmitted = 
+                        is_null($listReport->Time_List_Report) &&
+                        is_null($listReport->Time_Approved_Leader) &&
+                        is_null($listReport->Time_Approved_Auditor);
+
+                    if ($isNotSubmitted) {
+                        // Update Item_Procedure dengan nilai BARU
+                        DB::table('list_reports')
+                            ->where('Id_List_Report', $listReport->Id_List_Report)
+                            ->update([
+                                'Item_Procedure' => $itemProcedure, // ← nilai baru dari input
+                                // Status tetap null (tidak perlu di-set ulang, tapi boleh untuk kejelasan)
+                                'Time_List_Report' => null,
+                                'Time_Approved_Leader' => null,
+                                'Time_Approved_Auditor' => null,
+                                'Leader_Name' => null,
+                                'Auditor_Name' => null,
+                            ]);
+                    }
+                    // ❌ Jika sudah dikirim → abaikan
+                }
+
+                $updated = true;
             }
         }
 
-        if ($inserted) {
-            return back()->with('success', 'Matching procedures updated successfully');
+        if ($updated) {
+            return back()->with('success', 'Matching procedures and related reports updated successfully');
         }
 
         return back();

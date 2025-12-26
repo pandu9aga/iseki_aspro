@@ -1,4 +1,4 @@
-@extends('layouts.leader')
+﻿@extends('layouts.leader')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -67,7 +67,7 @@
                     </form>
 
                     <!-- Tombol Duplikasi Template -->
-                    <div class="my-3">
+                   {{-- <div class="my-3">
                         <form action="{{ route('report.create.template') }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-success"
@@ -75,7 +75,7 @@
                                 📋 Buat Template Bulan Ini dari Bulan Lalu
                             </button>
                         </form>
-                    </div>
+                    </div> --}}
 
                     <!-- Daftar Bulan (Cukup 1x) -->
                     <div class="row">
