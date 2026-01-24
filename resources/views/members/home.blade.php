@@ -84,7 +84,7 @@
                                 style="background-image: url('{{ asset('assets/img/rotate-1.jpg') }}'); background-size: cover;">
                                 <div class="card-body py-7 text-center">
                                     <i class="material-symbols-rounded text-white text-4xl my-3">account_circle</i>
-                                    <h3 class="text-white">Hi,<br/>{{ $member->Name_Member }}</h3>
+                                    <h3 class="text-white">Hi,<br/>{{ $member->nama }}</h3>
                                     <p class="text-white opacity-8">Welcome to Iseki Aspro (Assembling Procedure) website.</p>
                                 </div>
                             </div>

@@ -1,14 +1,17 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Member extends Model
 {
-    protected $table = 'members';
-    protected $primaryKey = 'Id_Member';
+    protected $connection = 'mysql2';
+
+    protected $table = 'employees';
+
+    protected $primaryKey = 'id';
+
     public $timestamps = false;
 
-    protected $fillable = ['NIK_Member', 'Name_Member'];
+    protected $fillable = ['nik', 'nama', 'team'];
 }

@@ -3,29 +3,28 @@
 namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Pastikan diimpor
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Models\List_Report;
+use App\Models\Member; // Pastikan diimpor
+use App\Models\Procedure;
+use App\Models\Report;
 use App\Models\Tractor;
 use App\Models\User;
-use App\Models\Procedure;
-use App\Models\Member;
-use App\Models\Process;
-use App\Models\Report; // Pastikan model ini diimpor
-use App\Models\List_Report; // Pastikan model ini diimpor
+use Carbon\Carbon;
+use Illuminate\Http\Request; // Pastikan model ini diimpor
+use Illuminate\Support\Facades\Storage; // Pastikan model ini diimpor
 
 class ReportController extends Controller
 {
     public function index()
     {
-        $page = "report";
+        $page = 'report';
+
         return view('leaders.reports.index', compact('page'));
     }
 
     public function reporter($year, $month)
     {
-        $page = "report";
+        $page = 'report';
 
         $reports = Report::whereYear('Start_Report', $year)
             ->whereMonth('Start_Report', $month)
@@ -59,9 +58,9 @@ class ReportController extends Controller
             }
 
             // Buat folder dasar untuk member
-            $folderName = $startReportDate . '_' . $id_member;
-            $fullPath = 'reports/' . $folderName;
-            if (!Storage::disk('public')->exists($fullPath)) {
+            $folderName = $startReportDate.'_'.$id_member;
+            $fullPath = 'reports/'.$folderName;
+            if (! Storage::disk('public')->exists($fullPath)) {
                 Storage::disk('public')->makeDirectory($fullPath);
             }
 
@@ -77,7 +76,7 @@ class ReportController extends Controller
 
     public function list_report(string $Id_Report)
     {
-        $page = "report";
+        $page = 'report';
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
         $tractors = Tractor::select('Name_Tractor', 'Photo_Tractor')
@@ -101,7 +100,7 @@ class ReportController extends Controller
 
     public function list_report_detail(string $Id_Report, string $Name_Tractor)
     {
-        $page = "report";
+        $page = 'report';
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
         $list_reports = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $Name_Tractor)->with('report')->orderBy('Name_Procedure')->get();
@@ -127,21 +126,27 @@ class ReportController extends Controller
         $report = Report::where('Id_Report', $request->Id_Report)->with('member')->first();
         $procedures = Procedure::whereIn('Name_Procedure', $request->Name_Procedure)->get();
 
-        $name_member = $report->member->Name_Member ?? 'Unknown';
-        $id_member = $report->member->Id_Member;
+        $name_member = $report->member->nama ?? 'Unknown';
+        $id_member = $report->member->id;
         $timeReport = Carbon::parse($report->Start_Report)->format('Y-m-d');
 
-        $fullPath = 'reports/' . $timeReport . '_' . $id_member;
+        $fullPath = 'reports/'.$timeReport.'_'.$id_member;
 
         if ($procedures->count() > 0) {
-            // Data list_reports untuk batch insert
             $data = [];
 
             foreach ($procedures as $procedure) {
                 $nameArea = $procedure->Name_Area;
                 $nameTractor = $procedure->Name_Tractor;
 
-                // Tambahkan ke array untuk insert
+                // Tambahkan id_member ke Pic_Procedure jika belum ada
+                $picProcedure = $procedure->Pic_Procedure ?? [];
+                if (!in_array($id_member, $picProcedure)) {
+                    $picProcedure[] = $id_member;
+                    $procedure->Pic_Procedure = $picProcedure;
+                    $procedure->save();
+                }
+
                 $data[] = [
                     'Id_Report' => $report->Id_Report,
                     'Name_Procedure' => $procedure->Name_Procedure,
@@ -156,42 +161,37 @@ class ReportController extends Controller
                     'Auditor_Name' => null,
                 ];
 
-                // Path asal file
-                $sourcePath = 'procedures/' . $nameTractor . '/' . $nameArea . '/' . $procedure->Name_Procedure . '.pdf';
+                $sourcePath = 'procedures/'.$nameTractor.'/'.$nameArea.'/'.$procedure->Name_Procedure.'.pdf';
+                $targetName = $procedure->Name_Procedure.'.pdf';
+                $targetPath = $fullPath.'/'.$targetName;
 
-                // Path tujuan
-                $targetName = $procedure->Name_Procedure . '.pdf';
-                $targetPath = $fullPath . '/' . $targetName;
-
-                // Copy dan rename jika file asal ada
                 if (Storage::disk('public')->exists($sourcePath)) {
                     Storage::disk('public')->copy($sourcePath, $targetPath);
                 }
             }
 
-            // Insert ke list_reports
             List_Report::insert($data);
         }
 
-        return redirect()->back()->with('success', 'Report berhasil disimpan.');
+        return redirect()->back()->with('success', 'Report berhasil disimpan dan PIC ditambahkan.');
     }
 
     public function report($Id_List_Report)
     {
-        $page = "report";
+        $page = 'report';
 
         $Id_User = session('Id_User');
         $user = User::where('Id_User', $Id_User)->first();
 
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->Id_Member;
+        $id_member = $listReport->report->member->id;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
-        $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
+        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
 
-        $fileName = $listReport->Name_Procedure . '.pdf';
-        $pdfPath = $fullPath . '/' . $fileName;
+        $fileName = $listReport->Name_Procedure.'.pdf';
+        $pdfPath = $fullPath.'/'.$fileName;
 
         return view('leaders.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
     }
@@ -200,19 +200,19 @@ class ReportController extends Controller
     {
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->Id_Member;
+        $id_member = $listReport->report->member->id;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
             $pdf = $request->file('pdf');
 
             // Path target di public/storage/reports/...
-            $path = 'storage/reports/' . $timeReport . '_' . $id_member;
-            $filename = $listReport->Name_Procedure . '.pdf';
+            $path = 'storage/reports/'.$timeReport.'_'.$id_member;
+            $filename = $listReport->Name_Procedure.'.pdf';
 
             // Pastikan direktori ada
             $fullPath = public_path($path);
-            if (!file_exists($fullPath)) {
+            if (! file_exists($fullPath)) {
                 mkdir($fullPath, 0755, true);
             }
 
@@ -261,12 +261,14 @@ class ReportController extends Controller
                 ->orderBy('Start_Report', 'desc')
                 ->first();
 
-            if (!$lastReport) continue;
+            if (! $lastReport) {
+                continue;
+            }
 
             // Buat folder baru untuk bulan ini
-            $newFolder = $firstDayThisMonth->format('Y-m-d') . '_' . $idMember;
-            $newPath = 'reports/' . $newFolder;
-            if (!Storage::disk('public')->exists($newPath)) {
+            $newFolder = $firstDayThisMonth->format('Y-m-d').'_'.$idMember;
+            $newPath = 'reports/'.$newFolder;
+            if (! Storage::disk('public')->exists($newPath)) {
                 Storage::disk('public')->makeDirectory($newPath);
             }
 
@@ -329,13 +331,14 @@ class ReportController extends Controller
             return redirect()->back()->with('info', 'Template bulan ini sudah ada atau tidak ada laporan bulan lalu untuk diproses.');
         }
     }
+
     // 🔥 Fungsi Update
     public function update(Request $request, $id)
     {
         // Validasi input
         $request->validate([
             'Start_Report' => 'required|date',
-            'Id_Member' => 'required|integer|exists:members,Id_Member', // Validasi Id_Member ada di tabel members
+            'Id_Member' => ['required', 'integer', 'exists:App\Models\Member,id'], // Validasi Id_Member ada di tabel members
         ]);
 
         // Temukan report berdasarkan ID
@@ -355,11 +358,11 @@ class ReportController extends Controller
         if ($oldStartReport !== $request->Start_Report || $oldIdMember !== $request->Id_Member) {
             // $oldFolderName = $oldStartReport . '_' . $oldIdMember;
             // $newFolderName = $request->Start_Report . '_' . $request->Id_Member;
-            $oldFolderName = Carbon::parse($oldStartReport)->format('Y-m-d') . '_' . $oldIdMember;
-            $newFolderName = Carbon::parse($request->Start_Report)->format('Y-m-d') . '_' . $request->Id_Member;
+            $oldFolderName = Carbon::parse($oldStartReport)->format('Y-m-d').'_'.$oldIdMember;
+            $newFolderName = Carbon::parse($request->Start_Report)->format('Y-m-d').'_'.$request->Id_Member;
 
-            $oldPath = 'reports/' . $oldFolderName;
-            $newPath = 'reports/' . $newFolderName;
+            $oldPath = 'reports/'.$oldFolderName;
+            $newPath = 'reports/'.$newFolderName;
 
             // Jika folder lama ada, coba pindahkan
             if (Storage::disk('public')->exists($oldPath)) {
@@ -376,8 +379,8 @@ class ReportController extends Controller
         $report = Report::findOrFail($id);
 
         // Format tanggal ke Y-m-d agar sesuai dengan nama folder sebenarnya
-        $folderName = Carbon::parse($report->Start_Report)->format('Y-m-d') . '_' . $report->Id_Member;
-        $fullPath = 'reports/' . $folderName;
+        $folderName = Carbon::parse($report->Start_Report)->format('Y-m-d').'_'.$report->Id_Member;
+        $fullPath = 'reports/'.$folderName;
 
         if (Storage::disk('public')->exists($fullPath)) {
             Storage::disk('public')->deleteDirectory($fullPath);
@@ -404,5 +407,35 @@ class ReportController extends Controller
         $listReport->delete();
 
         return redirect()->back()->with('success', 'Prosedur berhasil dihapus dari laporan.');
+    }
+
+    public function reset_list_report(string $Id_List_Report)
+    {
+        $listReport = List_Report::with(['report'])->findOrFail($Id_List_Report);
+
+        $nameTractor = $listReport->Name_Tractor;
+        $nameArea = $listReport->Name_Area;
+        $procedureName = $listReport->Name_Procedure;
+
+        $sourcePath = 'procedures/'.$nameTractor.'/'.$nameArea.'/'.$procedureName.'.pdf';
+
+        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
+
+        $fullPath = 'reports/'.$timeReport.'_'.$listReport->report->Id_Member;
+
+        $targetPath = $fullPath.'/'.$procedureName.'.pdf';
+
+        // copy dan replace file dari procedures ke reports jika file target ada
+        if (Storage::disk('public')->exists($sourcePath)) {
+            Storage::disk('public')->copy($sourcePath, $targetPath);
+        }
+
+        // Reset approval timestamps
+        $listReport->Time_Approved_Leader = null;
+        $listReport->Time_Approved_Auditor = null;
+        $listReport->Time_List_Report = null;
+        $listReport->save();
+
+        return redirect()->back()->with('success', 'Approval berhasil direset.');
     }
 }

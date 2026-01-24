@@ -27,7 +27,7 @@
             <br>
 
             {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
-            
+
             @if (is_null($listReport->Time_Approved_Leader))
                 <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist()">
                     <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
@@ -242,7 +242,7 @@ async function downloadPdf() {
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->report->process->Name_Process }}-{{ $listReport->Name_Procedure }}.pdf';
+    link.download = '{{ $listReport->report->member->nama }}-{{ $listReport->report->process->Name_Process }}-{{ $listReport->Name_Procedure }}.pdf';
     link.click();
 }
 
@@ -297,7 +297,7 @@ async function submitReport() {
         const finalY = pageHeight - (offsetY * scaleY) - 18;
 
         // Hitung panjang teks (kira-kira, tidak super presisi)
-        const textWidth = 20 * div.textContent.length * 0.6; 
+        const textWidth = 20 * div.textContent.length * 0.6;
         const textHeight = 18; // tinggi line kira-kira
 
         // Gambar kotak background putih 50%

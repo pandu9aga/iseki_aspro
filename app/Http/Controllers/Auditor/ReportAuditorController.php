@@ -3,28 +3,28 @@
 namespace App\Http\Controllers\Auditor;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
+use App\Models\List_Report;
+use App\Models\Member;
+use App\Models\Procedure;
+use App\Models\Report;
 use App\Models\Tractor;
 use App\Models\User;
-use App\Models\Procedure;
-use App\Models\Member;
-use App\Models\Report;
-use App\Models\List_Report;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ReportAuditorController extends Controller
 {
     public function index()
     {
-        $page = "report";
+        $page = 'report';
 
         return view('auditors.reports.index', compact('page'));
     }
 
     public function reporter($year, $month)
     {
-        $page = "report";
+        $page = 'report';
 
         $reports = Report::whereYear('Start_Report', $year)
             ->whereMonth('Start_Report', $month)
@@ -39,7 +39,7 @@ class ReportAuditorController extends Controller
 
     public function list_report(string $Id_Report)
     {
-        $page = "report";
+        $page = 'report';
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
         $tractors = Tractor::select('Name_Tractor', 'Photo_Tractor')
@@ -63,7 +63,7 @@ class ReportAuditorController extends Controller
 
     public function list_report_detail(string $Id_Report, string $Name_Tractor)
     {
-        $page = "report";
+        $page = 'report';
 
         $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
         $list_reports = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $Name_Tractor)->with('report')->orderBy('Name_Procedure')->get();
@@ -81,20 +81,20 @@ class ReportAuditorController extends Controller
 
     public function report($Id_List_Report)
     {
-        $page = "report";
+        $page = 'report';
 
         $Id_User = session('Id_User');
         $user = User::where('Id_User', $Id_User)->first();
 
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->Id_Member;
+        $id_member = $listReport->report->member->id;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
-        $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
+        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
 
-        $fileName = $listReport->Name_Procedure . '.pdf';
-        $pdfPath = $fullPath . '/' . $fileName;
+        $fileName = $listReport->Name_Procedure.'.pdf';
+        $pdfPath = $fullPath.'/'.$fileName;
 
         return view('auditors.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
     }
@@ -103,19 +103,19 @@ class ReportAuditorController extends Controller
     {
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->Id_Member;
+        $id_member = $listReport->report->member->id;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
             $pdf = $request->file('pdf');
 
             // Path target di public/storage/reports/...
-            $path = 'storage/reports/' . $timeReport . '_' . $id_member;
-            $filename = $listReport->Name_Procedure . '.pdf';
+            $path = 'storage/reports/'.$timeReport.'_'.$id_member;
+            $filename = $listReport->Name_Procedure.'.pdf';
 
             // Pastikan direktori ada
             $fullPath = public_path($path);
-            if (!file_exists($fullPath)) {
+            if (! file_exists($fullPath)) {
                 mkdir($fullPath, 0755, true);
             }
 

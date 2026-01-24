@@ -61,7 +61,7 @@
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
                             <td class="align-middle text-center">
-                                <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member }}</p>
+                                <p class="text-xs text-primary mb-0">{{ $report->member->nama }}</p>
                             </td>
                             <td class="align-middle text-center">
                                 <div class="d-flex justify-content-center">
@@ -103,7 +103,7 @@
                         <label class="form-label">Members</label>
                         <select class="form-control select2" name="Id_Member[]" multiple required>
                             @foreach ($members as $member)
-                                <option value="{{ $member->Id_Member }}">{{ $member->Name_Member }}</option>
+                                <option value="{{ $member->id }}">{{ $member->nama }}</option>
                             @endforeach
                         </select>
                     </div>

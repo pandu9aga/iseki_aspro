@@ -34,12 +34,12 @@
                 <div class="row">
                     <div class="col-12 mx-auto">
                         <div>
-                            Start Training - 
+                            Start Training -
                             <a class="text-primary" href="{{ route('reporter', ['year' => \Carbon\Carbon::parse($report->Start_Report)->format('Y'), 'month' => \Carbon\Carbon::parse($report->Start_Report)->format('m')]) }}">
                                 {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}
                             </a>
                         </div>
-                        <div>Member - <a class="text-primary" href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->Name_Member }}</a></div>
+                        <div>Member - <a class="text-primary" href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->nama }}</a></div>
                     </div>
                 </div>
             </div>

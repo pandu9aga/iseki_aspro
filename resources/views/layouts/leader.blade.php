@@ -95,10 +95,24 @@
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'missing' ? 'text-primary' : '' }}"
+                                        href="{{ route('missing') }}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">dangerous</i>
+                                        Missing
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}"
                                         href="{{ route('report') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">assignment</i>
                                         Training
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown dropdown-hover mx-2">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'temuan' ? 'text-primary' : '' }}"
+                                       href="{{route('leader-temuan.list')}}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">report_problem</i>
+                                        Temuan
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
@@ -157,6 +171,11 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('procedure') }}">
                                     Procedure
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('missing') }}">
+                                    Missing
                                 </a>
                             </li>
                             <li class="nav-item">

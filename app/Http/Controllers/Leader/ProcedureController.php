@@ -3,28 +3,35 @@
 namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
+use App\Models\Area;
+use App\Models\Procedure;
+use App\Models\Tractor;
+use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Tractor;
-use App\Models\Area;
-use App\Models\Procedure;
-use App\Models\User;
 
 class ProcedureController extends Controller
 {
     public function index()
     {
-        $page = "procedure";
+        $page = 'procedure';
         $tractors = Tractor::orderBy('Name_Tractor', 'asc')->get();
-        return view('leaders.procedures.index', compact('page', 'tractors'));
+
+        // Hitung jumlah procedure untuk setiap tractor
+        $tractorProcedureCounts = [];
+        foreach ($tractors as $tractor) {
+            $tractorProcedureCounts[$tractor->Name_Tractor] = Procedure::where('Name_Tractor', $tractor->Name_Tractor)->count();
+        }
+
+        return view('leaders.procedures.index', compact('page', 'tractors', 'tractorProcedureCounts'));
     }
 
     public function create_tractor(Request $request)
     {
         $request->validate([
             'Name_Tractor' => 'required|unique:tractors,Name_Tractor',
-            'Photo_Tractor' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048'
+            'Photo_Tractor' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
         ], [
             'Name_Tractor.required' => 'Nama wajib diisi',
             'Photo_Tractor.required' => 'Foto wajib diunggah',
@@ -38,17 +45,17 @@ class ProcedureController extends Controller
 
         if ($request->hasFile('Photo_Tractor')) {
             $file = $request->file('Photo_Tractor');
-            $filename = uniqid('tractor_') . '.' . $file->getClientOriginalExtension();
-            $photoPath = 'storage/tractors/' . $filename;
+            $filename = uniqid('tractor_').'.'.$file->getClientOriginalExtension();
+            $photoPath = 'storage/tractors/'.$filename;
             $file->move(public_path('storage/tractors'), $filename);
         }
 
         DB::table('tractors')->insert([
             'Name_Tractor' => $name,
-            'Photo_Tractor' => $photoPath
+            'Photo_Tractor' => $photoPath,
         ]);
 
-        Storage::disk('public')->makeDirectory('procedures/' . $name);
+        Storage::disk('public')->makeDirectory('procedures/'.$name);
 
         return redirect()->route('procedure')->with('success', 'Tractor berhasil ditambahkan dan foto disimpan');
     }
@@ -60,9 +67,9 @@ class ProcedureController extends Controller
         $oldPhoto = $oldTractor->Photo_Tractor;
 
         $request->validate([
-            'Name_Tractor' => 'required|unique:tractors,Name_Tractor,' . $Id_Tractor . ',Id_Tractor'
+            'Name_Tractor' => 'required|unique:tractors,Name_Tractor,'.$Id_Tractor.',Id_Tractor',
         ], [
-            'Name_Tractor.required' => 'Nama wajib diisi'
+            'Name_Tractor.required' => 'Nama wajib diisi',
         ]);
 
         $newName = $request->input('Name_Tractor');
@@ -75,19 +82,19 @@ class ProcedureController extends Controller
                 Storage::disk('public')->delete(str_replace('storage/', '', $oldPhoto));
             }
 
-            $fileName = uniqid('tractor_') . '.' . $file->getClientOriginalExtension();
+            $fileName = uniqid('tractor_').'.'.$file->getClientOriginalExtension();
             $file->move(public_path('storage/tractors'), $fileName);
-            $photoPath = 'storage/tractors/' . $fileName;
+            $photoPath = 'storage/tractors/'.$fileName;
         }
 
         DB::table('tractors')->where('Id_Tractor', $Id_Tractor)->update([
             'Name_Tractor' => $newName,
-            'Photo_Tractor' => $photoPath
+            'Photo_Tractor' => $photoPath,
         ]);
 
         if ($oldName !== $newName) {
-            $oldFolder = 'procedures/' . $oldName;
-            $newFolder = 'procedures/' . $newName;
+            $oldFolder = 'procedures/'.$oldName;
+            $newFolder = 'procedures/'.$newName;
 
             if (Storage::disk('public')->exists($oldFolder)) {
                 Storage::disk('public')->move($oldFolder, $newFolder);
@@ -104,7 +111,7 @@ class ProcedureController extends Controller
     {
         $tractor = Tractor::findOrFail($Id_Tractor);
         $nameTractor = $tractor->Name_Tractor;
-        $folderName = 'procedures/' . $nameTractor;
+        $folderName = 'procedures/'.$nameTractor;
 
         DB::table('areas')->where('Name_Tractor', $nameTractor)->delete();
         DB::table('procedures')->where('Name_Tractor', $nameTractor)->delete();
@@ -119,10 +126,11 @@ class ProcedureController extends Controller
 
     public function index_area($Name_Tractor)
     {
-        $page = "procedure";
+        $page = 'procedure';
         $tractor = $Name_Tractor;
         $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
         $areas = Area::where('Name_Tractor', $Name_Tractor)->orderBy('Name_Area', 'asc')->get();
+
         return view('leaders.procedures.areas', compact('page', 'tractor', 'photoTractor', 'areas'));
     }
 
@@ -130,10 +138,10 @@ class ProcedureController extends Controller
     {
         $request->validate([
             'Name_Tractor' => 'required',
-            'Name_Area' => 'required'
+            'Name_Area' => 'required',
         ], [
             'Name_Tractor.required' => 'Nama tractor wajib diisi',
-            'Name_Area.required' => 'Nama area wajib diisi'
+            'Name_Area.required' => 'Nama area wajib diisi',
         ]);
 
         $Name_Tractor = $request->input('Name_Tractor');
@@ -145,7 +153,7 @@ class ProcedureController extends Controller
 
         DB::table('areas')->insert([
             'Name_Tractor' => $Name_Tractor,
-            'Name_Area' => $Name_Area
+            'Name_Area' => $Name_Area,
         ]);
 
         Storage::disk('public')->makeDirectory("procedures/$Name_Tractor/$Name_Area");
@@ -158,7 +166,7 @@ class ProcedureController extends Controller
     public function update_area(Request $request, string $Id_Area)
     {
         $oldArea = DB::table('areas')->where('Id_Area', $Id_Area)->first();
-        if (!$oldArea) {
+        if (! $oldArea) {
             return back()->withErrors(['Area tidak ditemukan']);
         }
 
@@ -167,10 +175,10 @@ class ProcedureController extends Controller
 
         $request->validate([
             'Name_Tractor' => 'required',
-            'Name_Area' => 'required'
+            'Name_Area' => 'required',
         ], [
             'Name_Tractor.required' => 'Nama tractor wajib diisi',
-            'Name_Area.required' => 'Nama area wajib diisi'
+            'Name_Area.required' => 'Nama area wajib diisi',
         ]);
 
         $newNameTractor = $request->input('Name_Tractor');
@@ -187,7 +195,7 @@ class ProcedureController extends Controller
 
         DB::table('areas')->where('Id_Area', $Id_Area)->update([
             'Name_Tractor' => $newNameTractor,
-            'Name_Area' => $newNameArea
+            'Name_Area' => $newNameArea,
         ]);
 
         if ($oldNameTractor !== $newNameTractor || $oldNameArea !== $newNameArea) {
@@ -222,7 +230,7 @@ class ProcedureController extends Controller
         $area = Area::findOrFail($Id_Area);
         $Name_Tractor = $area->Name_Tractor;
         $Name_Area = $area->Name_Area;
-        $folderName = 'procedures/' . $Name_Tractor . '/' . $Name_Area;
+        $folderName = 'procedures/'.$Name_Tractor.'/'.$Name_Area;
 
         DB::table('procedures')
             ->where('Name_Tractor', $Name_Tractor)
@@ -241,7 +249,7 @@ class ProcedureController extends Controller
 
     public function index_procedure($Name_Tractor, $Name_Area)
     {
-        $page = "procedure";
+        $page = 'procedure';
         $tractor = $Name_Tractor;
         $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
         $area = $Name_Area;
@@ -249,7 +257,11 @@ class ProcedureController extends Controller
             ->where('Name_Area', $Name_Area)
             ->orderBy('Name_Procedure', 'asc')
             ->get();
-        return view('leaders.procedures.procedures', compact('page', 'tractor', 'photoTractor', 'area', 'procedures'));
+
+        // Tambahkan ini untuk mendapatkan semua member
+        $members = Member::orderBy('nama', 'asc')->get();
+
+        return view('leaders.procedures.procedures', compact('page', 'tractor', 'photoTractor', 'area', 'procedures', 'members'));
     }
 
     public function create_procedure(Request $request)
@@ -268,7 +280,7 @@ class ProcedureController extends Controller
                 $originalName = $file->getClientOriginalName();
                 $nameProcedure = pathinfo($originalName, PATHINFO_FILENAME);
                 $filename = $originalName;
-                $path = 'procedures/' . $tractor . '/' . $area;
+                $path = 'procedures/'.$tractor.'/'.$area;
 
                 // Simpan file PDF versi baru
                 $file->storeAs($path, $filename, 'public');
@@ -277,7 +289,7 @@ class ProcedureController extends Controller
                 $existingProcedure = \App\Models\Procedure::where([
                     'Name_Tractor' => $tractor,
                     'Name_Area' => $area,
-                    'Name_Procedure' => $nameProcedure
+                    'Name_Procedure' => $nameProcedure,
                 ])->first();
 
                 $itemProcedureValue = $existingProcedure ? $existingProcedure->Item_Procedure : '';
@@ -286,10 +298,10 @@ class ProcedureController extends Controller
                     [
                         'Name_Tractor' => $tractor,
                         'Name_Area' => $area,
-                        'Name_Procedure' => $nameProcedure
+                        'Name_Procedure' => $nameProcedure,
                     ],
                     [
-                        'Item_Procedure' => $itemProcedureValue
+                        'Item_Procedure' => $itemProcedureValue,
                     ]
                 );
 
@@ -297,12 +309,12 @@ class ProcedureController extends Controller
                 $matchingListReports = \App\Models\List_Report::where([
                     'Name_Tractor' => $tractor,
                     'Name_Area' => $area,
-                    'Name_Procedure' => $nameProcedure
+                    'Name_Procedure' => $nameProcedure,
                 ])->get();
 
                 foreach ($matchingListReports as $listReport) {
                     // ✅ Cek: apakah laporan belum pernah dikirim?
-                    $isNotSubmitted = 
+                    $isNotSubmitted =
                         is_null($listReport->Time_List_Report) &&
                         is_null($listReport->Time_Approved_Leader) &&
                         is_null($listReport->Time_Approved_Auditor);
@@ -345,14 +357,14 @@ class ProcedureController extends Controller
 
         return redirect()->route('procedure.procedure.index', [
             'Name_Tractor' => $tractor,
-            'Name_Area' => $area
+            'Name_Area' => $area,
         ])->with('success', 'Prosedur berhasil ditambahkan atau diperbarui');
     }
 
     public function update_procedure(Request $request, string $Id_Procedure)
     {
         $oldProcedure = DB::table('procedures')->where('Id_Procedure', $Id_Procedure)->first();
-        if (!$oldProcedure) {
+        if (! $oldProcedure) {
             return back()->withErrors(['Procedure tidak ditemukan']);
         }
 
@@ -363,11 +375,11 @@ class ProcedureController extends Controller
         $request->validate([
             'Name_Tractor' => 'required',
             'Name_Area' => 'required',
-            'Name_Procedure' => 'required'
+            'Name_Procedure' => 'required',
         ], [
             'Name_Tractor.required' => 'Nama tractor wajib diisi',
             'Name_Area.required' => 'Nama area wajib diisi',
-            'Name_Procedure.required' => 'Nama procedure wajib diisi'
+            'Name_Procedure.required' => 'Nama procedure wajib diisi',
         ]);
 
         $newNameTractor = $request->input('Name_Tractor');
@@ -391,7 +403,7 @@ class ProcedureController extends Controller
             'Name_Tractor' => $newNameTractor,
             'Name_Area' => $newNameArea,
             'Name_Procedure' => $newNameProcedure,
-            'Item_Procedure' => $newItemProcedure
+            'Item_Procedure' => $newItemProcedure,
         ]);
 
         // Rename file jika ada perubahan nama
@@ -414,12 +426,12 @@ class ProcedureController extends Controller
         $matchingListReports = \App\Models\List_Report::where([
             'Name_Tractor' => $oldNameTractor,
             'Name_Area' => $oldNameArea,
-            'Name_Procedure' => $oldNameProcedure
+            'Name_Procedure' => $oldNameProcedure,
         ])->get();
 
         foreach ($matchingListReports as $listReport) {
             // ✅ Cek: apakah laporan BELUM PERNAH dikirim?
-            $isNotSubmitted = 
+            $isNotSubmitted =
                 is_null($listReport->Time_List_Report) &&
                 is_null($listReport->Time_Approved_Leader) &&
                 is_null($listReport->Time_Approved_Auditor);
@@ -467,7 +479,7 @@ class ProcedureController extends Controller
         return redirect()
             ->route('procedure.procedure.index', [
                 'Name_Tractor' => $newNameTractor,
-                'Name_Area' => $newNameArea
+                'Name_Area' => $newNameArea,
             ])
             ->with('success', 'Data dan file berhasil diedit');
     }
@@ -479,7 +491,7 @@ class ProcedureController extends Controller
         ]);
 
         $procedure = DB::table('procedures')->where('Id_Procedure', $Id_Procedure)->first();
-        if (!$procedure) {
+        if (! $procedure) {
             return back()->withErrors(['Procedure tidak ditemukan']);
         }
 
@@ -487,8 +499,8 @@ class ProcedureController extends Controller
         $nameArea = $procedure->Name_Area;
         $nameProcedure = $procedure->Name_Procedure;
 
-        $folderPath = 'procedures/' . $nameTractor . '/' . $nameArea;
-        $fileName = $nameProcedure . '.pdf';
+        $folderPath = 'procedures/'.$nameTractor.'/'.$nameArea;
+        $fileName = $nameProcedure.'.pdf';
 
         // Simpan file PDF baru
         $file = $request->file('File_Procedure');
@@ -498,12 +510,12 @@ class ProcedureController extends Controller
         $matchingListReports = \App\Models\List_Report::where([
             'Name_Procedure' => $nameProcedure,
             'Name_Area' => $nameArea,
-            'Name_Tractor' => $nameTractor
+            'Name_Tractor' => $nameTractor,
         ])->get();
 
         foreach ($matchingListReports as $listReport) {
             // ✅ Cek: apakah laporan BELUM PERNAH dikirim?
-            $isNotSubmitted = 
+            $isNotSubmitted =
                 is_null($listReport->Time_List_Report) &&
                 is_null($listReport->Time_Approved_Leader) &&
                 is_null($listReport->Time_Approved_Auditor);
@@ -549,7 +561,7 @@ class ProcedureController extends Controller
         return redirect()
             ->route('procedure.procedure.index', [
                 'Name_Tractor' => $nameTractor,
-                'Name_Area' => $nameArea
+                'Name_Area' => $nameArea,
             ])
             ->with('success', 'File procedure berhasil diperbarui');
     }
@@ -560,7 +572,7 @@ class ProcedureController extends Controller
         $Name_Tractor = $procedure->Name_Tractor;
         $Name_Area = $procedure->Name_Area;
         $Name_Procedure = $procedure->Name_Procedure;
-        $filePath = 'procedures/' . $Name_Tractor . '/' . $Name_Area . '/' . $Name_Procedure . '.pdf';
+        $filePath = 'procedures/'.$Name_Tractor.'/'.$Name_Area.'/'.$Name_Procedure.'.pdf';
 
         $procedure->delete();
 
@@ -571,7 +583,7 @@ class ProcedureController extends Controller
         return redirect()
             ->route('procedure.procedure.index', [
                 'Name_Tractor' => $Name_Tractor,
-                'Name_Area' => $Name_Area
+                'Name_Area' => $Name_Area,
             ])
             ->with('success', 'File procedure berhasil dihapus');
     }
@@ -581,7 +593,7 @@ class ProcedureController extends Controller
         $request->validate([
             'Item_Tractors' => 'required|string',
             'Name_Tractor' => 'required|string',
-            'Name_Area' => 'required|string'
+            'Name_Area' => 'required|string',
         ]);
 
         $Name_Tractor = $request->input('Name_Tractor');
@@ -597,7 +609,9 @@ class ProcedureController extends Controller
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (!$line) continue;
+            if (! $line) {
+                continue;
+            }
 
             // Pisahkan berdasarkan tab (\t)
             $parts = explode("\t", $line);
@@ -616,12 +630,12 @@ class ProcedureController extends Controller
                 $matchingListReports = \App\Models\List_Report::where([
                     'Name_Tractor' => $Name_Tractor,
                     'Name_Area' => $Name_Area,
-                    'Name_Procedure' => $nameProcedure
+                    'Name_Procedure' => $nameProcedure,
                 ])->get();
 
                 foreach ($matchingListReports as $listReport) {
                     // ✅ Cek: apakah laporan BELUM PERNAH dikirim?
-                    $isNotSubmitted = 
+                    $isNotSubmitted =
                         is_null($listReport->Time_List_Report) &&
                         is_null($listReport->Time_Approved_Leader) &&
                         is_null($listReport->Time_Approved_Auditor);
@@ -652,5 +666,160 @@ class ProcedureController extends Controller
         }
 
         return back();
+    }
+
+    public function index_missing()
+    {
+        $page = 'missing';
+        
+        // Hanya ambil tractor yang memiliki procedure tanpa PIC
+        $tractors = Tractor::whereHas('procedures', function($query) {
+            $query->whereNull('Pic_Procedure')
+                ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
+        })->orderBy('Name_Tractor', 'asc')->get();
+
+        // Hitung jumlah procedure tanpa PIC untuk setiap tractor
+        $tractorProcedureCounts = [];
+        foreach ($tractors as $tractor) {
+            $tractorProcedureCounts[$tractor->Name_Tractor] = Procedure::where('Name_Tractor', $tractor->Name_Tractor)
+                ->where(function($query) {
+                    $query->whereNull('Pic_Procedure')
+                        ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
+                })
+                ->count();
+        }
+
+        return view('leaders.missing.index', compact('page', 'tractors', 'tractorProcedureCounts'));
+    }
+
+    public function index_area_missing($Name_Tractor)
+    {
+        $page = 'missing';
+        $tractor = $Name_Tractor;
+        $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
+        
+        // Hanya ambil area yang memiliki procedure tanpa PIC
+        $areas = Area::where('Name_Tractor', $Name_Tractor)
+            ->whereHas('procedures', function($query) {
+                $query->whereNull('Pic_Procedure')
+                    ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
+            })
+            ->orderBy('Name_Area', 'asc')
+            ->get();
+
+        return view('leaders.missing.areas', compact('page', 'tractor', 'photoTractor', 'areas'));
+    }
+
+    public function index_procedure_missing($Name_Tractor, $Name_Area)
+    {
+        $page = 'missing';
+        $tractor = $Name_Tractor;
+        $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
+        $area = $Name_Area;
+        
+        // Hanya ambil procedure yang tidak memiliki PIC
+        $procedures = Procedure::where('Name_Tractor', $Name_Tractor)
+            ->where('Name_Area', $Name_Area)
+            ->where(function($query) {
+                $query->whereNull('Pic_Procedure')
+                    ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
+            })
+            ->orderBy('Name_Procedure', 'asc')
+            ->get();
+
+        // Ambil daftar training (Report) yang tersedia untuk assignment
+        $trainings = \App\Models\Report::with('member')
+            ->orderBy('Start_Report', 'desc')
+            ->get();
+
+        return view('leaders.missing.procedures', compact('page', 'tractor', 'photoTractor', 'area', 'procedures', 'trainings'));
+    }
+
+    public function assign_to_training(Request $request)
+    {
+        $request->validate([
+            'Id_Procedure' => 'required|exists:procedures,Id_Procedure',
+            'Id_Report' => 'required|array',
+            'Id_Report.*' => 'exists:reports,Id_Report',
+        ], [
+            'Id_Report.required' => 'Pilih minimal satu training',
+            'Id_Report.array' => 'Format training tidak valid',
+        ]);
+
+        $procedure = Procedure::findOrFail($request->Id_Procedure);
+        $successCount = 0;
+        $skipCount = 0;
+        $memberIds = [];
+
+        foreach ($request->Id_Report as $reportId) {
+            $report = \App\Models\Report::with('member')->findOrFail($reportId);
+
+            // Cek apakah procedure sudah ada di list report ini
+            $exists = \App\Models\List_Report::where('Id_Report', $report->Id_Report)
+                ->where('Name_Procedure', $procedure->Name_Procedure)
+                ->where('Name_Area', $procedure->Name_Area)
+                ->where('Name_Tractor', $procedure->Name_Tractor)
+                ->exists();
+
+            if ($exists) {
+                $skipCount++;
+                continue;
+            }
+
+            $name_member = $report->member->nama ?? 'Unknown';
+            $id_member = $report->Id_Member;
+            $timeReport = \Carbon\Carbon::parse($report->Start_Report)->format('Y-m-d');
+            $fullPath = 'reports/'.$timeReport.'_'.$id_member;
+
+            // Tambahkan ke list_reports
+            \App\Models\List_Report::create([
+                'Id_Report' => $report->Id_Report,
+                'Name_Procedure' => $procedure->Name_Procedure,
+                'Name_Area' => $procedure->Name_Area,
+                'Name_Tractor' => $procedure->Name_Tractor,
+                'Item_Procedure' => $procedure->Item_Procedure,
+                'Time_List_Report' => null,
+                'Time_Approved_Leader' => null,
+                'Time_Approved_Auditor' => null,
+                'Reporter_Name' => $name_member,
+                'Leader_Name' => null,
+                'Auditor_Name' => null,
+            ]);
+
+            // Copy PDF ke folder report
+            $sourcePath = 'procedures/'.$procedure->Name_Tractor.'/'.$procedure->Name_Area.'/'.$procedure->Name_Procedure.'.pdf';
+            $targetPath = $fullPath.'/'.$procedure->Name_Procedure.'.pdf';
+
+            if (Storage::disk('public')->exists($sourcePath)) {
+                Storage::disk('public')->copy($sourcePath, $targetPath);
+            }
+
+            // Kumpulkan member IDs untuk update Pic_Procedure
+            if (!in_array($id_member, $memberIds)) {
+                $memberIds[] = $id_member;
+            }
+
+            $successCount++;
+        }
+
+        // Update Pic_Procedure dengan menambahkan member IDs baru
+        if (!empty($memberIds)) {
+            $currentPics = $procedure->Pic_Procedure ?? [];
+            
+            // Merge dengan PIC yang sudah ada (hindari duplikat)
+            $updatedPics = array_unique(array_merge($currentPics, $memberIds));
+            
+            // Update procedure
+            $procedure->Pic_Procedure = $updatedPics;
+            $procedure->save();
+        }
+
+        $message = "Berhasil menambahkan procedure ke {$successCount} training";
+        if ($skipCount > 0) {
+            $message .= " ({$skipCount} training dilewati karena sudah ada)";
+        }
+        $message .= " dan menambahkan " . count($memberIds) . " PIC";
+
+        return back()->with('success', $message);
     }
 }

@@ -487,7 +487,7 @@
             });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
+            link.download = '{{ $listReport->report->member->nama }}-{{ $listReport->Name_Procedure }}.pdf';
             link.click();
         }
     </script>
@@ -654,7 +654,7 @@
             const fontSize = 8;
 
             // Pisah teks menjadi array baris
-            const lines = [now, "{{ $member->Name_Member }}"];
+            const lines = [now, "{{ $member->nama }}"];
             const lineHeight = fontSize + 2;
 
             // Mulai dari Y tertentu

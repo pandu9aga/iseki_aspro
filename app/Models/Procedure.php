@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class Procedure extends Model
 {
@@ -12,16 +11,40 @@ class Procedure extends Model
     protected $primaryKey = 'Id_Procedure';
     public $timestamps = false;
 
-    protected $fillable = ['Name_Procedure', 'Name_Area', 'Name_Tractor', 'Item_Procedure'];
+    protected $fillable = [
+        'Name_Procedure', 
+        'Name_Area', 
+        'Name_Tractor', 
+        'Item_Procedure', 
+        'Pic_Procedure'
+    ];
 
-    // ====== Tambahkan event ini ======
+    // Cast Pic_Procedure sebagai array
+    protected $casts = [
+        'Pic_Procedure' => 'array',
+    ];
+
+    // Relasi many-to-many dengan Member melalui JSON
+    public function pics()
+    {
+        $picIds = $this->Pic_Procedure ?? [];
+        if (empty($picIds)) {
+            return collect();
+        }
+        return Member::whereIn('id', $picIds)->get();
+    }
+
+    // Helper method untuk mendapatkan nama-nama PIC
+    public function getPicNamesAttribute()
+    {
+        return $this->pics()->pluck('nama')->implode(', ');
+    }
+
     protected static function boot()
     {
         parent::boot();
 
         static::updated(function ($procedure) {
-            // 1. Cari semua List_Report yang cocok dengan kombinasi lama DAN baru?
-            // Kita asumsikan bahwa sebelum update, data lama sudah tersimpan di $procedure->getOriginal()
             $oldNameProcedure = $procedure->getOriginal('Name_Procedure');
             $oldNameArea = $procedure->getOriginal('Name_Area');
             $oldNameTractor = $procedure->getOriginal('Name_Tractor');
@@ -31,49 +54,45 @@ class Procedure extends Model
             $newNameTractor = $procedure->Name_Tractor;
             $newItemProcedure = $procedure->Item_Procedure;
 
-            // 2. Cari List_Report yang sebelumnya cocok dengan data lama
             $matchingListReports = List_Report::where('Name_Procedure', $oldNameProcedure)
                 ->where('Name_Area', $oldNameArea)
                 ->where('Name_Tractor', $oldNameTractor)
                 ->get();
 
             foreach ($matchingListReports as $listReport) {
-                // 3. Update ke nilai baru
-                $listReport->update([
-                    'Name_Procedure' => $newNameProcedure,
-                    'Name_Area' => $newNameArea,
-                    'Name_Tractor' => $newNameTractor,
-                    'Item_Procedure' => $newItemProcedure,
-                    'Time_List_Report' => null,
-                    'Time_Approved_Leader' => null,
-                    'Time_Approved_Auditor' => null,
-                    'Leader_Name' => null,
-                    'Auditor_Name' => null,
-                ]);
+                $isNotSubmitted =
+                    is_null($listReport->Time_List_Report) &&
+                    is_null($listReport->Time_Approved_Leader) &&
+                    is_null($listReport->Time_Approved_Auditor);
 
-                // 4. Ganti PDF di folder reports
-                // Ambil data report terkait
-                $report = $listReport->report;
-                if ($report) {
-                    $startReport = $report->Start_Report; // asumsi format: Y-m-d
-                    $idMember = $report->Id_Member;
+                if ($isNotSubmitted) {
+                    $listReport->update([
+                        'Name_Procedure' => $newNameProcedure,
+                        'Name_Area' => $newNameArea,
+                        'Name_Tractor' => $newNameTractor,
+                        'Item_Procedure' => $newItemProcedure,
+                        'Time_List_Report' => null,
+                        'Time_Approved_Leader' => null,
+                        'Time_Approved_Auditor' => null,
+                        'Leader_Name' => null,
+                        'Auditor_Name' => null,
+                    ]);
 
-                    $oldPdfPath = "reports/{$startReport}_{$idMember}/{$oldNameProcedure}.pdf";
-                    $newPdfPath = "reports/{$startReport}_{$idMember}/{$newNameProcedure}.pdf";
-                    $sourcePdfPath = "procedures/{$newNameTractor}/{$newNameArea}/{$newNameProcedure}.pdf";
+                    $report = $listReport->report;
+                    if ($report) {
+                        $startDate = \Carbon\Carbon::parse($report->Start_Report)->format('Y-m-d');
+                        $targetDir = "reports/{$startDate}_{$report->Id_Member}";
+                        $sourcePdfPath = "procedures/{$newNameTractor}/{$newNameArea}/{$newNameProcedure}.pdf";
+                        $destPdfPath = "{$targetDir}/{$newNameProcedure}.pdf";
 
-                    // Pastikan folder reports/{...} ada
-                    Storage::disk('public')->makeDirectory(dirname($newPdfPath));
+                        Storage::disk('public')->makeDirectory($targetDir, 0755, true, true);
 
-                    // Hapus file lama jika ada (opsional, tapi aman)
-                    if (Storage::disk('public')->exists($oldPdfPath) && $oldPdfPath !== $newPdfPath) {
-                        Storage::disk('public')->delete($oldPdfPath);
-                    }
-
-                    // Copy/replace dengan file terbaru dari procedures
-                    if (Storage::disk('public')->exists($sourcePdfPath)) {
-                        $pdfContent = Storage::disk('public')->get($sourcePdfPath);
-                        Storage::disk('public')->put($newPdfPath, $pdfContent);
+                        if (Storage::disk('public')->exists($sourcePdfPath)) {
+                            Storage::disk('public')->put(
+                                $destPdfPath,
+                                Storage::disk('public')->readStream($sourcePdfPath)
+                            );
+                        }
                     }
                 }
             }

@@ -53,6 +53,13 @@
                                         style="max-width: 180px; max-height: 180px; width: auto; height: auto;">
                                 </div>
                                 <b class="text-primary">{{ $t->Name_Tractor }}</b>
+                                
+                                <!-- Total Procedure Count -->
+                                <div>
+                                    <span class="badge bg-primary">
+                                        {{ $tractorProcedureCounts[$t->Name_Tractor] ?? 0 }}
+                                    </span>
+                                </div>
                             </div>
                         </a>
                         <span class="mt-3">
@@ -69,46 +76,6 @@
                 </div>
                 @endforeach
             </div>
-
-            {{-- <div class="table-responsive p-0">
-                <table id="example" class="table align-items-center mb-0">
-                    <thead>
-                        <tr>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Tractor</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ( $tractors as $t )
-                        <tr>
-                            <td class="align-middle text-center">
-                                <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
-                            </td>
-                            <td class="align-middle text-center">
-                                <p class="text-xs">
-                                    <a href="{{ route('procedure.area.index', ['Name_Tractor' => $t->Name_Tractor]) }}" class="text-primary">
-                                        {{ $t->Name_Tractor }}
-                                    </a>
-                                </p>
-                            </td>
-                            <td class="align-middle text-center">
-                                <div class="d-flex justify-content-center">
-                                    <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#editModal"
-                                        onclick="setEdit({{ $t }})">
-                                        <i class="material-symbols-rounded">app_registration</i>
-                                    </a>
-                                    <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                        onclick="setDelete({{ $t }})">
-                                        <i class="material-symbols-rounded">delete</i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div> --}}
         </div>
     </section>
 </div>
@@ -203,24 +170,25 @@
 </div>
 @endsection
 
-{{-- @section('style')
-<link href="{{asset('assets/datatables/datatables.min.css')}}" rel="stylesheet">
-@endsection --}}
-
 @section('style')
 <style>
     .hover-card {
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
     }
 
     .hover-card:hover {
-        background-color: #e91e63 !important; /* Biru Bootstrap */
+        background-color: #e91e63 !important;
         color: white !important;
         transform: translateY(-5px);
     }
 
     .hover-card:hover b {
         color: white !important;
+    }
+
+    .hover-card:hover .badge {
+        background: linear-gradient(310deg, #ffffff 0%, #f0f0f0 100%) !important;
+        color: #e91e63 !important;
     }
 </style>
 @endsection
@@ -233,26 +201,21 @@ new DataTable('#example');
 </script>
 <script>
     function setEdit(data) {
-        // Set form action
         const form = document.getElementById('editForm');
-        form.action = '/iseki_aspro/public/procedure/tractor/update/' + data.Id_Tractor; // Sesuaikan route-mu // kalau di server /iseki_aspro/public/procedure/tractor/update/
+        form.action = '/iseki_aspro/public/procedure/tractor/update/' + data.Id_Tractor;
 
-        // Isi data
         document.getElementById('edit-name').value = data.Name_Tractor;
 
-        // Tambahkan class is-filled agar label naik
         document.querySelectorAll('#editModal .input-group').forEach(group => {
             group.classList.add('is-filled');
         });
     }
 
     function setDelete(data) {
-        // Set nama ke <b>
         document.getElementById('delete-name').textContent = data.Name_Tractor;
 
-        // Set action form
         const form = document.getElementById('deleteForm');
-        form.action = `/iseki_aspro/public/procedure/tractor/delete/${data.Id_Tractor}`; // Sesuaikan dengan rute sebenarnya jika beda // kalau di server /iseki_aspro/public/procedure/tractor/delete/
+        form.action = `/iseki_aspro/public/procedure/tractor/delete/${data.Id_Tractor}`;
     }
 </script>
 @endsection

@@ -34,12 +34,12 @@
                 <div class="row">
                     <div class="col-12 mx-auto">
                         <div>
-                            Start Training - 
+                            Start Training -
                             <span class="text-primary">
                                 {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}
                             </span>
                         </div>
-                        <div>Member - <span class="text-primary">{{ $member->Name_Member }}</span></div>
+                        <div>Member - <span class="text-primary">{{ $member->nama }}</span></div>
                     </div>
                 </div>
             </div>

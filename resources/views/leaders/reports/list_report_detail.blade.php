@@ -42,7 +42,7 @@
                                 </a>
                             </div>
                             <div>Member - <a class="text-primary"
-                                    href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->Name_Member }}</a>
+                                    href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->nama }}</a>
                             </div>
                             <div>Tractor - <a class="text-primary"
                                     href="{{ route('list_report_detail', ['Id_Report' => $Id_Report, 'Name_Tractor' => $tractor->Name_Tractor]) }}">{{ $tractor->Name_Tractor }}</a>
@@ -152,6 +152,19 @@
                                                     <i class="material-symbols-rounded">delete</i>
                                                 </button>
                                             </form>
+                                            <!-- Reset -->
+                                            @if($l->Time_Approved_Leader || $l->Time_Approved_Auditor || $l->Time_List_Report)
+                                                <form action="{{ route('list_report.reset', $l->Id_List_Report) }}"
+                                                    method="POST" class="d-inline reset-form">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="btn btn-link text-warning p-0 mx-1"
+                                                        title="Reset Approval"
+                                                        onclick="return confirm('Reset approval untuk prosedur {{ addslashes($l->Name_Procedure) }}?')">
+                                                        <i class="material-symbols-rounded">restart_alt</i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -178,7 +191,7 @@
                         <div class="input-group input-group-outline my-3 is-filled">
                             <label class="form-label">Name Member</label>
                             <input type="text" class="form-control" name="Name_Member"
-                                value="{{ $report->member->Name_Member }}" required readonly>
+                                value="{{ $report->member->nama }}" required readonly>
                         </div>
                         <div class="input-group input-group-outline my-3 is-filled">
                             <label class="form-label">Procedures</label>
@@ -192,6 +205,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn bg-gradient-primary w-100 my-2">Submit</button>
+                        <button type="button" class="btn bg-gradient-warning w-100 my-2" id="resetFormBtn">Reset</button>
                         <button type="button" class="btn bg-gradient-secondary w-100 my-2 mb-2"
                             data-bs-dismiss="modal">Cancel</button>
                     </div>
@@ -223,6 +237,11 @@
             $('.select2').each(function() {
                 $(this).next('.select2-container').find('.select2-selection').addClass('form-control');
             });
+        });
+
+        // Reset form button
+        $('#resetFormBtn').on('click', function() {
+            $('select[name="Name_Procedure[]"]').val(null).trigger('change');
         });
     </script>
 @endsection

@@ -21,7 +21,7 @@ class List_Report extends Model
         'Time_Approved_Auditor',
         'Reporter_Name',
         'Leader_Name',
-        'Auditor_Name'
+        'Auditor_Name',
     ];
 
     public function report()
@@ -29,11 +29,8 @@ class List_Report extends Model
         return $this->belongsTo(Report::class, 'Id_Report', 'Id_Report');
     }
 
-    public function getProcedureMatchAttribute()
+    public function Temuans()
     {
-        return Procedure::where('Name_Procedure', $this->Name_Procedure)
-                        ->where('Name_Area', $this->Name_Area)
-                        ->where('Name_Tractor', $this->Name_Tractor)
-                        ->first();
+        return $this->hasMany(Temuan::class, 'Id_List_Report', 'Id_List_Report');
     }
 }

@@ -3,7 +3,7 @@
 * Material Kit 3 - v3.1.0
 =========================================================
 
-* Product Page:  https://www.creative-tim.com/product/material-kit 
+* Product Page:  https://www.creative-tim.com/product/material-kit
 * Copyright 2024 Creative Tim (https://www.creative-tim.com)
 * Coded by www.creative-tim.com
 
@@ -67,10 +67,17 @@
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}""
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}"
                                         href="{{ route('report_auditor') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">assignment</i>
                                         Training
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown dropdown-hover mx-2">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'temuan' ? 'text-primary' : '' }}"
+                                        href="{{route('auditor-report.temuan_index')}}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">report_problem</i>
+                                        Temuan
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">

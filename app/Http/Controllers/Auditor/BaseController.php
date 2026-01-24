@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Auditor;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\Procedure;
+use App\Models\User;
 use Carbon\Carbon;
 
 class BaseController extends Controller
 {
-    public function index(){
-        $page = "home";
+    public function index()
+    {
+        $page = 'home';
         $today = Carbon::today();
 
         $Id_User = session('Id_User');
@@ -20,5 +20,5 @@ class BaseController extends Controller
         $procedures = Procedure::count();
 
         return view('auditors.home', compact('page', 'today', 'user', 'procedures'));
-    }    
+    }
 }

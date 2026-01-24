@@ -14,7 +14,6 @@
 </header>
 
 <div class="card card-body blur shadow-blur mx-3 mx-md-4 mt-n6">
-
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
             <li class="breadcrumb-item text-sm"><a class="opacity-5 text-primary" href="{{ route('procedure') }}">Procedure</a></li>
@@ -49,13 +48,11 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12 col-md-3 mb-2 mb-md-0">
-                        <!-- Tombol Add di kiri -->
                         <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#addModal">
                             <span style="padding-left: 50px; padding-right: 50px;"><b>+</b> Add</span>
                         </button>
                     </div>
                     <div class="col-12 col-md-3 offset-md-6">
-                        <!-- Tombol Item di kanan -->
                         <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#itemModal">
                             <span style="padding-left: 50px; padding-right: 50px;"><i class="material-symbols-rounded">docs_add_on</i> Item</span>
                         </button>
@@ -68,10 +65,9 @@
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            {{-- <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Tractor</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Area</th> --}}
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Procedure</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Item</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">PIC</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
                         </tr>
                     </thead>
@@ -81,20 +77,6 @@
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
-                            {{-- <td class="align-middle text-center">
-                                <p class="text-xs">
-                                    <a href="{{ route('procedure.area.index', ['Name_Tractor' => $p->Name_Tractor]) }}" class="text-primary">
-                                        {{ $p->Name_Tractor }}
-                                    </a>
-                                </p>
-                            </td>
-                            <td class="align-middle text-center">
-                                <p class="text-xs">
-                                    <a href="{{ route('procedure.procedure.index', ['Name_Tractor' => $p->Name_Tractor, 'Name_Area' => $p->Name_Area]) }}" class="text-primary">
-                                        {{ $p->Name_Area }}
-                                    </a>
-                                </p>
-                            </td> --}}
                             <td class="align-middle text-center">
                                 <p class="text-xs">
                                     <a href="#" class="text-primary"
@@ -109,6 +91,11 @@
                                         onclick="previewPdf('{{ asset('storage/procedures/' . $p->Name_Tractor . '/' . $p->Name_Area . '/' . $p->Name_Procedure . '.pdf') }}?t={{ time() }}', '{{ $p->Name_Procedure }}')">
                                         {{ $p->Item_Procedure }}
                                     </a>
+                                </p>
+                            </td>
+                            <td class="align-middle text-center">
+                                <p class="text-xs text-secondary">
+                                    {{ $p->pic_names ?: '-' }}
                                 </p>
                             </td>
                             <td class="align-middle text-center">
@@ -335,43 +322,34 @@ new DataTable('#example');
 </script>
 <script>
     function setEdit(data) {
-        // Set form action
         const form = document.getElementById('editForm');
-        form.action = '/iseki_aspro/public/procedure/tractor/area/procedure/update/' + data.Id_Procedure; // Sesuaikan route-mu
+        form.action = '/iseki_aspro/public/procedure/tractor/area/procedure/update/' + data.Id_Procedure;
 
-        // Isi data
         document.getElementById('edit-tractor').value = data.Name_Tractor;
         document.getElementById('edit-area').value = data.Name_Area;
         document.getElementById('edit-procedure').value = data.Name_Procedure;
         document.getElementById('edit-item').value = data.Item_Procedure;
 
-        // Tambahkan class is-filled agar label naik
         document.querySelectorAll('#editModal .input-group').forEach(group => {
             group.classList.add('is-filled');
         });
     }
 
     function setDelete(data) {
-        // Set nama ke <b>
         document.getElementById('delete-name').textContent = data.Name_Procedure;
-
-        // Set action form
         const form = document.getElementById('deleteForm');
-        form.action = `/iseki_aspro/public/procedure/tractor/area/procedure/delete/${data.Id_Procedure}`; // Sesuaikan dengan rute sebenarnya jika beda
+        form.action = `/iseki_aspro/public/procedure/tractor/area/procedure/delete/${data.Id_Procedure}`;
     }
 
     function setUpload(data) {
-        // Set form action
         const form = document.getElementById('uploadForm');
-        form.action = '/iseki_aspro/public/procedure/tractor/area/procedure/upload/' + data.Id_Procedure; // Sesuaikan route-mu
+        form.action = '/iseki_aspro/public/procedure/tractor/area/procedure/upload/' + data.Id_Procedure;
 
-        // Isi data
         document.getElementById('upload-tractor').value = data.Name_Tractor;
         document.getElementById('upload-area').value = data.Name_Area;
         document.getElementById('upload-procedure').value = data.Name_Procedure;
         document.getElementById('upload-item').value = data.Item_Procedure;
 
-        // Tambahkan class is-filled agar label naik
         document.querySelectorAll('#uploadModal .input-group').forEach(group => {
             group.classList.add('is-filled');
         });

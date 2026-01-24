@@ -19,7 +19,7 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-lg-3 mt-lg-0 mt-4">
+            <div class="col-lg-3 mt-lg-0 my-4">
                 <a href="{{ route('user') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">remember_me</i>
@@ -30,7 +30,7 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-3 mt-lg-0 mt-4">
+            <div class="col-lg-3 mt-lg-0 my-4">
                 <a href="{{ route('team') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">badge</i>
@@ -41,7 +41,7 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-3 mt-lg-0 mt-4">
+            <div class="col-lg-3 mt-lg-0 my-4">
                 <a href="{{ route('procedure') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">format_list_numbered</i>
@@ -52,13 +52,35 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-3 mt-lg-0 mt-4">
+            <div class="col-lg-3 mt-lg-0 my-4">
+                <a href="{{ route('missing') }}" class="text-decoration-none">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <i class="material-symbols-rounded text-primary" style="font-size: 100px;">dangerous</i>
+                        <br>
+                        <div class="mt-3 mt-md-0">
+                            <h4>Missing</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 mt-lg-0 my-4">
                 <a href="{{ route('report') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">assignment</i>
                         <br>
                         <div class="mt-3 mt-md-0">
                             <h4>Training</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 mt-lg-0 my-4">
+                <a href="{{ route('leader-temuan.list') }}" class="text-decoration-none">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <i class="material-symbols-rounded text-primary" style="font-size: 100px;">report_problem</i>
+                        <br>
+                        <div class="mt-3 mt-md-0">
+                            <h4>Temuan</h4>
                         </div>
                     </div>
                 </a>
@@ -74,19 +96,9 @@
                         <div class="row">
                             <div class="col-lg-9 mx-auto py-3">
                                 <div class="row">
-                                    <div class="col-md-2 position-relative">
-                                        {{-- <div class="p-3 text-center">
-                                            <h1 class="text-gradient text-primary"><span id="state1" countTo="{{ $tractors }}">0</span></h1>
-                                            <h5 class="mt-3">Tractors</h5>
-                                            <p class="text-sm font-weight-normal">
-                                                Number of tractor types available on this website
-                                            </p>
-                                        </div> --}}
-                                        <hr class="vertical dark">
-                                    </div>
-                                    <div class="col-md-8 position-relative">
+                                    <div class="col-md-6 position-relative">
                                         <div class="p-3 text-center">
-                                            <h1 class="text-gradient text-primary display-3"><b id="state2" countTo="{{ $procedures }}">0</b></h1>
+                                            <h1 class="text-gradient text-primary display-3"><b id="state1" countTo="{{ $procedures }}">0</b></h1>
                                             <h3 class="mt-3 fw-bold">Procedures</h3>
                                             <p class="fs-5 fw-semibold">
                                                 Total procedures for all existing tractor types
@@ -94,15 +106,15 @@
                                         </div>
                                         <hr class="vertical dark">
                                     </div>
-                                    {{-- <div class="col-md-4">
+                                    <div class="col-md-6 position-relative">
                                         <div class="p-3 text-center">
-                                            <h1 class="text-gradient text-primary"><span id="state3" countTo="{{ $users }}">0</span></h1>
-                                            <h5 class="mt-3">Users</h5>
-                                            <p class="text-sm font-weight-normal">
-                                                Number of registered users on this website
+                                            <h1 class="text-gradient text-danger display-3"><b id="state2" countTo="{{ $missing }}">0</b></h1>
+                                            <h3 class="mt-3 fw-bold text-danger">Missing</h3>
+                                            <p class="fs-5 fw-semibold text-danger">
+                                                Total missing procedures without PIC assigned
                                             </p>
                                         </div>
-                                    </div> --}}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -148,7 +160,7 @@
                         <h4 class="text-white">Manage</h4>
                         <h1 class="text-white">Procedure</h1>
                         <p class="lead text-white opacity-8">
-                            Manage and organize existing assembling procedures in the procedures menu. 
+                            Manage and organize existing assembling procedures in the procedures menu.
                             You can upload procedure files (using pdf format), change them, delete them as per policy.
                         </p>
                         <a href="{{ route('procedure') }}"
@@ -170,7 +182,7 @@
                     <div class="ps-0 ps-md-3 mt-3 mt-md-0">
                         <h5>User</h5>
                         <p>
-                            Manage and organize all registered users through the user management section. 
+                            Manage and organize all registered users through the user management section.
                             This feature allows administrators to add new users, edit existing information, assign user roles, and delete accounts when necessary.
                         </p>
                         <a href="{{ route('user') }}" class="text-primary icon-move-right">
@@ -186,7 +198,7 @@
                     <div class="ps-0 ps-md-3 mt-3 mt-md-0">
                         <h5>Training</h5>
                         <p>
-                             View and manage reports submitted by training members regarding the assembling procedures they have completed or reviewed. 
+                             View and manage reports submitted by training members regarding the assembling procedures they have completed or reviewed.
                              This section provides structured documentation of feedback, observations, and potential issues encountered during the training process.
                         </p>
                         <a href="{{ route('report') }}" class="text-primary icon-move-right">

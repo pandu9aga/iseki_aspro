@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
+use App\Models\List_Report;
 use App\Models\Member;
 use App\Models\Report;
-use App\Models\List_Report;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ReportMemberController extends Controller
 {
     public function index()
     {
-        $page = "report";
+        $page = 'report';
 
         $Id_Member = session('Id_Member');
         $reports = Report::where('Id_Member', $Id_Member)
@@ -26,8 +26,9 @@ class ReportMemberController extends Controller
         return view('members.reports.index', compact('page', 'reports', 'member'));
     }
 
-    public function report_list_member($Id_Report){
-        $page = "report";
+    public function report_list_member($Id_Report)
+    {
+        $page = 'report';
 
         $report = Report::findOrFail($Id_Report);
         $list_reports = List_Report::where('Id_Report', $Id_Report)->orderBy('Name_Procedure', 'asc')->get();
@@ -39,20 +40,20 @@ class ReportMemberController extends Controller
 
     public function detail($Id_List_Report)
     {
-        $page = "report";
+        $page = 'report';
 
         $Id_Member = session('Id_Member');
         $member = Member::find($Id_Member);
 
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->Id_Member;
+        $id_member = $listReport->report->member->id;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
-        $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
+        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
 
-        $fileName = $listReport->Name_Procedure . '.pdf';
-        $pdfPath = $fullPath . '/' . $fileName;
+        $fileName = $listReport->Name_Procedure.'.pdf';
+        $pdfPath = $fullPath.'/'.$fileName;
 
         return view('members.reports.report', compact('page', 'listReport', 'pdfPath', 'member'));
     }
@@ -61,19 +62,19 @@ class ReportMemberController extends Controller
     {
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->Id_Member;
+        $id_member = $listReport->report->member->id;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
             $pdf = $request->file('pdf');
 
             // Path target di public/storage/reports/...
-            $path = 'storage/reports/' . $timeReport . '_' . $id_member;
-            $filename = $listReport->Name_Procedure . '.pdf';
+            $path = 'storage/reports/'.$timeReport.'_'.$id_member;
+            $filename = $listReport->Name_Procedure.'.pdf';
 
             // Pastikan direktori ada
             $fullPath = public_path($path);
-            if (!file_exists($fullPath)) {
+            if (! file_exists($fullPath)) {
                 mkdir($fullPath, 0755, true);
             }
 
