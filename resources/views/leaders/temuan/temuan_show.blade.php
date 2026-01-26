@@ -1,4 +1,4 @@
-@extends('layouts.auditor')
+@extends('layouts.leader')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -6,7 +6,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 mx-auto">
-                        <h3 class="text-white pt-3 mt-n2">Report</h3>
+                        <h3 class="text-white pt-3 mt-n2">Penanganan Temuan</h3>
                     </div>
                 </div>
             </div>
@@ -17,13 +17,27 @@
 
         <section class="pt-3 pb-4" id="count-stats">
             <div class="container">
-                <!-- Tombol Back & List Temuan -->
+                <!-- Alerts -->
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="material-symbols-rounded text-sm align-middle me-2">check_circle</i>
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="material-symbols-rounded text-sm align-middle me-2">error</i>
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                <!-- Tombol Back -->
                 <div class="d-flex gap-2 mb-4">
-                    <a class="btn btn-primary" href="{{ route('report_auditor.detail', ['Id_List_Report' => $listReport->Id_List_Report]) }}">
-                        <i class="material-symbols-rounded text-sm">arrow_back</i> Back
-                    </a>
-                    <a class="btn btn-info" href="{{ route('auditor-report.temuan_index') }}">
-                        <i class="material-symbols-rounded text-sm">list</i> List Temuan
+                    <a class="btn btn-primary" href="{{ route('leader-temuan.list') }}">
+                        <i class="material-symbols-rounded text-sm">arrow_back</i> Back to List
                     </a>
                 </div>
 
@@ -32,7 +46,7 @@
                     <div class="card-body py-3">
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
-                            <h4 class="mb-0">Temuan: <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h4>
+                            <h4 class="mb-0">Penanganan Temuan: <span class="text-primary">{{ $temuan->ListReport->Name_Procedure }}</span></h4>
                         </div>
                     </div>
                 </div>
@@ -42,7 +56,7 @@
                     <div class="card-header pb-0">
                         <h6 class="mb-0">
                             <i class="material-symbols-rounded text-sm align-middle me-1">picture_as_pdf</i>
-                            Preview Dokumen
+                            Preview Dokumen Asli
                         </h6>
                     </div>
                     <div class="card-body">
@@ -52,109 +66,97 @@
                     </div>
                 </div>
 
-                @if($totalListTemuan > 0)
-                    <div class="mb-3">
-                        <h5 class="text-dark">
-                            <i class="material-symbols-rounded text-lg align-middle me-1">checklist</i>
-                            Daftar Temuan yang Telah Disubmit ({{ $totalListTemuan }})
-                        </h5>
-                    </div>
+                <!-- Temuan Section -->
+                @php
+                    $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
+                    $listReport = $temuan->ListReport;
+                    $comments = $object->get('Comments_Temuan', []);
+                    $comments_penanganan = $object->get('Comments_Penanganan', []);
+                @endphp
 
-                    @foreach($listTemuan as $index => $temuan)
-                        @php
-                            $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
-                            $comments = $object->get('Comments_Temuan', []);
-                        @endphp
-
-                        <div class="card mb-4 shadow-sm">
-                            <div class="card-header pb-0">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-2">
-                                            <i class="material-symbols-rounded text-sm align-middle me-1">person</i>
-                                            Auditor: <span class="text-primary">{{ $object->get('Name_User_Temuan', 'N/A') }}</span>
-                                        </h6>
-                                        <p class="text-xs text-secondary mb-0">
-                                            <i class="material-symbols-rounded text-xs align-middle me-1">schedule</i>
-                                            {{ \Carbon\Carbon::parse($temuan->Time_Temuan)->format('d F Y, H:i') }} WIB
-                                        </p>
-                                    </div>
-                                    <div class="d-flex flex-column gap-2 align-items-end">
-                                        @if($temuan->Status_Temuan)
-                                            <span class="badge bg-gradient-success">
-                                                <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
-                                            </span>
-                                        @elseif($temuan->Is_Submit_Temuan)
-                                            <span class="badge bg-gradient-info">
-                                                <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi
-                                            </span>
-                                        @else
-                                            <span class="badge bg-gradient-warning">
-                                                <i class="material-symbols-rounded text-xs me-1">pending</i>Menunggu Penanganan
-                                            </span>
-                                        @endif
-                                        <a href="{{ route('auditor-report.temuan_show',['Id_Temuan' => $temuan->Id_Temuan]) }}" class="btn btn-sm btn-info">
-                                            <i class="material-symbols-rounded text-sm">visibility</i> Lihat Detail
-                                        </a>
-                                    </div>
-                                </div>
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header pb-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-2">
+                                    <i class="material-symbols-rounded text-sm align-middle me-1">person</i>
+                                    Auditor: <span class="text-primary">{{ $object->get('Name_User_Temuan', 'N/A') }}</span>
+                                </h6>
+                                <p class="text-xs text-secondary mb-0">
+                                    <i class="material-symbols-rounded text-xs align-middle me-1">schedule</i>
+                                    {{ \Carbon\Carbon::parse($temuan->Time_Temuan)->format('d F Y, H:i') }} WIB
+                                </p>
                             </div>
-                            <div class="card-body">
-
-                                <a href="{{ asset($object->get('File_Path_Temuan', '')) }}" download="Temuan_{{ $listReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
-                                    <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
-                                </a>
-
-                                <div id="pdf-container-{{$temuan->Id_Temuan}}" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
-                                    <canvas id="default-pdf-canvas-{{$temuan->Id_Temuan}}"></canvas>
-                                </div>
-
-                                @if(!empty($comments) && is_array($comments))
-                                    <div class="mt-3">
-                                        <h6 class="text-dark mb-3">
-                                            <i class="material-symbols-rounded text-sm align-middle me-1">format_list_bulleted</i>
-                                            Daftar Temuan ({{ count($comments) }} item)
-                                        </h6>
-                                        <ul class="list-group">
-                                            @foreach($comments as $index => $comment)
-                                                @php
-                                                    $commentText = is_array($comment) ? ($comment['text'] ?? '') : (is_object($comment) ? ($comment->text ?? '') : $comment);
-                                                @endphp
-                                                @if(!empty($commentText))
-                                                    <li class="list-group-item d-flex align-items-start">
-                                                        <span class="badge bg-primary me-2 mt-1">{{ $index + 1 }}</span>
-                                                        <span class="text-sm">{{ $commentText }}</span>
-                                                    </li>
-                                                @endif
-                                            @endforeach
-                                        </ul>
-                                    </div>
+                            <div class="d-flex flex-column gap-2 align-items-end">
+                                @if($temuan->Status_Temuan)
+                                    <span class="badge bg-gradient-success">
+                                        <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
+                                    </span>
+                                @elseif($object->Is_Submit_Penanganan)
+                                    <span class="badge bg-gradient-info">
+                                        <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi
+                                    </span>
                                 @else
-                                    <div class="alert alert-info mb-0">
-                                        <i class="material-symbols-rounded text-sm align-middle me-1">info</i>
-                                        Tidak ada komentar temuan
-                                    </div>
+                                    <span class="badge bg-gradient-warning">
+                                        <i class="material-symbols-rounded text-xs me-1">pending</i>Menunggu Penanganan
+                                    </span>
                                 @endif
                             </div>
                         </div>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ asset($object->get('File_Path_Temuan', '')) }}" download="Temuan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
+                            <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
+                        </a>
 
-                    @endforeach
-                @endif
+                        <div id="pdf-container-temuan" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                            <canvas id="default-pdf-canvas-temuan"></canvas>
+                        </div>
 
+                        @if(!empty($comments) && is_array($comments))
+                            <div class="mt-3">
+                                <h6 class="text-dark mb-3">
+                                    <i class="material-symbols-rounded text-sm align-middle me-1">format_list_bulleted</i>
+                                    Daftar Temuan ({{ count($comments) }} item)
+                                </h6>
+                                <ul class="list-group">
+                                    @foreach($comments as $index => $comment)
+                                        @php
+                                            $commentText = is_array($comment) ? ($comment['text'] ?? '') : (is_object($comment) ? ($comment->text ?? '') : $comment);
+                                        @endphp
+                                        @if(!empty($commentText))
+                                            <li class="list-group-item d-flex align-items-start">
+                                                <span class="badge bg-primary me-2 mt-1">{{ $index + 1 }}</span>
+                                                <span class="text-sm">{{ $commentText }}</span>
+                                            </li>
+                                        @endif
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @else
+                            <div class="alert alert-info mb-0">
+                                <i class="material-symbols-rounded text-sm align-middle me-1">info</i>
+                                Tidak ada komentar temuan
+                            </div>
+                        @endif
+                    </div>
+                </div>
 
-                @if($totalListTemuanNull == 0)
-                    <!-- Form Tambah Temuan Baru -->
-                    <div class="card shadow-sm">
+                <!-- Form Penanganan -->
+                @if(!$object->get('UploudFoto_Time_Penanganan',false))
+                    <div class="card mt-4 mb-4 shadow-sm">
                         <div class="card-header pb-0">
                             <h6 class="mb-0">
-                                <i class="material-symbols-rounded text-sm align-middle me-1">add_circle</i>
-                                Tambah Temuan Baru
+                                <i class="material-symbols-rounded text-sm align-middle me-1">build</i>
+                                Form Penanganan
                             </h6>
                         </div>
                         <div class="card-body">
+                            <p class="text-sm text-muted mb-3">Unggah foto penanganan untuk temuan ini.</p>
+
                             <label class="form-label text-sm font-weight-bold">
                                 <i class="material-symbols-rounded text-sm align-middle me-1">photo_camera</i>
-                                Upload Foto untuk: <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
+                                Upload Foto Penanganan: <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
                             </label>
                             <div class="input-group input-group-outline mb-3">
                                 <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*" capture="environment">
@@ -162,184 +164,200 @@
                             <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
 
                             <div class="mt-4">
-                                <button class="btn btn-primary" onclick="TambahkanTemuan()">
-                                    <i class="material-symbols-rounded text-sm">add</i> Tambahkan Temuan
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <!-- Editor Temuan -->
-                    <div class="card shadow-sm">
-                        <div class="card-header pb-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">
-                                    <i class="material-symbols-rounded text-sm align-middle me-1">edit_note</i>
-                                    Editor Temuan
-                                </h6>
-                                <span class="badge bg-gradient-info">Mode Editor</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <!-- Toolbar -->
-                            <div class="d-flex flex-wrap gap-2 mb-3 p-3 bg-light rounded">
-                                <button class="btn btn-sm btn-primary" id="checklist-btn" onclick="toggleChecklist('check')" title="Checklist">
-                                    <i class="material-symbols-rounded text-sm" id="checklist-btn-icon">edit_off</i>
-                                </button>
-                                <button class="btn btn-sm btn-warning" onclick="undo()" title="Undo">
-                                    <i class="material-symbols-rounded text-sm">undo</i>
-                                </button>
-                                <button class="btn btn-sm btn-info" onclick="redo()" title="Redo">
-                                    <i class="material-symbols-rounded text-sm">redo</i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" id="delete-btn" onclick="deleteSelected()" disabled title="Delete">
-                                    <i class="material-symbols-rounded text-sm">delete</i>
-                                </button>
-                                <button class="btn btn-sm btn-primary" id="ng-btn" onclick="toggleChecklist('ng')" title="Mark NG">
-                                    <i class="material-symbols-rounded text-sm" id="ng-btn-icon">block</i>
-                                </button>
-                                <button class="btn btn-sm btn-primary" id="x-btn" onclick="toggleChecklist('x')" title="Mark X">
-                                    <i class="material-symbols-rounded text-sm" id="x-btn-icon">close</i>
-                                </button>
-                                <button class="btn btn-sm btn-primary" id="comment-btn" onclick="toggleChecklist('comment')" title="Add Comment">
-                                    <i class="material-symbols-rounded text-sm" id="comment-btn-icon">comment</i>
-                                </button>
-                            </div>
-
-                            <!-- PDF Editor Canvas -->
-                            <div id="pdf-container-editor" class="border rounded" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
-                                <canvas id="pdf-canvas-editor"></canvas>
-                                <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex gap-2 mt-3">
-                                <button onclick="submitReport()" class="btn btn-success">
-                                    <i class="material-symbols-rounded text-sm">send</i> Submit Temuan
+                                <button class="btn btn-success" onclick="uploudFoto()">
+                                    <i class="material-symbols-rounded text-sm">upload</i> Submit Penanganan
                                 </button>
                             </div>
                         </div>
                     </div>
                 @endif
 
+                <!-- Penanganan Section -->
+                @if($object->Is_Submit_Penanganan)
+                    <div class="card mt-4 mb-4 shadow-sm">
+                        <div class="card-header pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-2">
+                                        <i class="material-symbols-rounded text-sm align-middle me-1">build</i>
+                                        Penanggung Jawab: <span class="text-primary">{{ $object->get('Name_User_Penanganan', 'N/A') }}</span>
+                                    </h6>
+                                    <p class="text-xs text-secondary mb-0">
+                                        <i class="material-symbols-rounded text-xs align-middle me-1">schedule</i>
+                                        {{ $temuan->Time_Penanganan ? \Carbon\Carbon::parse($temuan->Time_Penanganan)->format('d F Y, H:i') : '-' }} WIB
+                                    </p>
+                                </div>
+                                <div class="d-flex flex-column gap-2 align-items-end">
+                                    @if($temuan->Status_Temuan)
+                                        <span class="badge bg-gradient-success">
+                                            <i class="material-symbols-rounded text-xs me-1">check_circle</i>Tervalidasi
+                                        </span>
+                                    @else
+                                        <span class="badge bg-gradient-info">
+                                            <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if($temuan->Status_Temuan)
+                                <div class="alert alert-success mb-3" role="alert">
+                                    <div class="d-flex align-items-start">
+                                        <i class="material-symbols-rounded text-sm me-2">check_circle</i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-2">
+                                                <strong>Status Validasi:</strong>
+                                                <span class="text-uppercase text-success">✓ Disetujui</span>
+                                            </h6>
+                                            @if($object->get('Validation_Time'))
+                                                <small class="d-block mb-2">
+                                                    <i class="material-symbols-rounded text-xs align-middle">schedule</i>
+                                                    <strong>Waktu:</strong> {{ \Carbon\Carbon::parse($object->get('Validation_Time'))->format('d F Y, H:i') }} WIB
+                                                </small>
+                                            @endif
+                                            @if($object->get('Validation_Notes'))
+                                                <div class="mt-2 p-2 bg-light rounded">
+                                                    <small>
+                                                        <i class="material-symbols-rounded text-xs align-middle">comment</i>
+                                                        <strong>Catatan Validasi:</strong><br>
+                                                        <em class="text-dark">"{{ $object->get('Validation_Notes') }}"</em>
+                                                    </small>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
 
+                            <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}" download="Penanganan_{{ $listReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
+                                <i class="material-symbols-rounded text-sm">download</i> Download PDF Penanganan
+                            </a>
+
+                            <div id="pdf-container-penanganan" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                                <canvas id="default-pdf-canvas-penanganan"></canvas>
+                            </div>
+
+                            @if(!empty($comments_penanganan) && is_array($comments_penanganan))
+                                <div class="mt-3">
+                                    <h6 class="text-dark mb-3">
+                                        <i class="material-symbols-rounded text-sm align-middle me-1">format_list_bulleted</i>
+                                        Daftar Penanganan ({{ count($comments_penanganan) }} item)
+                                    </h6>
+                                    <ul class="list-group">
+                                        @foreach($comments_penanganan as $index => $comment)
+                                            @php
+                                                $commentText = is_array($comment) ? ($comment['text'] ?? '') : (is_object($comment) ? ($comment->text ?? '') : $comment);
+                                            @endphp
+                                            @if(!empty($commentText))
+                                                <li class="list-group-item d-flex align-items-start">
+                                                    <span class="badge bg-success me-2 mt-1">{{ $index + 1 }}</span>
+                                                    <span class="text-sm">{{ $commentText }}</span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @else
+                                <div class="alert alert-info mb-0">
+                                    <i class="material-symbols-rounded text-sm align-middle me-1">info</i>
+                                    Tidak ada komentar penanganan
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                @if(!$object->Is_Submit_Penanganan && $object->UploudFoto_Time_Penanganan)
+                        <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist('check')">
+                            <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
+                        </button>
+                        <button class="btn btn-warning mt-3" onclick="undo()">
+                            <i class="material-symbols-rounded">undo</i>
+                        </button>
+                        <button class="btn btn-info mt-3" onclick="redo()">
+                            <i class="material-symbols-rounded">redo</i>
+                        </button>
+                        <button class="btn btn-danger mt-3" id="delete-btn" onclick="deleteSelected()" disabled>
+                            <i class="material-symbols-rounded">delete</i>
+                        </button>
+                        <!-- Tombol NG -->
+                        <button class="btn btn-primary mt-3" id="ng-btn" onclick="toggleChecklist('ng')">
+                            <i class="material-symbols-rounded" id="ng-btn-icon">block</i> <!-- Ganti ikon sesuai kebutuhan -->
+                        </button>
+                        <!-- Tombol X -->
+                        <button class="btn btn-primary mt-3" id="x-btn" onclick="toggleChecklist('x')">
+                            <!-- Ganti onclick ke 'x' -->
+                            <i class="material-symbols-rounded" id="x-btn-icon">edit_off</i>
+                            <!-- Ganti ikon sesuai kebutuhan -->
+                        </button>
+                        <!-- Tombol Comment -->
+                        <button class="btn btn-primary mt-3" id="comment-btn" onclick="toggleChecklist('comment')">
+                            <i class="material-symbols-rounded" id="comment-btn-icon">text_fields</i>
+                            <!-- Ganti ikon sesuai kebutuhan -->
+                        </button>
+                        <div id="pdf-container-editor" style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
+                            <canvas id="pdf-canvas-editor"></canvas>
+                            <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Temuan</button>
+                            {{--                        <button onclick="deleteReport()" class="btn btn-danger mt-3">Delete Temuan</button>--}}
+                        </div>
+                    @endif
             </div>
         </section>
     </div>
-@endsection
-
-@section('style')
     <style>
-        /* Selection Outline */
         .selected {
             outline: 2px dashed red;
         }
 
-        /* Card Styling */
-        .card {
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-            border: none;
-        }
-
-        .card-header {
-            background-color: transparent;
-            border-bottom: 1px solid #f0f2f5;
-        }
-
-        /* Badge Styling */
         .badge {
-            padding: 0.5rem 0.875rem;
+            padding: 0.5rem 1rem;
             font-weight: 600;
-            letter-spacing: 0.3px;
-            border-radius: 0.5rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .badge i {
+            letter-spacing: 0.5px;
             font-size: 0.875rem;
         }
 
         .bg-gradient-success {
             background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-        }
-
-        .bg-gradient-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
         }
 
         .bg-gradient-warning {
             background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
         }
 
-        /* Button Styling */
-        .btn {
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            border: none;
-        }
-
-        .btn-success {
-            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            border: none;
-        }
-
-        /* Toolbar Styling */
-        .bg-light {
-            background-color: #f8f9fa !important;
-        }
-
-        /* List Group Styling */
-        .list-group-item {
-            border: 1px solid #e9ecef;
-            transition: all 0.2s ease;
-        }
-
-        .list-group-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        /* Alert Styling */
-        .alert-info {
-            background: linear-gradient(195deg, #e3f2fd 0%, #bbdefb 100%);
-            border: none;
-            border-radius: 0.5rem;
-        }
-
-        /* Gap Utilities */
-        .gap-2 {
+        .d-flex.gap-2 {
             gap: 0.5rem;
         }
 
-        /* PDF Container */
-        .border.rounded {
-            border-color: #d2d6da !important;
+        .flex-column.gap-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
-            }
+        .alert {
+            border-radius: 0.75rem;
+        }
 
-            .badge {
-                padding: 0.375rem 0.625rem;
-                font-size: 0.75rem;
-            }
+        .alert h6 {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .alert small {
+            font-size: 0.8125rem;
+            line-height: 1.5;
+        }
+
+        .alert .material-symbols-rounded {
+            vertical-align: middle;
+        }
+
+        .bg-gradient-info {
+            background: linear-gradient(195deg, #49A3F1 0%, #1A73E8 100%);
         }
     </style>
 @endsection
@@ -436,23 +454,19 @@
         }
 
         RenderPDF("{{ asset($pdfPath) }}?t=" + new Date().getTime(), "default-pdf-canvas");
+        RenderPDF("{{ asset($object->File_Path_Temuan) }}?t=" + new Date().getTime(), "default-pdf-canvas-temuan");
 
-        const listTemuan = @json($listTemuan);
-        if (listTemuan && Array.isArray(listTemuan)) {
-            listTemuan.forEach(temuan => {
-                let object = JSON.parse(temuan.Object_Temuan);
-                RenderPDF("{{ asset('') }}" + object.File_Path_Temuan + "?t=" + new Date().getTime(), "default-pdf-canvas-" + temuan.Id_Temuan);
-            });
-        }
-
+        @if($object->Is_Submit_Penanganan)
+            RenderPDF("{{ asset($object->File_Path_Penanganan) }}?t=" + new Date().getTime(), "default-pdf-canvas-penanganan");
+        @endif
     </script>
 
 
-    @if($totalListTemuanNull == 0)
-        {{--Foto Uploud--}}
+    @if(!$object->get('UploudFoto_Time_Penanganan',false))
+        {{--Foto Upload for Penanganan--}}
         <script>
             // Photo state
-            images = [];
+            let images = [];
 
             // Handle image selection
             document.getElementById('imageInput').addEventListener('change', function(e) {
@@ -478,7 +492,7 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        canvas.toBlob(blob => resolve(blob), file.type, 0.7); // 0.7 = quality (for jpeg)
+                        canvas.toBlob(blob => resolve(blob), file.type, 0.7);
                     };
                     img.src = URL.createObjectURL(file);
                 });
@@ -528,7 +542,7 @@
                 reader.readAsDataURL(file);
             }
 
-            // Generate standalone photo PDF (for download only, not used in submit)
+            // Generate PDF from photos
             async function createPhotoPDF() {
                 if (images.length === 0) return null;
 
@@ -549,36 +563,27 @@
                         page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
                     }
 
-                    if (!page) {
-                        console.error('Page is null, cannot draw image');
-                        continue;
-                    }
+                    const resizedBlob = await resizeImage(file, 1000, 1000);
+                    const imgBytes = await resizedBlob.arrayBuffer();
+                    let imgEmbed = file.type.includes('png') ?
+                        await pdfDoc.embedPng(imgBytes) :
+                        await pdfDoc.embedJpg(imgBytes);
 
-                    try {
-                        const resizedBlob = await resizeImage(file, 1000, 1000);
-                        const imgBytes = await resizedBlob.arrayBuffer();
-                        let imgEmbed = file.type.includes('png') ?
-                            await pdfDoc.embedPng(imgBytes) :
-                            await pdfDoc.embedJpg(imgBytes);
+                    const { width, height } = imgEmbed.size();
+                    const scale = Math.min(SLOT_W / width, SLOT_H / height);
+                    const col = slotIndex % 2;
+                    const row = Math.floor((slotIndex % 4) / 2);
+                    const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
+                    const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
 
-                        const { width, height } = imgEmbed.size();
-                        const scale = Math.min(SLOT_W / width, SLOT_H / height);
-                        const col = slotIndex % 2;
-                        const row = Math.floor((slotIndex % 4) / 2);
-                        const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
-                        const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
+                    page.drawImage(imgEmbed, {
+                        x,
+                        y,
+                        width: width * scale,
+                        height: height * scale
+                    });
 
-                        page.drawImage(imgEmbed, {
-                            x,
-                            y,
-                            width: width * scale,
-                            height: height * scale
-                        });
-
-                        slotIndex++;
-                    } catch (err) {
-                        console.error('Error processing image:', err);
-                    }
+                    slotIndex++;
                 }
 
                 return await pdfDoc.save();
@@ -589,19 +594,24 @@
                 return new Blob([pdfBytes], { type: 'application/pdf' });
             }
 
-            async function TambahkanTemuan() {
+            async function uploudFoto() {
                 if (images.length === 0) {
-                    alert('Please select at least one image.');
+                    alert('Silakan pilih minimal satu gambar.');
+                    return;
+                }
+
+                if (!confirm('Apakah Anda yakin ingin Create penanganan ini?')) {
                     return;
                 }
 
                 const photoPDFBlob = await generatePDFReturnBlob();
                 const formData = new FormData();
-                formData.append('Id_List_Report', '{{ $listReport->Id_List_Report }}');
-                formData.append('photo_pdf', photoPDFBlob, 'temuan_photos.pdf');
+                formData.append('Id_Temuan', '{{ $temuan->Id_Temuan }}');
+                formData.append('photo_pdf', photoPDFBlob, 'penanganan_photos.pdf');
+                formData.append('timestamp', new Date().toISOString());
 
                 try {
-                    const response = await fetch("{{ route('auditor-report.temuan_create') }}", {
+                    const response = await fetch("{{ route('leader-temuan.penanganan.create') }}", {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -609,33 +619,31 @@
                         body: formData
                     });
 
-                    console.log(await response.json());
+                    const result = await response.json();
+                    console.log(result);
 
-                    if (response.ok) {
-                        alert('Temuan added successfully!');
+                    if (response.ok && result.success) {
+                        alert('Penanganan berhasil disubmit!');
                         window.location.reload();
                     } else {
-                        alert('Failed to add Temuan.');
+                        alert('Gagal submit penanganan: ' + (result.message || 'Unknown error'));
                     }
                 } catch (error) {
-                    console.error('Error submitting Temuan:', error);
-                    alert('An error occurred while submitting Temuan.');
+                    console.error('Error submitting penanganan:', error);
+                    alert('Terjadi kesalahan saat submit penanganan.');
                 }
             }
         </script>
-    @else
+    @endif
+
+    @if(!$object->Is_Submit_Penanganan && $object->UploudFoto_Time_Penanganan)
         {{--editable layout however this was for only for annotation and editable layout--}}
         <script>
             // ============================================
             // GLOBAL VARIABLES & CONFIGURATION
             // ============================================
-
-            const listTemuanNull = @json($ListTemuanNull);
-
             const CONFIG = {
-                pdfUrl: listTemuanNull && listTemuanNull.File_Path_Temuan
-                    ? "{{ asset('') }}" + listTemuanNull.File_Path_Temuan + "?t=" + new Date().getTime()
-                    : "",
+                pdfUrl: "{{ asset($object->File_Path_Penanganan) }}"+"?t=" + new Date().getTime(),
                 pdfScale: 1.5,
                 fontSize: {
                     timestamp: 8,
@@ -1024,7 +1032,7 @@
                 setupSelectionEvents(element);
                 setupDraggableEvents(element);
             }
-        {{-- Submit Report with Annotations --}}
+            {{-- Submit Report with Annotations --}}
             // ============================================
             // UTILITIES
             // ============================================
@@ -1201,21 +1209,21 @@
 
             async function uploadToServer(pdfBytes) {
                 const formData = new FormData();
-                formData.append('Id_List_Report', '{{ $listReport->Id_List_Report }}');
-                formData.append('Id_Temuan', '{{ $ListTemuanNull['Id_Temuan'] }}');
+                formData.append('Id_Temuan', '{{ $temuan->Id_Temuan }}');
                 formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
                 formData.append('timestamp', getWIBTimestamp());
                 formData.append('comments', JSON.stringify(FINAL_STATE.comments));
 
-                const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
+                const response = await fetch(`{{ route('leader-temuan.penanganan.submit') }}`, {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
                 });
 
-                console.log(await response.json());
+                json = await response.json();
+                console.log(json);
                 if (response.ok) {
-                    alert('Report submitted successfully!');
+                    alert(json.message || 'Report submitted successfully!');
                     location.reload();
                 } else {
                     throw new Error('Server rejected submission');
@@ -1224,6 +1232,140 @@
         </script>
     @endif
 
-
-
 @endsection
+
+@section('style')
+    <style>
+        /* Selection Outline */
+        .selected {
+            outline: 2px dashed red;
+        }
+
+        /* Card Styling */
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border: none;
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        /* Badge Styling */
+        .badge {
+            padding: 0.5rem 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items-center;
+            gap: 0.25rem;
+        }
+
+        .badge i {
+            font-size: 0.875rem;
+        }
+
+        .bg-gradient-success {
+            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+        }
+
+        .bg-gradient-info {
+            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+        }
+
+        .bg-gradient-warning {
+            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+        }
+
+        /* Button Styling */
+        .btn {
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-info {
+            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+            border: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+            border: none;
+        }
+
+        /* List Group Styling */
+        .list-group-item {
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Alert Styling */
+        .alert {
+            border-radius: 0.75rem;
+        }
+
+        .alert-info {
+            background: linear-gradient(195deg, #e3f2fd 0%, #bbdefb 100%);
+            border: none;
+        }
+
+        .alert-success {
+            background: linear-gradient(195deg, #d4edda 0%, #c3e6cb 100%);
+            border: none;
+        }
+
+        /* Form Styling */
+        .form-control {
+            border-radius: 0.5rem;
+            border: 1px solid #d2d6da;
+        }
+
+        .form-control:focus {
+            border-color: #5e72e4;
+            box-shadow: 0 0 0 0.2rem rgba(94, 114, 228, 0.15);
+        }
+
+        .form-label {
+            color: #344767;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Gap Utilities */
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        /* PDF Container */
+        .border.rounded {
+            border-color: #d2d6da !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            .badge {
+                padding: 0.375rem 0.625rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+@endsection
+

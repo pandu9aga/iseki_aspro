@@ -116,11 +116,12 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
     Route::prefix('temuan')->group(function () {
         Route::prefix('list')->group(function () {
             Route::get('/', [TemuanLeaderController::class, 'index'])->name('leader-temuan.list');
-            Route::get('date/{year}/{month}', [TemuanLeaderController::class, 'listDateTemuan'])->name('leader-temuan.list-date');
-            Route::get('/user/{Id_User}', [TemuanLeaderController::class, 'listAllTemuan'])->name('leader-temuan.list-user');
+            Route::get('/show/{Id_Temuan}', [TemuanLeaderController::class, 'show'])->name('leader-temuan.show');
+            Route::post('penanganan/create', [TemuanLeaderController::class, 'createPenanganan'])->name('leader-temuan.penanganan.create');
+            Route::post('penanganan/submit', [TemuanLeaderController::class, 'submitPenanganan'])->name('leader-temuan.penanganan.submit');
         });
-        Route::get('show/{Id_List_User}/user/{Id_User}', [TemuanLeaderController::class, 'showTemuan'])->name('leader-temuan.list-show');
         Route::delete('delete/{Id_Temuan}', [TemuanLeaderController::class, 'deleteTemuan'])->name('leader-temuan.delete');
+        Route::post('submit-penanganan', [TemuanLeaderController::class, 'submitPenanganan'])->name('leader-temuan.submit-penanganan');
     });
 });
 

@@ -29,11 +29,11 @@
                     <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
                     </h4>
 
-                    @if(is_null($listReport->Time_Approved_Auditor))
+                    {{-- @if(is_null($listReport->Time_Approved_Auditor)) --}}
                         <button class="btn btn-warning mt-3" style="white-space:nowrap;" onclick="window.location.href = '{{ route('auditor-report.temuan_report', ['Id_List_Report' => $listReport->Id_List_Report]) }}'">
                             Tambahkan Temuan
                         </button>
-                    @endif
+                    {{-- @endif --}}
                 </div>
                 <br>
 

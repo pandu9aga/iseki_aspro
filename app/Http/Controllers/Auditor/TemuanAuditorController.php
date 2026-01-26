@@ -78,11 +78,8 @@ class TemuanAuditorController extends Controller
                 $jsonData->UploudFoto_Time_Penanganan = '';
                 $jsonData->File_Path_Penanganan = '';
                 $jsonData->Name_User_Penanganan = '';
-                $jsonData->comment_validation = '';
-                $jsonData->Validation_Status = 'rejected';
-                $jsonData->Validation_Notes = $data['validation_notes'] ?? '';
-                $jsonData->Validation_Time = Carbon::now()->toDateTimeString();
-                $jsonData->Validation_By = session('Id_User');
+                $jsonData->Validation_Notes = '';
+                $jsonData->Validation_Time = '';
 
                 $temuan = new Temuan;
                 $temuan->Id_List_Report = $data['Id_List_Report'];
@@ -104,7 +101,7 @@ class TemuanAuditorController extends Controller
                     }
 
                     $extension = $photo_pdf->getClientOriginalExtension();
-                    $fileName = $temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.'.$extension;
+                    $fileName = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.'.$extension;
 
                     if (! $photo_pdf->move($directory, $fileName)) {
                         throw new \RuntimeException('Failed to move uploaded file');
@@ -178,7 +175,7 @@ class TemuanAuditorController extends Controller
                         }
                     }
 
-                    $filename = $temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.pdf';
+                    $filename = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.pdf';
 
                     if (! $pdf->move($directory, $filename)) {
                         throw new \RuntimeException('Failed to move PDF file');
@@ -231,17 +228,12 @@ class TemuanAuditorController extends Controller
     {
         $page = 'temuan';
         $Id_User = session('Id_User');
-        $date = $request->input('date');
+        $date = $request->input('date') ?? Carbon::today()->format('Y-m-d');
 
         $query = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
-            ->whereNotNull('Time_Temuan');
-
-        if ($date) {
-            $query->whereDate('Time_Temuan', $date);
-        } else {
-            $query->limit(300);
-        }
+            ->whereNotNull('Time_Temuan')
+            ->whereDate('Time_Temuan', $date);
 
         $temuans = $query->orderBy('Time_Temuan', 'desc')->get();
 
@@ -252,7 +244,8 @@ class TemuanAuditorController extends Controller
         ]);
     }
 
-    public function show(string $Id_Temuan) {
+    public function show(string $Id_Temuan)
+    {
         $page = 'temuan';
         $temuan = Temuan::with(['ListReport.report.member', 'User'])->where('Id_Temuan', $Id_Temuan)->firstOrFail();
         $id_member = $temuan->ListReport->report->member->id;
@@ -271,7 +264,6 @@ class TemuanAuditorController extends Controller
     public function validateTemuan(Request $request, string $Id_Temuan)
     {
         $data = $request->validate([
-            'action' => 'required|in:approve,reject',
             'validation_notes' => 'nullable|string|max:1000',
         ]);
 
@@ -279,34 +271,16 @@ class TemuanAuditorController extends Controller
             return DB::transaction(function () use ($data, $Id_Temuan) {
                 $temuan = Temuan::findOrFail($Id_Temuan);
                 $jsonData = new JsonHelper($temuan->Object_Temuan);
-
-                if ($data['action'] === 'approve') {
-                    $temuan->Status_Temuan = 1;
-
-                    $jsonData->Validation_Status = 'approved';
-                    $jsonData->Validation_Notes = $data['validation_notes'] ?? '';
-                    $jsonData->Validation_Time = Carbon::now()->toDateTimeString();
-                    $jsonData->Validation_By = session('Id_User');
-                } else {
-                    $temuan->Status_Temuan = 0;
-                    $temuan->Time_Penanganan = null;
-
-                    $jsonData->Validation_Status = 'rejected';
-                    $jsonData->Validation_Notes = $data['validation_notes'] ?? '';
-                    $jsonData->Validation_Time = Carbon::now()->toDateTimeString();
-                    $jsonData->Validation_By = session('Id_User');
-                }
+                $jsonData->Validation_Notes = $data['validation_notes'] ?? '';
+                $jsonData->Validation_Time = Carbon::now()->toDateTimeString();
 
                 $temuan->Object_Temuan = $jsonData;
+                $temuan->Status_Temuan = 1;
                 $temuan->save();
-
-                $message = $data['action'] === 'approve'
-                    ? 'Temuan berhasil divalidasi dan ditandai selesai'
-                    : 'Penanganan ditolak, temuan dikembalikan untuk perbaikan';
 
                 return redirect()
                     ->back()
-                    ->with('success', $message);
+                    ->with('success', 'Temuan berhasil divalidasi dan ditandai selesai');
             });
         } catch (\Exception $e) {
             Log::error('Failed to validate temuan', [

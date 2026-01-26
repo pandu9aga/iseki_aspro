@@ -11,7 +11,84 @@ use Illuminate\Contracts\Support\Jsonable;
  * Supports both magic property access and explicit dot-path methods for
  * reading and writing nested values.
  *
- * @property JsonHelper|mixed|string|null $Photo_PDF
+ * ============================================================================
+ * TEMUAN PROPERTIES (Auditor Side)
+ * ============================================================================
+ *
+ * @property string $UploudFoto_Time_Temuan Upload timestamp for temuan photos
+ * @property string $Name_User_Temuan Name of auditor who created the temuan
+ * @property string $File_Path_Temuan Relative file path to temuan PDF
+ * @property string $Photo_PDF_Temuan Filename of temuan PDF
+ * @property string $Submit_Time_Temuan Timestamp when temuan was submitted
+ * @property array $Comments_Temuan Array of comments/annotations for temuan
+ *
+ * ============================================================================
+ * PENANGANAN PROPERTIES (Leader Side)
+ * ============================================================================
+ * @property string $UploudFoto_Time_Penanganan Upload timestamp for penanganan photos
+ * @property string $Name_User_Penanganan Name of leader who handled the temuan
+ * @property string $File_Path_Penanganan Relative file path to penanganan PDF
+ * @property array $Comments_Penanganan Array of comments/notes for penanganan
+ * @property bool $Is_Submit_Penanganan Flag indicating if penanganan has been submitted
+ *
+ * ============================================================================
+ * VALIDATION PROPERTIES (Auditor Validation)
+ * ============================================================================
+ * @property string $Validation_Notes Notes/comments from auditor during validation
+ * @property string $Validation_Time Timestamp when validation was performed
+ * @property string $Validation_Name Name of auditor who performed the validation
+ *
+ * ============================================================================
+ * COMMON PROPERTIES
+ * ============================================================================
+ * @property mixed $Photo_PDF Generic photo PDF property (legacy)
+ *
+ * ============================================================================
+ * USAGE EXAMPLES
+ * ============================================================================
+ *
+ * Creating instances:
+ *   $helper = new JsonHelper('{"name":"John","age":30}');
+ *   $helper = new JsonHelper(['name' => 'John', 'age' => 30]);
+ *
+ * Reading nested values:
+ *   $helper = new JsonHelper(['user' => ['profile' => ['name' => 'John']]]);
+ *   $name = $helper->get('user.profile.name');           // "John"
+ *   $email = $helper->get('user.profile.email', 'N/A');  // "N/A" (default)
+ *
+ * Setting nested values (auto-creates intermediate arrays):
+ *   $helper = new JsonHelper();
+ *   $helper->set('user.profile.name', 'Jane');
+ *   $helper->set('user.profile.age', 25);
+ *   // Result: ['user' => ['profile' => ['name' => 'Jane', 'age' => 25]]]
+ *
+ * Checking and removing:
+ *   if ($helper->has('user.profile.name')) { ... }
+ *   $helper->remove('user.profile.age');
+ *
+ * Converting back:
+ *   $array = $helper->toArray();
+ *   $json = $helper->toJson();
+ *   $json = (string) $helper;
+ *
+ * ============================================================================
+ * IMPORTANT NOTES
+ * ============================================================================
+ *
+ * Magic Property Limitation:
+ *   Magic property access ($obj->key) returns a NEW JsonHelper instance for
+ *   nested arrays. Chained assignments WON'T update the parent's data.
+ *
+ *   ✗ WRONG - Won't update parent:
+ *     $helper->user->name = 'John';
+ *
+ *   ✓ CORRECT - Updates parent:
+ *     $helper->set('user.name', 'John');
+ *
+ * Other notes:
+ *   • Empty paths ('') operate on root data
+ *   • Invalid JSON strings fall back to empty array
+ *   • Safe for nested operations without null checks
  *
  * @author tunbudi06
  */
