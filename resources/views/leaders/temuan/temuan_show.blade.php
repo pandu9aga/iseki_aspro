@@ -1268,7 +1268,7 @@
             font-size: 0.875rem;
         }
 
-        .bg-gradient-success {
+        /* .bg-gradient-success {
             background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
             box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
         }
@@ -1281,10 +1281,10 @@
         .bg-gradient-warning {
             background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
             box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-        }
+        } */
 
         /* Button Styling */
-        .btn {
+        /* .btn {
             transition: all 0.3s ease;
         }
 
@@ -1301,7 +1301,7 @@
         .btn-success {
             background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
             border: none;
-        }
+        } */
 
         /* List Group Styling */
         .list-group-item {

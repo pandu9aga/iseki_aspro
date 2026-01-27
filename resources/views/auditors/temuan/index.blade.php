@@ -238,7 +238,7 @@
             font-size: 0.875rem;
         }
 
-        .bg-gradient-success {
+        /* .bg-gradient-success {
             background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
             box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
         }
@@ -266,7 +266,7 @@
         .btn-info:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
-        }
+        } */
 
         .table thead th {
             border-bottom: 2px solid #e9ecef;
