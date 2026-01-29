@@ -37,7 +37,7 @@
     <link id="pagestyle" href="{{ asset('assets/css/material-dashboard.css?v=3.2.0') }}" rel="stylesheet" />
 
     <!-- Choices.js CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/styles/choices.min.css">
+    <link rel="stylesheet" href="{{ asset('assets/css/choices.min.css') }}">
 
     @yield('style')
 </head>
@@ -233,7 +233,7 @@
     {{-- <script src="./assets/js/material-kit.min.js?v=3.1.0" type="text/javascript"></script> --}}
 
     <!-- Choices.js JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/scripts/choices.min.js"></script>
+    <script src="{{ asset('assets/js/plugins/choices.min.js') }}"></script>
 
     @yield('script')
 </body>

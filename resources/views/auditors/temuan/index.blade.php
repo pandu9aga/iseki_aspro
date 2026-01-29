@@ -99,6 +99,9 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($temuans as $index => $temuan)
+                                        @php
+                                            $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
+                                        @endphp
                                         <tr class="row-data">
                                             <td class="align-middle text-center ps-2">
                                                 <span class="text-secondary text-xs font-weight-bold">{{ $index + 1 }}</span>
@@ -133,7 +136,7 @@
                                                     <span class="badge badge-sm bg-gradient-success">
                                                         <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
                                                     </span>
-                                                @elseif($temuan->Is_Submit_Temuan)
+                                                @elseif($object->Is_Submit_Penanganan)
                                                     <span class="badge badge-sm bg-gradient-info">
                                                         <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi
                                                     </span>

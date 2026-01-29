@@ -122,6 +122,10 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         });
         Route::delete('delete/{Id_Temuan}', [TemuanLeaderController::class, 'deleteTemuan'])->name('leader-temuan.delete');
         Route::post('submit-penanganan', [TemuanLeaderController::class, 'submitPenanganan'])->name('leader-temuan.submit-penanganan');
+        Route::put('update-tipe/{Id_Temuan}', [TemuanLeaderController::class, 'updateTipeTemuan'])->name('leader-temuan.update-tipe');
+        Route::get('statistics/monthly', [TemuanLeaderController::class, 'getMonthlyStatistics'])->name('leader-temuan.statistics.monthly');
+        Route::get('statistics/missing', [TemuanLeaderController::class, 'getMissingStatistics'])->name('leader-temuan.statistics.missing');
+        Route::get('missing', [TemuanLeaderController::class, 'missingTemuan'])->name('leader-temuan.missing');
     });
 });
 

@@ -19,7 +19,7 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-lg-4 mt-lg-0 mt-4">
+            <div class="col-lg-4 mt-lg-0 my-4">
                 <a href="{{ route('base') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">home</i>
@@ -30,7 +30,7 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-4 mt-lg-0 mt-4">
+            <div class="col-lg-4 mt-lg-0 my-4">
                 <a href="{{ route('report_auditor') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">assignment</i>
@@ -41,9 +41,9 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-4 mt-lg-0 mt-4">
+            <div class="col-lg-4 mt-lg-0 my-4">
                 <a href="{{ route('auditor-report.temuan_index') }}" class="text-decoration-none">
-                    <div class="hover-card mt-3 bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">report_problem</i>
                         <br>
                         <div class="mt-3 mt-md-0">
@@ -52,7 +52,7 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-4 mt-lg-0 mt-4">
+            <div class="col-lg-4 mt-lg-0 my-4">
                 <a href="{{ route('profile_auditor') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">account_circle</i>

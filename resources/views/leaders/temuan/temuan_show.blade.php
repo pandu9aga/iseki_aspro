@@ -51,6 +51,81 @@
                     </div>
                 </div>
 
+                @php
+                    $current_user_check = \App\Models\User::find(session('Id_User'));
+                @endphp
+
+                @if($current_user_check && $current_user_check->Username_User === 'saiful')
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">
+                                <i class="material-symbols-rounded text-sm align-middle me-1">category</i>
+                                Tipe Temuan
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ route('leader-temuan.update-tipe', ['Id_Temuan' => $temuan->Id_Temuan]) }}">
+                                @csrf
+                                @method('PUT')
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="tipe_temuan" class="form-label text-sm font-weight-bold">
+                                                Pilih Tipe Temuan
+                                            </label>
+                                            <select class="form-select" id="tipe_temuan" name="tipe_temuan" required>
+                                                <option value="">-- Pilih Tipe Temuan --</option>
+                                                <option value="Revisi prosedur" {{ $temuan->Tipe_Temuan === 'Revisi prosedur' ? 'selected' : '' }}>
+                                                    Revisi prosedur
+                                                </option>
+                                                <option value="Perakitan tak sesuai" {{ $temuan->Tipe_Temuan === 'Perakitan tak sesuai' ? 'selected' : '' }}>
+                                                    Perakitan tak sesuai
+                                                </option>
+                                                <option value="Shiyousho tak sesuai" {{ $temuan->Tipe_Temuan === 'Shiyousho tak sesuai' ? 'selected' : '' }}>
+                                                    Shiyousho tak sesuai
+                                                </option>
+                                                <option value="Lain-lain" {{ (!in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', null, ''])) ? 'selected' : '' }}>
+                                                    Lain-lain
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3" id="customTipeContainer" style="display: {{ (!in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', null, ''])) ? 'block' : 'none' }};">
+                                            <label for="tipe_temuan_custom" class="form-label text-sm font-weight-bold">
+                                                Tipe Temuan Custom
+                                            </label>
+                                            <input type="text" class="form-control" id="tipe_temuan_custom" name="tipe_temuan_custom" 
+                                                placeholder="Masukkan tipe temuan custom"
+                                                value="{{ (!in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', null, ''])) ? $temuan->Tipe_Temuan : '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="material-symbols-rounded text-sm">save</i> Simpan Tipe Temuan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <!-- Display only for non-saiful users -->
+                    @if($temuan->Tipe_Temuan)
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="material-symbols-rounded text-2xl text-primary me-2">category</i>
+                                    <div>
+                                        <small class="text-xs text-secondary d-block mb-1">Tipe Temuan</small>
+                                        <h6 class="mb-0">{{ $temuan->Tipe_Temuan }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+
                 <!-- PDF Viewer -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-header pb-0">
@@ -459,6 +534,25 @@
         @if($object->Is_Submit_Penanganan)
             RenderPDF("{{ asset($object->File_Path_Penanganan) }}?t=" + new Date().getTime(), "default-pdf-canvas-penanganan");
         @endif
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const tipeTemuanSelect = document.getElementById('tipe_temuan');
+            const customTipeContainer = document.getElementById('customTipeContainer');
+            const customTipeInput = document.getElementById('tipe_temuan_custom');
+
+            if (tipeTemuanSelect) {
+                tipeTemuanSelect.addEventListener('change', function() {
+                    if (this.value === 'Lain-lain') {
+                        customTipeContainer.style.display = 'block';
+                        customTipeInput.required = true;
+                    } else {
+                        customTipeContainer.style.display = 'none';
+                        customTipeInput.required = false;
+                        customTipeInput.value = '';
+                    }
+                });
+            }
+        });
     </script>
 
 

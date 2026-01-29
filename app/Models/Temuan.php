@@ -18,6 +18,7 @@ class Temuan extends Model
         'Object_Temuan',
         'Time_Temuan',
         'Time_Penanganan',
+        'Tipe_Temuan',
         'Status_Temuan',
     ];
 

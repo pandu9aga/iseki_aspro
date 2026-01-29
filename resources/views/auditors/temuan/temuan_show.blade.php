@@ -94,7 +94,7 @@
                                     <span class="badge bg-gradient-success">
                                         <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
                                     </span>
-                                @elseif($temuan->Is_Submit_Temuan)
+                                @elseif($object->Is_Submit_Penanganan)
                                     <span class="badge bg-gradient-info">
                                         <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi
                                     </span>
