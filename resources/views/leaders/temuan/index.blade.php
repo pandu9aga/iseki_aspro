@@ -531,11 +531,22 @@
         $(document).ready(function() {
             // Initialize DataTables for each tab
             $('.temuan-table').each(function() {
-                if ($(this).find('tbody tr').length > 0) {
-                    $(this).DataTable({
+                const table = $(this);
+                const rowCount = table.find('tbody tr').length;
+                const hasData = table.find('tbody td[colspan]').length === 0; // bukan pesan "tidak ada data"
+
+                if (rowCount > 0 && hasData) {
+                    table.DataTable({
                         pageLength: 25,
-                        order: [[6, 'desc']] // Sort by date column
+                        order: [[6, 'desc']],
+                        // Hindari error saat tidak ada data
+                        language: {
+                            emptyTable: "Tidak ada temuan pada tanggal ini."
+                        }
                     });
+                } else {
+                    // Opsional: tampilkan pesan tanpa DataTables
+                    table.addClass('table-borderless');
                 }
             });
 

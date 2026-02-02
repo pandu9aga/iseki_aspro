@@ -176,4 +176,8 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
             Route::patch('validate/{Id_Temuan}', [TemuanAuditorController::class, 'validateTemuan'])->name('auditor-temuan.validate');
         });
     });
+
+    Route::get('statistics/monthly', [TemuanAuditorController::class, 'getMonthlyStatistics'])->name('auditor-temuan.statistics.monthly');
+    Route::get('statistics/missing', [TemuanAuditorController::class, 'getMissingStatistics'])->name('auditor-temuan.statistics.missing');
+    Route::get('missing', [TemuanAuditorController::class, 'missingTemuan'])->name('auditor-temuan.missing');
 });

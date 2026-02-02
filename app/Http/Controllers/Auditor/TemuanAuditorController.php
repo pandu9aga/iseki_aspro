@@ -48,15 +48,6 @@ class TemuanAuditorController extends Controller
         ]);
     }
 
-    /**
-     * Create temuan with file upload
-     *
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @throws Throwable
-     *
-     * @author tunbudi06
-     */
     public function create_temuan(Request $request)
     {
         $data = $request->validate([
@@ -137,13 +128,6 @@ class TemuanAuditorController extends Controller
         }
     }
 
-    /**
-     * Submit temuan with annotated PDF
-     *
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @author tunbudi06
-     */
     public function submit_temuan(Request $request)
     {
         $data = $request->validate([
@@ -217,13 +201,6 @@ class TemuanAuditorController extends Controller
         }
     }
 
-    /**
-     * Show list of all temuans for current auditor with optional date filter
-     *
-     * @return \Illuminate\View\View
-     *
-     * @author tunbudi06
-     */
     public function index(Request $request)
     {
         $page = 'temuan';
@@ -237,9 +214,31 @@ class TemuanAuditorController extends Controller
 
         $temuans = $query->orderBy('Time_Temuan', 'desc')->get();
 
+        // Group temuans by Tipe_Temuan
+        $tipeTemuanCategories = [
+            'Revisi prosedur' => [],
+            'Perakitan tak sesuai' => [],
+            'Shiyousho tak sesuai' => [],
+            'Lain-lain' => [],
+            'Uncategorized' => []
+        ];
+
+        foreach ($temuans as $temuan) {
+            $tipe = $temuan->Tipe_Temuan;
+            
+            if (empty($tipe)) {
+                $tipeTemuanCategories['Uncategorized'][] = $temuan;
+            } elseif (in_array($tipe, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai'])) {
+                $tipeTemuanCategories[$tipe][] = $temuan;
+            } else {
+                $tipeTemuanCategories['Lain-lain'][] = $temuan;
+            }
+        }
+
         return view('auditors.temuan.index', [
             'page' => $page,
             'temuans' => $temuans,
+            'tipeTemuanCategories' => $tipeTemuanCategories,
             'date' => $date,
         ]);
     }
@@ -293,5 +292,158 @@ class TemuanAuditorController extends Controller
                 ->back()
                 ->with('error', 'Gagal memvalidasi temuan: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Get statistics for selected month (Auditor only sees their own temuans)
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getMonthlyStatistics(Request $request)
+    {
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $Id_User = session('Id_User');
+        list($year, $monthNum) = explode('-', $month);
+
+        $temuans = Temuan::with(['ListReport.report.member', 'User'])
+            ->where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->get();
+
+        $statistics = [
+            'total' => $temuans->count(),
+            'categories' => [
+                'Revisi prosedur' => $this->getCategoryStats($temuans, 'Revisi prosedur'),
+                'Perakitan tak sesuai' => $this->getCategoryStats($temuans, 'Perakitan tak sesuai'),
+                'Shiyousho tak sesuai' => $this->getCategoryStats($temuans, 'Shiyousho tak sesuai'),
+                'Lain-lain' => $this->getOtherCategoryStats($temuans),
+            ],
+            'month' => $month,
+            'monthName' => Carbon::createFromFormat('Y-m', $month)->format('F Y')
+        ];
+
+        return response()->json($statistics);
+    }
+
+    /**
+     * Get statistics for specific category
+     */
+    private function getCategoryStats($temuans, $category)
+    {
+        $categoryTemuans = $temuans->filter(function($temuan) use ($category) {
+            return $temuan->Tipe_Temuan === $category;
+        });
+
+        return [
+            'total' => $categoryTemuans->count(),
+            'belum_penanganan' => $categoryTemuans->filter(function($temuan) {
+                return is_null($temuan->Time_Penanganan);
+            })->count(),
+            'menunggu_validasi' => $categoryTemuans->filter(function($temuan) {
+                return !is_null($temuan->Time_Penanganan) && !$temuan->Status_Temuan;
+            })->count(),
+            'sudah_tervalidasi' => $categoryTemuans->filter(function($temuan) {
+                return !is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
+            })->count(),
+        ];
+    }
+
+    /**
+     * Get statistics for "Lain-lain" category (custom types)
+     */
+    private function getOtherCategoryStats($temuans)
+    {
+        $otherTemuans = $temuans->filter(function($temuan) {
+            return !empty($temuan->Tipe_Temuan) && 
+                !in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai']);
+        });
+
+        return [
+            'total' => $otherTemuans->count(),
+            'belum_penanganan' => $otherTemuans->filter(function($temuan) {
+                return is_null($temuan->Time_Penanganan);
+            })->count(),
+            'menunggu_validasi' => $otherTemuans->filter(function($temuan) {
+                return !is_null($temuan->Time_Penanganan) && !$temuan->Status_Temuan;
+            })->count(),
+            'sudah_tervalidasi' => $otherTemuans->filter(function($temuan) {
+                return !is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
+            })->count(),
+        ];
+    }
+
+    /**
+     * Get missing temuan statistics (Auditor only sees their own temuans)
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getMissingStatistics()
+    {
+        $Id_User = session('Id_User');
+        
+        // Temuan yang sudah 3 hari belum dikategorikan
+        $uncategorized = Temuan::where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->where(function($query) {
+                $query->whereNull('Tipe_Temuan')
+                    ->orWhere('Tipe_Temuan', '');
+            })
+            ->where('Time_Temuan', '<=', Carbon::now()->subDays(3))
+            ->count();
+
+        // Temuan yang sudah 15 hari belum ada penanganan
+        $noPenanganan = Temuan::where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereNull('Time_Penanganan')
+            ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
+            ->count();
+
+        $statistics = [
+            'uncategorized_3days' => $uncategorized,
+            'no_penanganan_15days' => $noPenanganan,
+            'total_missing' => $uncategorized + $noPenanganan
+        ];
+
+        return response()->json($statistics);
+    }
+
+    /**
+     * Show missing temuan page (Auditor only sees their own temuans)
+     *
+     * @return \Illuminate\View\View
+     */
+    public function missingTemuan()
+    {
+        $page = 'temuan';
+        $Id_User = session('Id_User');
+        
+        // Temuan yang sudah 3 hari belum dikategorikan
+        $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'User'])
+            ->where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->where(function($query) {
+                $query->whereNull('Tipe_Temuan')
+                    ->orWhere('Tipe_Temuan', '');
+            })
+            ->where('Time_Temuan', '<=', Carbon::now()->subDays(3))
+            ->orderBy('Time_Temuan', 'asc')
+            ->get();
+
+        // Temuan yang sudah 15 hari belum ada penanganan
+        $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'User'])
+            ->where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereNull('Time_Penanganan')
+            ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
+            ->orderBy('Time_Temuan', 'asc')
+            ->get();
+
+        return view('auditors.temuan.missing', [
+            'page' => $page,
+            'uncategorizedTemuans' => $uncategorizedTemuans,
+            'noPenangananTemuans' => $noPenangananTemuans,
+        ]);
     }
 }

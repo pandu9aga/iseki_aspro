@@ -16,13 +16,6 @@ class TemuanLeaderController extends Controller
 {
     private string $base_path = 'storage/temuans/';
 
-    /**
-     * Show list of all temuans with optional date filter
-     *
-     * @return \Illuminate\View\View
-     *
-     * @author tunbudi06
-     */
     public function index(Request $request)
     {
         $page = 'temuan';
@@ -100,9 +93,6 @@ class TemuanLeaderController extends Controller
         }
     }
 
-    /**
-     * Delete temuan file and empty parent directory
-     */
     private function deleteTemuanFile(Temuan $temuan): void
     {
         $objectdata = new JsonHelper($temuan->Object_Temuan);
@@ -133,17 +123,11 @@ class TemuanLeaderController extends Controller
         }
     }
 
-    /**
-     * Check if directory is empty
-     */
     private function isDirectoryEmpty(string $dir): bool
     {
         return is_dir($dir) && count(scandir($dir)) === 2;
     }
 
-    /**
-     * Check if directory is safe to delete (within public/storage)
-     */
     private function isSafeToDelete(string $dir): bool
     {
         $safeRoots = [
@@ -160,13 +144,6 @@ class TemuanLeaderController extends Controller
         return false;
     }
 
-    /**
-     * Show temuan detail for penanganan by leader
-     *
-     * @return \Illuminate\View\View
-     *
-     * @author tunbudi06
-     */
     public function show(string $Id_Temuan)
     {
         $page = 'temuan';
@@ -193,13 +170,6 @@ class TemuanLeaderController extends Controller
         ]);
     }
 
-    /**
-     * Submit penanganan by leader
-     *
-     * @return array
-     *
-     * @author tunbudi06
-     */
     public function submitPenanganan(Request $request)
     {
         $data = $request->validate([
@@ -301,11 +271,6 @@ class TemuanLeaderController extends Controller
         });
     }
 
-    /**
-     * Get statistics for selected month
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getMonthlyStatistics(Request $request)
     {
         $month = $request->input('month', Carbon::now()->format('Y-m'));
@@ -379,11 +344,6 @@ class TemuanLeaderController extends Controller
         ];
     }
 
-    /**
-     * Get missing temuan statistics
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getMissingStatistics()
     {
         $now = Carbon::now();
@@ -412,11 +372,6 @@ class TemuanLeaderController extends Controller
         return response()->json($statistics);
     }
 
-    /**
-     * Show missing temuan page
-     *
-     * @return \Illuminate\View\View
-     */
     public function missingTemuan()
     {
         $page = 'temuan';
