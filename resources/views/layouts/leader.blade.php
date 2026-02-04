@@ -52,7 +52,8 @@
                     <div class="container-fluid px-0">
                         <a class="navbar-brand font-weight-bolder ms-sm-3 text-sm" href="{{ route('dashboard') }}"
                             rel="tooltip" title="Designed and Coded by Creative Tim" data-placement="bottom">
-                            <span class="text-primary">Iseki Aspro</span> <small>- Assembling Procedure</small>
+                            <span class="text-primary">Iseki Aspro</span> {{-- <small>- Assembling Procedure</small>
+                            --}}
                         </a>
                         <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navigation" aria-controls="navigation" aria-expanded="false"
@@ -110,9 +111,16 @@
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'temuan' ? 'text-primary' : '' }}"
-                                       href="{{route('leader-temuan.list')}}">
+                                        href="{{route('leader-temuan.list')}}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">report_problem</i>
                                         Temuan
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown dropdown-hover mx-2">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'audit' ? 'text-primary' : '' }}"
+                                        href="{{route('audit.index')}}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">fact_check</i>
+                                        Audit
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
@@ -123,8 +131,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item my-auto ms-3 ms-lg-0">
-                                    <a href="{{ route('logout') }}"
-                                        class="btn  bg-gradient-primary  mb-0 mt-2 mt-md-0">
+                                    <a href="{{ route('logout') }}" class="btn  bg-gradient-primary  mb-0 mt-2 mt-md-0">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">logout</i>
                                         Logout
                                     </a>
@@ -184,6 +191,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="{{ route('audit.index') }}">
+                                    Audit
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ route('profile') }}">
                                     Profile
                                 </a>
@@ -220,17 +232,24 @@
     <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
     <script src="{{ asset('assets/js/material-dashboard.min.js?v=3.2.0') }}"></script>
     <!--  Plugin for TypedJS, full documentation here: https://github.com/inorganik/CountUp.js  -->
-    {{-- <script src="./assets/js/plugins/choices.min.js"></script> --}}
-    {{-- <script src="./assets/js/plugins/prism.min.js"></script> --}}
-    {{-- <script src="./assets/js/plugins/highlight.min.js"></script> --}}
+    {{--
+    <script src="./assets/js/plugins/choices.min.js"></script> --}}
+    {{--
+    <script src="./assets/js/plugins/prism.min.js"></script> --}}
+    {{--
+    <script src="./assets/js/plugins/highlight.min.js"></script> --}}
     <!--  Plugin for Parallax, full documentation here: https://github.com/dixonandmoe/rellax  -->
-    {{-- <script src="./assets/js/plugins/rellax.min.js"></script> --}}
+    {{--
+    <script src="./assets/js/plugins/rellax.min.js"></script> --}}
     <!--  Plugin for TiltJS, full documentation here: https://gijsroge.github.io/tilt.js/  -->
-    {{-- <script src="./assets/js/plugins/tilt.min.js"></script> --}}
+    {{--
+    <script src="./assets/js/plugins/tilt.min.js"></script> --}}
     <!--  Plugin for Selectpicker - ChoicesJS, full documentation here: https://github.com/jshjohnson/Choices  -->
-    {{-- <script src="./assets/js/plugins/choices.min.js"></script> --}}
+    {{--
+    <script src="./assets/js/plugins/choices.min.js"></script> --}}
     <!-- Control Center for Material UI Kit: parallax effects, scripts for the example pages etc -->
-    {{-- <script src="./assets/js/material-kit.min.js?v=3.1.0" type="text/javascript"></script> --}}
+    {{--
+    <script src="./assets/js/material-kit.min.js?v=3.1.0" type="text/javascript"></script> --}}
 
     <!-- Choices.js JavaScript -->
     <script src="{{ asset('assets/js/plugins/choices.min.js') }}"></script>

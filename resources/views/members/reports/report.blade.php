@@ -18,8 +18,7 @@
         <section class="pt-3 pb-4" id="count-stats">
             <div class="container">
                 <!-- Tombol Back -->
-                <a class="btn btn-primary mx-3"
-                    href="{{ route('report_list_member', ['Id_Report' => $listReport->Id_Report]) }}">
+                <a class="btn btn-primary mx-3" href="javascript:void(0)" onclick="window.history.back()">
                     <span style="padding-left: 50px; padding-right: 50px;">Back</span>
                 </a>
                 <br><br>
@@ -61,10 +60,10 @@
 
                 @if ($listReport->Time_List_Report)
                     <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
-                    <div><b>Leader Approvement : <span
-                                class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b></div>
-                    <div><b>Auditor Approvement : <span
-                                class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b></div>
+                    <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b>
+                    </div>
+                    <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b>
+                    </div>
                     <br>
 
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
@@ -82,7 +81,9 @@
                         <label class="form-label">Photos</label>
                         <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*"
                             capture="environment">
-                        {{-- <input type="file" class="form-control image-input" name="{{ $part->photo_angle->Id_Photo_Angle }}" data-preview="#preview-{{ $part->photo_angle->Id_Photo_Angle }}" accept="image/*" capture="environment"> --}}
+                        {{-- <input type="file" class="form-control image-input" name="{{ $part->photo_angle->Id_Photo_Angle }}"
+                            data-preview="#preview-{{ $part->photo_angle->Id_Photo_Angle }}" accept="image/*"
+                            capture="environment"> --}}
                     </div>
                     <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
                     <br>
@@ -152,9 +153,9 @@
 
             let currentY = 0;
             for (const {
-                    page,
-                    viewport
-                }
+                page,
+                viewport
+            }
                 of pageViewports) {
                 // Render ke kanvas kecil
                 const tmpCanvas = document.createElement('canvas');
@@ -433,7 +434,7 @@
         }
 
         // --- Event Listener Klik pada Editor Layer ---
-        editorLayer.addEventListener('click', function(e) {
+        editorLayer.addEventListener('click', function (e) {
             if (!checklistMode) {
                 if (selectedObject) {
                     selectedObject.classList.remove('selected');
@@ -495,7 +496,7 @@
         let images = [];
 
         // Saat user pilih gambar
-        document.getElementById('imageInput').addEventListener('change', function(e) {
+        document.getElementById('imageInput').addEventListener('change', function (e) {
             for (let file of e.target.files) {
                 images.push(file);
                 showPreview(file);
@@ -505,7 +506,7 @@
         // Tampilkan preview dengan tombol hapus
         function showPreview(file) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const container = document.createElement('div');
                 container.style.position = 'relative';
 
@@ -533,7 +534,7 @@
                 delBtn.style.justifyContent = 'center';
                 delBtn.style.fontSize = '12px';
 
-                delBtn.onclick = function() {
+                delBtn.onclick = function () {
                     const index = Array.from(container.parentNode.children).indexOf(container);
                     images.splice(index, 1);
                     container.remove();
@@ -621,7 +622,7 @@
         async function resizeImage(file, maxWidth, maxHeight) {
             return new Promise(resolve => {
                 const img = new Image();
-                img.onload = function() {
+                img.onload = function () {
                     let width = img.width;
                     let height = img.height;
 

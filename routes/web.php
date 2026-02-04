@@ -4,6 +4,7 @@ use App\Http\Controllers\Auditor\BaseController;
 use App\Http\Controllers\Auditor\ProfileAuditorController;
 use App\Http\Controllers\Auditor\ReportAuditorController;
 use App\Http\Controllers\Auditor\TemuanAuditorController;
+use App\Http\Controllers\Leader\AuditController;
 use App\Http\Controllers\Leader\LeaderController;
 use App\Http\Controllers\Leader\ProcedureController;
 use App\Http\Controllers\Leader\ProfileController;
@@ -126,6 +127,12 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::get('statistics/monthly', [TemuanLeaderController::class, 'getMonthlyStatistics'])->name('leader-temuan.statistics.monthly');
         Route::get('statistics/missing', [TemuanLeaderController::class, 'getMissingStatistics'])->name('leader-temuan.statistics.missing');
         Route::get('missing', [TemuanLeaderController::class, 'missingTemuan'])->name('leader-temuan.missing');
+    });
+
+    Route::prefix('audit')->group(function () {
+        Route::get('/', [AuditController::class, 'index'])->name('audit.index');
+        Route::get('/list/{year}/{month}', [AuditController::class, 'index'])->name('audit.monthly');
+        Route::get('/detail/{year}/{month}/{day}/{auditorName}', [AuditController::class, 'detail'])->name('audit.detail');
     });
 });
 

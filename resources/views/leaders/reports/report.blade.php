@@ -18,8 +18,7 @@
         <section class="pt-3 pb-4" id="count-stats">
             <div class="container">
                 <!-- Tombol Back -->
-                <a class="btn btn-primary mx-3"
-                    href="{{ route('list_report_detail', ['Id_Report' => $listReport->Id_Report, 'Name_Tractor' => $listReport->Name_Tractor]) }}">
+                <a class="btn btn-primary mx-3" href="javascript:void(0)" onclick="window.history.back()">
                     <span style="padding-left: 50px; padding-right: 50px;"><b> </b> Back</span>
                 </a>
                 <br><br>
@@ -61,10 +60,10 @@
 
                 @if ($listReport->Time_Approved_Leader)
                     <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
-                    <div><b>Leader Approvement : <span
-                                class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b></div>
-                    <div><b>Auditor Approvement : <span
-                                class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b></div>
+                    <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b>
+                    </div>
+                    <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b>
+                    </div>
                     <br>
 
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
@@ -78,12 +77,13 @@
                 <br><br>
                 @if (is_null($listReport->Time_Approved_Leader))
                     {{-- <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
-            <div class="input-group input-group-outline my-3 is-filled">
-                <label class="form-label">Photos</label>
-                <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*" capture="environment">
-            </div>
-            <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
-            <br> --}}
+                    <div class="input-group input-group-outline my-3 is-filled">
+                        <label class="form-label">Photos</label>
+                        <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*"
+                            capture="environment">
+                    </div>
+                    <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
+                    <br> --}}
                     <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Report</button>
                 @endif
             </div>
@@ -151,9 +151,9 @@
 
             let currentY = 0;
             for (const {
-                    page,
-                    vp
-                }
+                page,
+                vp
+            }
                 of viewports) {
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = vp.width;
@@ -330,7 +330,7 @@
         }
 
         // --- Event Listener Klik pada Editor Layer ---
-        editorLayer.addEventListener('click', function(e) {
+        editorLayer.addEventListener('click', function (e) {
             if (!checklistMode) {
                 if (selectedObject) {
                     selectedObject.classList.remove('selected');
@@ -583,7 +583,7 @@
                         // Tempatkan teks di tengah area dalam kotak putih
                         const textX = outerX + borderWidth + innerPadding + 2; // Sedikit jarak dari kiri
                         const textY = outerY + outerHeight - fontSizeComment -
-                        4; // Sesuaikan posisi Y agar teks pas di dalam kotak
+                            4; // Sesuaikan posisi Y agar teks pas di dalam kotak
 
                         page.drawText(text, {
                             x: textX,

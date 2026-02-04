@@ -122,8 +122,9 @@ class ReportAuditorController extends Controller
             // Pindahkan file ke public/storage/reports/...
             $pdf->move($fullPath, $filename);
 
-            // Update waktu
+            // Update waktu and Auditor Name
             $listReport->Time_Approved_Auditor = $request->input('timestamp');
+            $listReport->Auditor_Name = session('Username_User');
             $listReport->save();
 
             return response()->json(['success' => true]);
