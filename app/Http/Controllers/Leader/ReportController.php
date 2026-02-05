@@ -221,6 +221,7 @@ class ReportController extends Controller
 
             // Update waktu
             $listReport->Time_Approved_Leader = $request->input('timestamp');
+            $listReport->Leader_Name = session('Username_User');
             $listReport->save();
 
             return response()->json(['success' => true]);
@@ -430,10 +431,12 @@ class ReportController extends Controller
             Storage::disk('public')->copy($sourcePath, $targetPath);
         }
 
-        // Reset approval timestamps
+        // Reset approval timestamps and names
         $listReport->Time_Approved_Leader = null;
         $listReport->Time_Approved_Auditor = null;
         $listReport->Time_List_Report = null;
+        $listReport->Leader_Name = null;
+        $listReport->Auditor_Name = null;
         $listReport->save();
 
         return redirect()->back()->with('success', 'Approval berhasil direset.');

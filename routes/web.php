@@ -133,6 +133,7 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::get('/', [AuditController::class, 'index'])->name('audit.index');
         Route::get('/list/{year}/{month}', [AuditController::class, 'index'])->name('audit.monthly');
         Route::get('/detail/{year}/{month}/{day}/{auditorName}', [AuditController::class, 'detail'])->name('audit.detail');
+        Route::get('/export/{year}/{month}', [AuditController::class, 'exportExcel'])->name('audit.export');
     });
 });
 

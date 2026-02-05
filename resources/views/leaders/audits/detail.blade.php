@@ -20,7 +20,7 @@
             <div class="row">
                 <div class="col-12 py-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="mb-0">Found {{ count($audits) }} Audits</h3>
+                        <h3 class="mb-0"><span class="text-primary">{{ count($audits) }}</span> Audits</h3>
                         <a href="{{ route('audit.monthly', ['year' => date('Y', strtotime($date)), 'month' => date('m', strtotime($date))]) }}"
                             class="btn btn-outline-primary mb-0">Back to Summary</a>
                     </div>
@@ -29,9 +29,9 @@
                         <table class="table table-flush">
                             <thead class="thead-light">
                                 <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Report
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Training
                                         Date</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Reporter
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Member
                                     </th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor
                                     </th>

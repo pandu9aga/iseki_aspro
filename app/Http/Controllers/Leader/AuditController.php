@@ -8,6 +8,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exports\AuditExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AuditController extends Controller
 {
@@ -79,5 +81,11 @@ class AuditController extends Controller
         $audits = $query->get();
 
         return view('leaders.audits.detail', compact('page', 'audits', 'date', 'auditorName'));
+    }
+
+    public function exportExcel($year, $month)
+    {
+        $fileName = 'Audit_Report_'.$year.'_'.$month.'.xlsx';
+        return Excel::download(new AuditExport($year, $month), $fileName);
     }
 }

@@ -69,6 +69,7 @@
                                 @endforeach
                             </select>
                             <button class="btn btn-primary mb-0" id="filterBtn">Filter</button>
+                            <button class="btn btn-success mb-0" id="exportBtn">Export Excel</button>
                         </div>
                     </div>
 
@@ -142,6 +143,14 @@
         const month = document.getElementById('monthPicker').value;
         const year = document.getElementById('yearPicker').value;
         let url = "{{ route('audit.monthly', ['year' => ':year', 'month' => ':month']) }}";
+        url = url.replace(':year', year).replace(':month', month);
+        window.location.href = url;
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        const month = document.getElementById('monthPicker').value;
+        const year = document.getElementById('yearPicker').value;
+        let url = "{{ route('audit.export', ['year' => ':year', 'month' => ':month']) }}";
         url = url.replace(':year', year).replace(':month', month);
         window.location.href = url;
     });
