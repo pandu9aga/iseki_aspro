@@ -46,7 +46,8 @@
                     <div class="card-body py-3">
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
-                            <h4 class="mb-0">Penanganan Temuan: <span class="text-primary">{{ $temuan->ListReport->Name_Procedure }}</span></h4>
+                            <h4 class="mb-0">Penanganan Temuan: <span
+                                    class="text-primary">{{ $temuan->ListReport->Name_Procedure }}</span></h4>
                         </div>
                     </div>
                 </div>
@@ -64,7 +65,8 @@
                             </h6>
                         </div>
                         <div class="card-body">
-                            <form method="POST" action="{{ route('leader-temuan.update-tipe', ['Id_Temuan' => $temuan->Id_Temuan]) }}">
+                            <form method="POST"
+                                action="{{ route('leader-temuan.update-tipe', ['Id_Temuan' => $temuan->Id_Temuan]) }}">
                                 @csrf
                                 @method('PUT')
                                 <div class="row">
@@ -91,12 +93,13 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="mb-3" id="customTipeContainer" style="display: {{ (!in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', null, ''])) ? 'block' : 'none' }};">
+                                        <div class="mb-3" id="customTipeContainer"
+                                            style="display: {{ (!in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', null, ''])) ? 'block' : 'none' }};">
                                             <label for="tipe_temuan_custom" class="form-label text-sm font-weight-bold">
                                                 Tipe Temuan Custom
                                             </label>
-                                            <input type="text" class="form-control" id="tipe_temuan_custom" name="tipe_temuan_custom" 
-                                                placeholder="Masukkan tipe temuan custom"
+                                            <input type="text" class="form-control" id="tipe_temuan_custom"
+                                                name="tipe_temuan_custom" placeholder="Masukkan tipe temuan custom"
                                                 value="{{ (!in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', null, ''])) ? $temuan->Tipe_Temuan : '' }}">
                                         </div>
                                     </div>
@@ -135,7 +138,8 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <div id="pdf-container" class="border rounded" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                        <div id="pdf-container" class="border rounded"
+                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas"></canvas>
                         </div>
                     </div>
@@ -180,11 +184,14 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <a href="{{ asset($object->get('File_Path_Temuan', '')) }}" download="Temuan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
+                        <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
+                            download="Temuan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                            class="btn btn-success mb-3">
                             <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                         </a>
 
-                        <div id="pdf-container-temuan" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                        <div id="pdf-container-temuan" class="border rounded mb-3"
+                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas-temuan"></canvas>
                         </div>
 
@@ -202,7 +209,7 @@
                                         @if(!empty($commentText))
                                             <li class="list-group-item d-flex align-items-start">
                                                 <span class="badge bg-primary me-2 mt-1">{{ $index + 1 }}</span>
-                                                <span class="text-sm">{{ $commentText }}</span>
+                                                <span class="text-sm">{!! nl2br(e($commentText)) !!}</span>
                                             </li>
                                         @endif
                                     @endforeach
@@ -218,7 +225,7 @@
                 </div>
 
                 <!-- Form Penanganan -->
-                @if(!$object->get('UploudFoto_Time_Penanganan',false))
+                @if(!$object->get('UploudFoto_Time_Penanganan', false))
                     <div class="card mt-4 mb-4 shadow-sm">
                         <div class="card-header pb-0">
                             <h6 class="mb-0">
@@ -234,7 +241,8 @@
                                 Upload Foto Penanganan: <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
                             </label>
                             <div class="input-group input-group-outline mb-3">
-                                <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*" capture="environment">
+                                <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*"
+                                    capture="environment">
                             </div>
                             <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
 
@@ -255,11 +263,13 @@
                                 <div>
                                     <h6 class="mb-2">
                                         <i class="material-symbols-rounded text-sm align-middle me-1">build</i>
-                                        Penanggung Jawab: <span class="text-primary">{{ $object->get('Name_User_Penanganan', 'N/A') }}</span>
+                                        Penanggung Jawab: <span
+                                            class="text-primary">{{ $object->get('Name_User_Penanganan', 'N/A') }}</span>
                                     </h6>
                                     <p class="text-xs text-secondary mb-0">
                                         <i class="material-symbols-rounded text-xs align-middle me-1">schedule</i>
-                                        {{ $temuan->Time_Penanganan ? \Carbon\Carbon::parse($temuan->Time_Penanganan)->format('d F Y, H:i') : '-' }} WIB
+                                        {{ $temuan->Time_Penanganan ? \Carbon\Carbon::parse($temuan->Time_Penanganan)->format('d F Y, H:i') : '-' }}
+                                        WIB
                                     </p>
                                 </div>
                                 <div class="d-flex flex-column gap-2 align-items-end">
@@ -288,7 +298,9 @@
                                             @if($object->get('Validation_Time'))
                                                 <small class="d-block mb-2">
                                                     <i class="material-symbols-rounded text-xs align-middle">schedule</i>
-                                                    <strong>Waktu:</strong> {{ \Carbon\Carbon::parse($object->get('Validation_Time'))->format('d F Y, H:i') }} WIB
+                                                    <strong>Waktu:</strong>
+                                                    {{ \Carbon\Carbon::parse($object->get('Validation_Time'))->format('d F Y, H:i') }}
+                                                    WIB
                                                 </small>
                                             @endif
                                             @if($object->get('Validation_Notes'))
@@ -305,11 +317,14 @@
                                 </div>
                             @endif
 
-                            <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}" download="Penanganan_{{ $listReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
+                            <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}"
+                                download="Penanganan_{{ $listReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                                class="btn btn-success mb-3">
                                 <i class="material-symbols-rounded text-sm">download</i> Download PDF Penanganan
                             </a>
 
-                            <div id="pdf-container-penanganan" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                            <div id="pdf-container-penanganan" class="border rounded mb-3"
+                                style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                                 <canvas id="default-pdf-canvas-penanganan"></canvas>
                             </div>
 
@@ -327,7 +342,7 @@
                                             @if(!empty($commentText))
                                                 <li class="list-group-item d-flex align-items-start">
                                                     <span class="badge bg-success me-2 mt-1">{{ $index + 1 }}</span>
-                                                    <span class="text-sm">{{ $commentText }}</span>
+                                                    <span class="text-sm">{!! nl2br(e($commentText)) !!}</span>
                                                 </li>
                                             @endif
                                         @endforeach
@@ -344,42 +359,43 @@
                 @endif
 
                 @if(!$object->Is_Submit_Penanganan && $object->UploudFoto_Time_Penanganan)
-                        <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist('check')">
-                            <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
-                        </button>
-                        <button class="btn btn-warning mt-3" onclick="undo()">
-                            <i class="material-symbols-rounded">undo</i>
-                        </button>
-                        <button class="btn btn-info mt-3" onclick="redo()">
-                            <i class="material-symbols-rounded">redo</i>
-                        </button>
-                        <button class="btn btn-danger mt-3" id="delete-btn" onclick="deleteSelected()" disabled>
-                            <i class="material-symbols-rounded">delete</i>
-                        </button>
-                        <!-- Tombol NG -->
-                        <button class="btn btn-primary mt-3" id="ng-btn" onclick="toggleChecklist('ng')">
-                            <i class="material-symbols-rounded" id="ng-btn-icon">block</i> <!-- Ganti ikon sesuai kebutuhan -->
-                        </button>
-                        <!-- Tombol X -->
-                        <button class="btn btn-primary mt-3" id="x-btn" onclick="toggleChecklist('x')">
-                            <!-- Ganti onclick ke 'x' -->
-                            <i class="material-symbols-rounded" id="x-btn-icon">edit_off</i>
-                            <!-- Ganti ikon sesuai kebutuhan -->
-                        </button>
-                        <!-- Tombol Comment -->
-                        <button class="btn btn-primary mt-3" id="comment-btn" onclick="toggleChecklist('comment')">
-                            <i class="material-symbols-rounded" id="comment-btn-icon">text_fields</i>
-                            <!-- Ganti ikon sesuai kebutuhan -->
-                        </button>
-                        <div id="pdf-container-editor" style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
-                            <canvas id="pdf-canvas-editor"></canvas>
-                            <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Temuan</button>
-                            {{--                        <button onclick="deleteReport()" class="btn btn-danger mt-3">Delete Temuan</button>--}}
-                        </div>
-                    @endif
+                    <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist('check')">
+                        <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
+                    </button>
+                    <button class="btn btn-warning mt-3" onclick="undo()">
+                        <i class="material-symbols-rounded">undo</i>
+                    </button>
+                    <button class="btn btn-info mt-3" onclick="redo()">
+                        <i class="material-symbols-rounded">redo</i>
+                    </button>
+                    <button class="btn btn-danger mt-3" id="delete-btn" onclick="deleteSelected()" disabled>
+                        <i class="material-symbols-rounded">delete</i>
+                    </button>
+                    <!-- Tombol NG -->
+                    <button class="btn btn-primary mt-3" id="ng-btn" onclick="toggleChecklist('ng')">
+                        <i class="material-symbols-rounded" id="ng-btn-icon">block</i> <!-- Ganti ikon sesuai kebutuhan -->
+                    </button>
+                    <!-- Tombol X -->
+                    <button class="btn btn-primary mt-3" id="x-btn" onclick="toggleChecklist('x')">
+                        <!-- Ganti onclick ke 'x' -->
+                        <i class="material-symbols-rounded" id="x-btn-icon">edit_off</i>
+                        <!-- Ganti ikon sesuai kebutuhan -->
+                    </button>
+                    <!-- Tombol Comment -->
+                    <button class="btn btn-primary mt-3" id="comment-btn" onclick="toggleChecklist('comment')">
+                        <i class="material-symbols-rounded" id="comment-btn-icon">text_fields</i>
+                        <!-- Ganti ikon sesuai kebutuhan -->
+                    </button>
+                    <div id="pdf-container-editor"
+                        style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
+                        <canvas id="pdf-canvas-editor"></canvas>
+                        <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Temuan</button>
+                        {{-- <button onclick="deleteReport()" class="btn btn-danger mt-3">Delete Temuan</button>--}}
+                    </div>
+                @endif
             </div>
         </section>
     </div>
@@ -444,6 +460,7 @@
     {{-- Render Default PDF to get their Size (Isolated) this will be reuse for the loop submitted Temuan --}}
     <script>
         const PDF_SCALE = 1.5;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
 
         function RenderPDF(pdfUrl, canvasId) {
@@ -535,13 +552,13 @@
             RenderPDF("{{ asset($object->File_Path_Penanganan) }}?t=" + new Date().getTime(), "default-pdf-canvas-penanganan");
         @endif
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const tipeTemuanSelect = document.getElementById('tipe_temuan');
             const customTipeContainer = document.getElementById('customTipeContainer');
             const customTipeInput = document.getElementById('tipe_temuan_custom');
 
             if (tipeTemuanSelect) {
-                tipeTemuanSelect.addEventListener('change', function() {
+                tipeTemuanSelect.addEventListener('change', function () {
                     if (this.value === 'Lain-lain') {
                         customTipeContainer.style.display = 'block';
                         customTipeInput.required = true;
@@ -556,14 +573,14 @@
     </script>
 
 
-    @if(!$object->get('UploudFoto_Time_Penanganan',false))
+    @if(!$object->get('UploudFoto_Time_Penanganan', false))
         {{--Foto Upload for Penanganan--}}
         <script>
             // Photo state
             let images = [];
 
             // Handle image selection
-            document.getElementById('imageInput').addEventListener('change', function(e) {
+            document.getElementById('imageInput').addEventListener('change', function (e) {
                 for (let file of e.target.files) {
                     images.push(file);
                     showPreview(file);
@@ -573,7 +590,7 @@
             async function resizeImage(file, maxWidth, maxHeight) {
                 return new Promise(resolve => {
                     const img = new Image();
-                    img.onload = function() {
+                    img.onload = function () {
                         let width = img.width;
                         let height = img.height;
 
@@ -595,7 +612,7 @@
             // Display preview with delete button
             function showPreview(file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const container = document.createElement('div');
                     container.style.position = 'relative';
 
@@ -623,7 +640,7 @@
                     delBtn.style.justifyContent = 'center';
                     delBtn.style.fontSize = '12px';
 
-                    delBtn.onclick = function() {
+                    delBtn.onclick = function () {
                         const index = Array.from(container.parentNode.children).indexOf(container);
                         images.splice(index, 1);
                         container.remove();
@@ -737,7 +754,7 @@
             // GLOBAL VARIABLES & CONFIGURATION
             // ============================================
             const CONFIG = {
-                pdfUrl: "{{ asset($object->File_Path_Penanganan) }}"+"?t=" + new Date().getTime(),
+                pdfUrl: "{{ asset($object->File_Path_Penanganan) }}" + "?t=" + new Date().getTime(),
                 pdfScale: 1.5,
                 fontSize: {
                     timestamp: 8,
@@ -748,9 +765,10 @@
                     check: { text: 'blue', bg: 'rgba(0,255,0,0.3)' },
                     ng: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
                     x: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
-                    comment: { text: 'black', bg: 'white', border: '#bd0237' }
+                    comment: { text: 'white', bg: '#E91E63', border: 'transparent' }
                 }
             };
+            pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
             // DOM Elements
             const DOM = {
@@ -922,10 +940,9 @@
                     left: '50px',
                     cursor: 'move',
                     color: CONFIG.colors.comment.text,
-                    background: CONFIG.colors.comment.bg,
-                    padding: '5px',
-                    fontSize: '14px',
-                    border: `2px solid ${CONFIG.colors.comment.border}`,
+                    backgroundColor: CONFIG.colors.comment.bg,
+                    border: 'none',
+                    whiteSpace: 'pre-wrap', // Allow newlines
                     minWidth: '100px',
                     minHeight: '20px',
                     outline: 'none'
@@ -942,7 +959,26 @@
             // EVENT HANDLERS
             // ============================================
             function setupDraggableEvents(element) {
-                element.setAttribute('draggable', true);
+                element.setAttribute('draggable', 'true');
+
+                // Disable dragging when editing to allow Enter key
+                element.addEventListener('focus', () => {
+                    element.removeAttribute('draggable');
+                });
+
+                element.addEventListener('blur', () => {
+                    element.setAttribute('draggable', 'true');
+                });
+
+                // Explicit Enter key handler for newlines
+                element.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Insert line break manually
+                        document.execCommand('insertLineBreak');
+                    }
+                });
 
                 element.addEventListener('dragstart', (e) => {
                     element.startX = e.clientX - element.offsetLeft;
@@ -990,7 +1026,7 @@
 
             function resetElementBorder(element) {
                 if (element.contentEditable === 'true') {
-                    element.style.border = `2px solid ${CONFIG.colors.comment.border}`;
+                    element.style.border = '2px dashed #fff';
                 } else {
                     element.style.border = '1px solid transparent';
                 }
@@ -1043,7 +1079,7 @@
             // ============================================
             // EDITOR LAYER INTERACTION
             // ============================================
-            DOM.editorLayer.addEventListener('click', function(e) {
+            DOM.editorLayer.addEventListener('click', function (e) {
                 if (!STATE.checklistMode) {
                     handleClickOutsideAnnotation();
                     return;
@@ -1126,7 +1162,7 @@
                 setupSelectionEvents(element);
                 setupDraggableEvents(element);
             }
-            {{-- Submit Report with Annotations --}}
+            { { --Submit Report with Annotations--} }
             // ============================================
             // UTILITIES
             // ============================================
@@ -1198,42 +1234,68 @@
                 if (!text || text === 'Tulis komentar...') return;
 
                 const fontSize = CONFIG.fontSize.comment;
-                const padding = { x: 6, y: 6 };
-                const border = 1;
-                const innerPadding = 1;
+                const lineHeight = fontSize + 4;
+
+                // Split text by newlines
+                // Sanitize: Remove zero-width chars and ensure WinAnsi compatibility
+                const rawText = element.innerText.replace(/[\u200B-\u200D\uFEFF]/g, '');
+                // Split and map to ensure we check characters
+                const lines = rawText.split(/\r?\n/).map(l => l.replace(/[^\x00-\xFF]/g, '')); // Basic Latin-1 filter
+
+                // Calculate dimensions based on longest line
+                let maxLineWidth = 0;
+                lines.forEach(line => {
+                    try {
+                        const width = font.widthOfTextAtSize(line, fontSize);
+                        if (width > maxLineWidth) maxLineWidth = width;
+                    } catch (e) {
+                        console.warn('Skipping unsupported character line:', line);
+                    }
+                });
+
+                const paddingX = 6;
+                const paddingY = 6;
+                const outerWidth = maxLineWidth + (2 * paddingX);
+                const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
+
+                // Adjust Y calculation
+                // In this file, like temuan.blade.php, it references 'y' directly.
+                // Assuming 'y' is the bottom-left corner of where the element started,
+                // but checking calculatePDFPosition: it returns y = pageHeight - (offsetY * scaleY) - 18
+                // This y usually represents the baseline or bottom of the element in PDF coords.
+                // If we want the BOX to extend downwards (or rather, the box contains the text),
+                // and if 'y' is the top of the element in HTML...
+                // Actually, in HTML top-left is (x,y).
+                // calculatePDFPosition converts that HTML top-left to PDF coords.
+                // In PDF, (0,0) is bottom-left.
+                // So HTML y=0 -> PDF y=Height.
+                // HTML y=50 -> PDF y=Height-50.
+                // So the 'y' returned by calculatePDFPosition is the PDF Y coordinate of the TOP of the element.
+                // So to draw the box, we start at 'y' and go DOWN (subtract height).
+
+                const boxY = y - outerHeight;
+                const boxX = x - paddingX;
+
                 FINAL_STATE.comments.push({
                     'text': text,
                     'position': { 'x': x, 'y': y },
                     'fontSize': fontSize
                 })
 
-                const textWidth = font.widthOfTextAtSize(text, fontSize);
-                const boxWidth = textWidth + (2 * padding.x);
-                const boxHeight = fontSize + 4 + (2 * padding.y);
-                const boxX = x - padding.x;
-                const boxY = y - fontSize - 4 - padding.y;
+                // Outer background (pink)
+                drawRectangle(page, boxX, boxY, outerWidth, outerHeight,
+                    PDFLib.rgb(0.913, 0.117, 0.388)); // #E91E63
 
-                // Outer border (pink)
-                drawRectangle(page, boxX, boxY, boxWidth, boxHeight,
-                    PDFLib.rgb(0.741, 0.008, 0.216));
-
-                // Inner background (white)
-                const innerOffset = border + innerPadding;
-                drawRectangle(page,
-                    boxX + innerOffset,
-                    boxY + innerOffset,
-                    boxWidth - (2 * innerOffset),
-                    boxHeight - (2 * innerOffset),
-                    PDFLib.rgb(1, 1, 1)
-                );
-
-                // Text
-                page.drawText(text, {
-                    x: boxX + innerOffset + 2,
-                    y: boxY + boxHeight - fontSize - 4,
-                    size: fontSize,
-                    color: PDFLib.rgb(0, 0, 0),
-                    font
+                // Text lines
+                lines.forEach((line, index) => {
+                    const textY = y - paddingY - (index + 1) * lineHeight + 4;
+                    page.drawText(line, {
+                        x: x,
+                        y: textY,
+                        size: fontSize,
+                        color: PDFLib.rgb(1, 1, 1), // White
+                        font
+                    });
                 });
             }
 
@@ -1323,6 +1385,9 @@
                     throw new Error('Server rejected submission');
                 }
             }
+
+            // Initialize PDF rendering
+            renderPDF();
         </script>
     @endif
 
@@ -1363,39 +1428,39 @@
         }
 
         /* .bg-gradient-success {
-            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-        }
+                                        background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                        box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+                                    }
 
-        .bg-gradient-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
-        }
+                                    .bg-gradient-info {
+                                        background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                        box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+                                    }
 
-        .bg-gradient-warning {
-            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-        } */
+                                    .bg-gradient-warning {
+                                        background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+                                        box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+                                    } */
 
         /* Button Styling */
         /* .btn {
-            transition: all 0.3s ease;
-        }
+                                        transition: all 0.3s ease;
+                                    }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
+                                    .btn:hover {
+                                        transform: translateY(-2px);
+                                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                    }
 
-        .btn-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            border: none;
-        }
+                                    .btn-info {
+                                        background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                        border: none;
+                                    }
 
-        .btn-success {
-            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            border: none;
-        } */
+                                    .btn-success {
+                                        background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                        border: none;
+                                    } */
 
         /* List Group Styling */
         .list-group-item {
@@ -1462,4 +1527,3 @@
         }
     </style>
 @endsection
-

@@ -104,6 +104,7 @@
     <script src="{{ asset('assets/js/pdf-lib.min.js') }}"></script>
     <script>
         let pdfUrl = "{{ asset($pdfPath) }}?t=" + new Date().getTime();
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
         let pdfCanvas = document.getElementById('pdf-canvas');
         let editorLayer = document.getElementById('editor-layer');
         let checklistMode = false;
@@ -245,11 +246,12 @@
                 top: '50px',
                 left: '50px',
                 cursor: 'move',
-                color: 'black', // Teks hitam
-                background: 'white', // Background putih
+                color: 'white', // White text
+                backgroundColor: '#E91E63', // Pink background
+                whiteSpace: 'pre-wrap', // Allow newlines
                 padding: '5px',
                 fontSize: '14px',
-                border: '2px solid #bd0237', // Outer box warna pink gelap
+                border: 'none',
                 minWidth: '100px',
                 minHeight: '20px',
                 outline: 'none'
@@ -258,6 +260,25 @@
 
             div.addEventListener('input', () => {
                 saveState();
+            });
+
+            // Disable dragging when editing to allow Enter key
+            div.addEventListener('focus', () => {
+                div.removeAttribute('draggable');
+            });
+
+            div.addEventListener('blur', () => {
+                div.setAttribute('draggable', 'true');
+            });
+
+            // Explicit Enter key handler for newlines
+            div.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Insert line break manually
+                    document.execCommand('insertLineBreak');
+                }
             });
 
             div.addEventListener('click', e => {
@@ -383,7 +404,7 @@
                         if (selectedObject) selectedObject.classList.remove('selected');
                         selectedObject = div;
                         div.classList.add('selected');
-                        div.style.border = '2px dashed red';
+                        div.style.border = '2px dashed #fff';
                         document.getElementById('delete-btn').disabled = false;
                     });
                     div.addEventListener('dragstart', e => {
@@ -444,7 +465,7 @@
                         selectedObject.style.border = '1px solid transparent';
                     } else if (selectedObject.tagName.toLowerCase() === 'div' && selectedObject.contentEditable ===
                         'true') {
-                        selectedObject.style.border = '2px solid #bd0237'; // Border default untuk komentar
+                        selectedObject.style.border = '2px dashed #fff'; // White selection for visibility on pink
                     }
                     selectedObject = null;
                     document.getElementById('delete-btn').disabled = true;
@@ -700,53 +721,57 @@
                     // Hindari menyimpan placeholder teks jika kosong
                     if (text && text.trim() !== '' && text.trim() !== 'Tulis komentar...') {
                         const fontSizeComment = 12; // Ukuran teks komentar di PDF
-                        const textWidth = font.widthOfTextAtSize(text, fontSizeComment);
-                        const textHeight = fontSizeComment + 4; // Tinggi teks + sedikit padding
+                        const lineHeight = fontSizeComment + 4;
 
-                        // --- 1. Gambar border pink gelap (kotak luar) ---
-                        const borderWidth = 1; // Ketebalan border
-                        const paddingX = 6; // Padding total horizontal (border + padding dalam)
-                        const paddingY = 6; // Padding total vertikal
-                        const outerWidth = textWidth + (2 * paddingX);
-                        const outerHeight = textHeight + (2 * paddingY);
+                        // Split text by newlines (handle contentEditable behavior)
+                        const rawText = div.innerText.replace(/[\u200B-\u200D\uFEFF]/g, '');
+                        const lines = rawText.split(/\r?\n/).map(l => l.replace(/[^\x00-\xFF]/g, ''));
+
+                        // Calculate max width
+                        let maxLineWidth = 0;
+                        lines.forEach(line => {
+                            try {
+                                const width = font.widthOfTextAtSize(line, fontSizeComment);
+                                if (width > maxLineWidth) maxLineWidth = width;
+                            } catch (e) {
+                                console.warn('Skipping unsupported character line:', line);
+                            }
+                        });
+
+                        const paddingX = 6;
+                        const paddingY = 6;
+                        const outerWidth = maxLineWidth + (2 * paddingX);
+                        const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
+
+                        // Adjust position (similar to previous fixes)
+                        // scaledX/scaledY are canvas coords converted to PDF dim ratios.
+                        // finalY = pageHeight - scaledY - 18
+                        // We want to draw extending DOWN from finalY.
+
                         const outerX = scaledX - paddingX;
-                        const outerY = finalY - textHeight -
-                            paddingY; // finalY adalah puncak teks, jadi posisi Y kotak dihitung dari sana
+                        const rectBottomY = finalY - outerHeight;
 
+                        // --- 1. Gambar background pink ---
                         page.drawRectangle({
                             x: outerX,
-                            y: outerY,
+                            y: rectBottomY,
                             width: outerWidth,
                             height: outerHeight,
-                            color: PDFLib.rgb(0.741, 0.008, 0.216), // Warna pink gelap: #bd0237
-                            thickness: borderWidth,
+                            color: PDFLib.rgb(0.913, 0.117, 0.388), // #E91E63
                             opacity: 1
                         });
 
-                        // --- 2. Gambar background putih (kotak dalam, sedikit lebih kecil dari border) ---
-                        // Kurangi ukuran dan posisi agar berada di dalam border
-                        const innerPadding = 1; // Jarak antara border dan background putih
-                        page.drawRectangle({
-                            x: outerX + borderWidth + innerPadding,
-                            y: outerY + borderWidth + innerPadding,
-                            width: outerWidth - 2 * (borderWidth + innerPadding),
-                            height: outerHeight - 2 * (borderWidth + innerPadding),
-                            color: PDFLib.rgb(1, 1, 1), // Putih
-                            opacity: 1
-                        });
+                        // --- 2. Gambar teks putih ---
+                        lines.forEach((line, index) => {
+                            const textY = finalY - paddingY - (index + 1) * lineHeight + 4;
 
-                        // --- 3. Gambar teks hitam ---
-                        // Tempatkan teks di tengah area dalam kotak putih
-                        const textX = outerX + borderWidth + innerPadding + 2; // Sedikit jarak dari kiri
-                        const textY = outerY + outerHeight - fontSizeComment -
-                            4; // Sesuaikan posisi Y agar teks pas di dalam kotak
-
-                        page.drawText(text, {
-                            x: textX,
-                            y: textY,
-                            size: fontSizeComment,
-                            color: PDFLib.rgb(0, 0, 0), // Hitam
-                            font
+                            page.drawText(line, {
+                                x: scaledX, // Align left
+                                y: textY,
+                                size: fontSizeComment,
+                                color: PDFLib.rgb(1, 1, 1), // Putih
+                                font
+                            });
                         });
                     }
                 } else {

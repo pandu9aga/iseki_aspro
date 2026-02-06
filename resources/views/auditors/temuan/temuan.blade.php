@@ -19,7 +19,8 @@
             <div class="container">
                 <!-- Tombol Back & List Temuan -->
                 <div class="d-flex gap-2 mb-4">
-                    <a class="btn btn-primary" href="{{ route('report_auditor.detail', ['Id_List_Report' => $listReport->Id_List_Report]) }}">
+                    <a class="btn btn-primary"
+                        href="{{ route('report_auditor.detail', ['Id_List_Report' => $listReport->Id_List_Report]) }}">
                         <i class="material-symbols-rounded text-sm">arrow_back</i> Back
                     </a>
                     <a class="btn btn-info" href="{{ route('auditor-report.temuan_index') }}">
@@ -32,7 +33,8 @@
                     <div class="card-body py-3">
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
-                            <h4 class="mb-0">Temuan: <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h4>
+                            <h4 class="mb-0">Temuan: <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
+                            </h4>
                         </div>
                     </div>
                 </div>
@@ -46,7 +48,8 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <div id="pdf-container" class="border rounded" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                        <div id="pdf-container" class="border rounded"
+                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas"></canvas>
                         </div>
                     </div>
@@ -93,7 +96,8 @@
                                                 <i class="material-symbols-rounded text-xs me-1">pending</i>Menunggu Penanganan
                                             </span>
                                         @endif
-                                        <a href="{{ route('auditor-report.temuan_show',['Id_Temuan' => $temuan->Id_Temuan]) }}" class="btn btn-sm btn-info">
+                                        <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
+                                            class="btn btn-sm btn-info">
                                             <i class="material-symbols-rounded text-sm">visibility</i> Lihat Detail
                                         </a>
                                     </div>
@@ -101,11 +105,14 @@
                             </div>
                             <div class="card-body">
 
-                                <a href="{{ asset($object->get('File_Path_Temuan', '')) }}" download="Temuan_{{ $listReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
+                                <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
+                                    download="Temuan_{{ $listReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                                    class="btn btn-success mb-3">
                                     <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                                 </a>
 
-                                <div id="pdf-container-{{$temuan->Id_Temuan}}" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                                <div id="pdf-container-{{$temuan->Id_Temuan}}" class="border rounded mb-3"
+                                    style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                                     <canvas id="default-pdf-canvas-{{$temuan->Id_Temuan}}"></canvas>
                                 </div>
 
@@ -157,7 +164,8 @@
                                 Upload Foto untuk: <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
                             </label>
                             <div class="input-group input-group-outline mb-3">
-                                <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*" capture="environment">
+                                <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*"
+                                    capture="environment">
                             </div>
                             <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
 
@@ -183,7 +191,8 @@
                         <div class="card-body">
                             <!-- Toolbar -->
                             <div class="d-flex flex-wrap gap-2 mb-3 p-3 bg-light rounded">
-                                <button class="btn btn-sm btn-primary" id="checklist-btn" onclick="toggleChecklist('check')" title="Checklist">
+                                <button class="btn btn-sm btn-primary" id="checklist-btn" onclick="toggleChecklist('check')"
+                                    title="Checklist">
                                     <i class="material-symbols-rounded text-sm" id="checklist-btn-icon">edit_off</i>
                                 </button>
                                 <button class="btn btn-sm btn-warning" onclick="undo()" title="Undo">
@@ -192,22 +201,26 @@
                                 <button class="btn btn-sm btn-info" onclick="redo()" title="Redo">
                                     <i class="material-symbols-rounded text-sm">redo</i>
                                 </button>
-                                <button class="btn btn-sm btn-danger" id="delete-btn" onclick="deleteSelected()" disabled title="Delete">
+                                <button class="btn btn-sm btn-danger" id="delete-btn" onclick="deleteSelected()" disabled
+                                    title="Delete">
                                     <i class="material-symbols-rounded text-sm">delete</i>
                                 </button>
-                                <button class="btn btn-sm btn-primary" id="ng-btn" onclick="toggleChecklist('ng')" title="Mark NG">
+                                <button class="btn btn-sm btn-primary" id="ng-btn" onclick="toggleChecklist('ng')"
+                                    title="Mark NG">
                                     <i class="material-symbols-rounded text-sm" id="ng-btn-icon">block</i>
                                 </button>
                                 <button class="btn btn-sm btn-primary" id="x-btn" onclick="toggleChecklist('x')" title="Mark X">
                                     <i class="material-symbols-rounded text-sm" id="x-btn-icon">close</i>
                                 </button>
-                                <button class="btn btn-sm btn-primary" id="comment-btn" onclick="toggleChecklist('comment')" title="Add Comment">
+                                <button class="btn btn-sm btn-primary" id="comment-btn" onclick="toggleChecklist('comment')"
+                                    title="Add Comment">
                                     <i class="material-symbols-rounded text-sm" id="comment-btn-icon">comment</i>
                                 </button>
                             </div>
 
                             <!-- PDF Editor Canvas -->
-                            <div id="pdf-container-editor" class="border rounded" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                            <div id="pdf-container-editor" class="border rounded"
+                                style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                                 <canvas id="pdf-canvas-editor"></canvas>
                                 <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                             </div>
@@ -263,44 +276,44 @@
         }
 
         /* .bg-gradient-success {
-            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-        }
+                background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+            }
 
-        .bg-gradient-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
-        }
+            .bg-gradient-info {
+                background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+            }
 
-        .bg-gradient-warning {
-            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-        } */
+            .bg-gradient-warning {
+                background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+                box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+            } */
 
         /* Button Styling */
         /* .btn {
-            transition: all 0.3s ease;
-        }
+                transition: all 0.3s ease;
+            }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
 
-        .btn-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            border: none;
-        }
+            .btn-info {
+                background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                border: none;
+            }
 
-        .btn-success {
-            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            border: none;
-        } */
+            .btn-success {
+                background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                border: none;
+            } */
 
         /* Toolbar Styling */
         /* .bg-light {
-            background-color: #f8f9fa !important;
-        } */
+                background-color: #f8f9fa !important;
+            } */
 
         /* List Group Styling */
         .list-group-item {
@@ -455,7 +468,7 @@
             images = [];
 
             // Handle image selection
-            document.getElementById('imageInput').addEventListener('change', function(e) {
+            document.getElementById('imageInput').addEventListener('change', function (e) {
                 for (let file of e.target.files) {
                     images.push(file);
                     showPreview(file);
@@ -465,7 +478,7 @@
             async function resizeImage(file, maxWidth, maxHeight) {
                 return new Promise(resolve => {
                     const img = new Image();
-                    img.onload = function() {
+                    img.onload = function () {
                         let width = img.width;
                         let height = img.height;
 
@@ -487,7 +500,7 @@
             // Display preview with delete button
             function showPreview(file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const container = document.createElement('div');
                     container.style.position = 'relative';
 
@@ -515,7 +528,7 @@
                     delBtn.style.justifyContent = 'center';
                     delBtn.style.fontSize = '12px';
 
-                    delBtn.onclick = function() {
+                    delBtn.onclick = function () {
                         const index = Array.from(container.parentNode.children).indexOf(container);
                         images.splice(index, 1);
                         container.remove();
@@ -646,7 +659,7 @@
                     check: { text: 'blue', bg: 'rgba(0,255,0,0.3)' },
                     ng: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
                     x: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
-                    comment: { text: 'black', bg: 'white', border: '#bd0237' }
+                    comment: { text: 'white', bg: '#E91E63', border: 'transparent' }
                 }
             };
 
@@ -820,13 +833,8 @@
                     left: '50px',
                     cursor: 'move',
                     color: CONFIG.colors.comment.text,
-                    background: CONFIG.colors.comment.bg,
-                    padding: '5px',
-                    fontSize: '14px',
-                    border: `2px solid ${CONFIG.colors.comment.border}`,
-                    minWidth: '100px',
-                    minHeight: '20px',
-                    outline: 'none'
+                    backgroundColor: CONFIG.colors.comment.bg,
+                    border: 'none',
                 });
 
                 comment.addEventListener('input', saveState);
@@ -888,7 +896,7 @@
 
             function resetElementBorder(element) {
                 if (element.contentEditable === 'true') {
-                    element.style.border = `2px solid ${CONFIG.colors.comment.border}`;
+                    element.style.border = '2px dashed #fff';
                 } else {
                     element.style.border = '1px solid transparent';
                 }
@@ -941,7 +949,7 @@
             // ============================================
             // EDITOR LAYER INTERACTION
             // ============================================
-            DOM.editorLayer.addEventListener('click', function(e) {
+            DOM.editorLayer.addEventListener('click', function (e) {
                 if (!STATE.checklistMode) {
                     handleClickOutsideAnnotation();
                     return;
@@ -1024,7 +1032,7 @@
                 setupSelectionEvents(element);
                 setupDraggableEvents(element);
             }
-        {{-- Submit Report with Annotations --}}
+            { { --Submit Report with Annotations--} }
             // ============================================
             // UTILITIES
             // ============================================
@@ -1096,42 +1104,57 @@
                 if (!text || text === 'Tulis komentar...') return;
 
                 const fontSize = CONFIG.fontSize.comment;
-                const padding = { x: 6, y: 6 };
-                const border = 1;
-                const innerPadding = 1;
+                const lineHeight = fontSize + 4;
+
+                // Split text by newlines
+                const rawText = element.innerText;
+                const lines = rawText.split(/\r?\n/);
+
+                // Calculate dimensions based on longest line
+                let maxLineWidth = 0;
+                lines.forEach(line => {
+                    const width = font.widthOfTextAtSize(line, fontSize);
+                    if (width > maxLineWidth) maxLineWidth = width;
+                });
+
+                const paddingX = 6;
+                const paddingY = 6;
+                const outerWidth = maxLineWidth + (2 * paddingX);
+                const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
+
+                // Adjust Y calculation (similar to report.blade.php fix)
+                // In this file, it references 'y' directly.
+                // Previous logic: const boxY = y - fontSize - 4 - padding.y; (Logic seems to place box ABOVE the Y point? or maybe Y is bottom?)
+                // Let's check calculatePDFPosition: y = pageHeight - (offsetY * scaleY) - 18;
+                // If HTML y increases, PDF y decreases.
+                // If y is the TOP in HTML:
+                // We want the box to extend DOWN from y in HTML, which means DOWN from y in PDF too.
+                // Wait, PDF Y=0 is bottom. So DOWN means decreasing Y.
+                // So boxY should be y - outerHeight.
+
+                const boxY = y - outerHeight;
+                const boxX = x - paddingX;
+
                 FINAL_STATE.comments.push({
                     'text': text,
                     'position': { 'x': x, 'y': y },
                     'fontSize': fontSize
                 })
 
-                const textWidth = font.widthOfTextAtSize(text, fontSize);
-                const boxWidth = textWidth + (2 * padding.x);
-                const boxHeight = fontSize + 4 + (2 * padding.y);
-                const boxX = x - padding.x;
-                const boxY = y - fontSize - 4 - padding.y;
+                // Outer background (pink)
+                drawRectangle(page, boxX, boxY, outerWidth, outerHeight,
+                    PDFLib.rgb(0.913, 0.117, 0.388)); // #E91E63
 
-                // Outer border (pink)
-                drawRectangle(page, boxX, boxY, boxWidth, boxHeight,
-                    PDFLib.rgb(0.741, 0.008, 0.216));
-
-                // Inner background (white)
-                const innerOffset = border + innerPadding;
-                drawRectangle(page,
-                    boxX + innerOffset,
-                    boxY + innerOffset,
-                    boxWidth - (2 * innerOffset),
-                    boxHeight - (2 * innerOffset),
-                    PDFLib.rgb(1, 1, 1)
-                );
-
-                // Text
-                page.drawText(text, {
-                    x: boxX + innerOffset + 2,
-                    y: boxY + boxHeight - fontSize - 4,
-                    size: fontSize,
-                    color: PDFLib.rgb(0, 0, 0),
-                    font
+                // Text lines
+                lines.forEach((line, index) => {
+                    const textY = y - paddingY - (index + 1) * lineHeight + 4;
+                    page.drawText(line, {
+                        x: x,
+                        y: textY,
+                        size: fontSize,
+                        color: PDFLib.rgb(1, 1, 1), // White
+                        font
+                    });
                 });
             }
 

@@ -36,7 +36,8 @@
 
                 <!-- Tombol Back & List Temuan -->
                 <div class="d-flex gap-2 mb-4">
-                    <a class="btn btn-primary" href="{{ route('report_auditor.detail', ['Id_List_Report' => $temuan->Id_List_Report]) }}">
+                    <a class="btn btn-primary"
+                        href="{{ route('report_auditor.detail', ['Id_List_Report' => $temuan->Id_List_Report]) }}">
                         <i class="material-symbols-rounded text-sm">arrow_back</i> Back
                     </a>
                     <a class="btn btn-info" href="{{ route('auditor-report.temuan_index') }}">
@@ -49,7 +50,8 @@
                     <div class="card-body py-3">
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
-                            <h4 class="mb-0">Detail Temuan: <span class="text-primary">{{ $temuan->ListReport->Name_Procedure }}</span></h4>
+                            <h4 class="mb-0">Detail Temuan: <span
+                                    class="text-primary">{{ $temuan->ListReport->Name_Procedure }}</span></h4>
                         </div>
                     </div>
                 </div>
@@ -63,7 +65,8 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <div id="pdf-container" class="border rounded" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                        <div id="pdf-container" class="border rounded"
+                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas"></canvas>
                         </div>
                     </div>
@@ -107,11 +110,14 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <a href="{{ asset($object->get('File_Path_Temuan', '')) }}" download="Temuan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
+                        <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
+                            download="Temuan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                            class="btn btn-success mb-3">
                             <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                         </a>
 
-                        <div id="pdf-container-temuan" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                        <div id="pdf-container-temuan" class="border rounded mb-3"
+                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas-temuan"></canvas>
                         </div>
 
@@ -129,7 +135,7 @@
                                         @if(!empty($commentText))
                                             <li class="list-group-item d-flex align-items-start">
                                                 <span class="badge bg-primary me-2 mt-1">{{ $index + 1 }}</span>
-                                                <span class="text-sm">{{ $commentText }}</span>
+                                                <span class="text-sm">{!! nl2br(e($commentText)) !!}</span>
                                             </li>
                                         @endif
                                     @endforeach
@@ -152,11 +158,13 @@
                                 <div>
                                     <h6 class="mb-2">
                                         <i class="material-symbols-rounded text-sm align-middle me-1">build</i>
-                                        Penanggung Jawab: <span class="text-primary">{{ $object->get('Name_User_Penanganan', 'N/A') }}</span>
+                                        Penanggung Jawab: <span
+                                            class="text-primary">{{ $object->get('Name_User_Penanganan', 'N/A') }}</span>
                                     </h6>
                                     <p class="text-xs text-secondary mb-0">
                                         <i class="material-symbols-rounded text-xs align-middle me-1">schedule</i>
-                                        {{ $temuan->Time_Penanganan ? \Carbon\Carbon::parse($temuan->Time_Penanganan)->format('d F Y, H:i') : '-' }} WIB
+                                        {{ $temuan->Time_Penanganan ? \Carbon\Carbon::parse($temuan->Time_Penanganan)->format('d F Y, H:i') : '-' }}
+                                        WIB
                                     </p>
                                 </div>
                                 <div class="d-flex flex-column gap-2 align-items-end">
@@ -186,7 +194,9 @@
                                             @if($object->get('Validation_Time'))
                                                 <small class="d-block mb-2">
                                                     <i class="material-symbols-rounded text-xs align-middle">schedule</i>
-                                                    <strong>Waktu:</strong> {{ \Carbon\Carbon::parse($object->get('Validation_Time'))->format('d F Y, H:i') }} WIB
+                                                    <strong>Waktu:</strong>
+                                                    {{ \Carbon\Carbon::parse($object->get('Validation_Time'))->format('d F Y, H:i') }}
+                                                    WIB
                                                 </small>
                                             @endif
                                             @if($object->get('Validation_Notes'))
@@ -203,11 +213,14 @@
                                 </div>
                             @endif
 
-                            <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}" download="Penanganan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf" class="btn btn-success mb-3">
+                            <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}"
+                                download="Penanganan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                                class="btn btn-success mb-3">
                                 <i class="material-symbols-rounded text-sm">download</i> Download PDF Penanganan
                             </a>
 
-                            <div id="pdf-container-penanganan" class="border rounded mb-3" style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                            <div id="pdf-container-penanganan" class="border rounded mb-3"
+                                style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                                 <canvas id="default-pdf-canvas-penanganan"></canvas>
                             </div>
 
@@ -225,7 +238,7 @@
                                             @if(!empty($commentText))
                                                 <li class="list-group-item d-flex align-items-start">
                                                     <span class="badge bg-success me-2 mt-1">{{ $index + 1 }}</span>
-                                                    <span class="text-sm">{{ $commentText }}</span>
+                                                    <span class="text-sm">{!! nl2br(e($commentText)) !!}</span>
                                                 </li>
                                             @endif
                                         @endforeach
@@ -245,7 +258,8 @@
                                             <i class="material-symbols-rounded text-sm align-middle me-1">task_alt</i>
                                             Form Validasi Penanganan
                                         </h6>
-                                        <form action="{{ route('auditor-temuan.validate', $temuan->Id_Temuan) }}" method="POST" id="validateForm">
+                                        <form action="{{ route('auditor-temuan.validate', $temuan->Id_Temuan) }}" method="POST"
+                                            id="validateForm">
                                             @csrf
                                             @method('PATCH')
 
@@ -254,7 +268,8 @@
                                                     <i class="material-symbols-rounded text-xs align-middle me-1">comment</i>
                                                     Catatan Validasi (Opsional)
                                                 </label>
-                                                <textarea class="form-control" id="validation_notes" name="validation_notes" rows="3" placeholder="Tambahkan catatan validasi jika diperlukan..."></textarea>
+                                                <textarea class="form-control" id="validation_notes" name="validation_notes"
+                                                    rows="3" placeholder="Tambahkan catatan validasi jika diperlukan..."></textarea>
                                             </div>
 
                                             <button type="submit" class="btn btn-success">
@@ -314,38 +329,38 @@
         }
 
         /* .bg-gradient-success {
-            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-        }
+                background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+            }
 
-        .bg-gradient-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
-        }
+            .bg-gradient-info {
+                background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+            }
 
-        .bg-gradient-warning {
-            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-        }
+            .bg-gradient-warning {
+                background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+                box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+            }
 
-        .btn {
-            transition: all 0.3s ease;
-        }
+            .btn {
+                transition: all 0.3s ease;
+            }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
 
-        .btn-info {
-            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-            border: none;
-        }
+            .btn-info {
+                background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                border: none;
+            }
 
-        .btn-success {
-            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-            border: none;
-        } */
+            .btn-success {
+                background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                border: none;
+            } */
 
         /* List Group Styling */
         .list-group-item {
@@ -434,6 +449,7 @@
     {{-- Render Default PDF to get their Size (Isolated) this will be reuse for the loop submitted Temuan --}}
     <script>
         const PDF_SCALE = 1.5;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
 
         function RenderPDF(pdfUrl, canvasId) {
@@ -527,11 +543,11 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const validateForm = document.getElementById('validateForm');
 
             if (validateForm) {
-                validateForm.addEventListener('submit', function(e) {
+                validateForm.addEventListener('submit', function (e) {
                     if (!confirm('Apakah Anda yakin ingin memvalidasi dan menandai temuan ini sebagai SELESAI?')) {
                         e.preventDefault();
                         return false;

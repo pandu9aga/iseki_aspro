@@ -111,6 +111,7 @@
     <script src="{{ asset('assets/js/pdf.min.js') }}"></script>
     <script src="{{ asset('assets/js/pdf-lib.min.js') }}"></script>
     <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
         // ============================================
         // GLOBAL VARIABLES & CONFIGURATION
         // ============================================
@@ -126,7 +127,7 @@
                 check: { text: 'blue', bg: 'rgba(0,255,0,0.3)' },
                 ng: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
                 x: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
-                comment: { text: 'black', bg: 'white', border: '#bd0237' }
+                comment: { text: 'white', bg: '#E91E63', border: 'transparent' }
             }
         };
 
@@ -295,12 +296,11 @@
                 left: '50px',
                 cursor: 'move',
                 color: CONFIG.colors.comment.text,
-                background: CONFIG.colors.comment.bg,
-                padding: '5px',
-                fontSize: '14px',
-                border: `2px solid ${CONFIG.colors.comment.border}`,
+                backgroundColor: CONFIG.colors.comment.bg,
+                border: 'none',
                 minWidth: '100px',
                 minHeight: '20px',
+                whiteSpace: 'pre-wrap', // Allow newlines
                 outline: 'none'
             });
 
@@ -315,7 +315,26 @@
         // EVENT HANDLERS
         // ============================================
         function setupDraggableEvents(element) {
-            element.setAttribute('draggable', true);
+            element.setAttribute('draggable', 'true');
+
+            // Disable dragging when editing to allow Enter key
+            element.addEventListener('focus', () => {
+                element.removeAttribute('draggable');
+            });
+
+            element.addEventListener('blur', () => {
+                element.setAttribute('draggable', 'true');
+            });
+
+            // Explicit Enter key handler for newlines
+            element.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Insert line break manually
+                    document.execCommand('insertLineBreak');
+                }
+            });
 
             element.addEventListener('dragstart', (e) => {
                 element.startX = e.clientX - element.offsetLeft;
@@ -363,7 +382,7 @@
 
         function resetElementBorder(element) {
             if (element.contentEditable === 'true') {
-                element.style.border = `2px solid ${CONFIG.colors.comment.border}`;
+                element.style.border = '2px dashed #fff'; // White selection for visibility on pink
             } else {
                 element.style.border = '1px solid transparent';
             }
@@ -751,53 +770,95 @@
         }
 
         function renderCommentToPDF(page, element, x, y, font) {
-            const text = element.textContent.trim();
+            const text = element.textContent.trim(); // Gunakan textContent untuk mengambil semua teks termasuk newline
             if (!text || text === 'Tulis komentar...') return;
 
             const fontSize = CONFIG.fontSize.comment;
-            const textWidth = font.widthOfTextAtSize(text, fontSize);
-            const textHeight = fontSize + 4;
+            const lineHeight = fontSize + 4;
 
-            // Draw outer border (pink)
-            const borderWidth = 1;
+            // Split text by newlines
+            // Note: contentEditable usually inserts <div> or <br> for newlines.
+            // We need to handle how the browser represents newlines in contentEditable.
+            // A safer approach for contentEditable that might contain HTML:
+            // Split text by newlines
+            // Sanitize: Remove zero-width chars and ensure WinAnsi compatibility
+            const rawText = element.innerText.replace(/[\u200B-\u200D\uFEFF]/g, '');
+            // Split and map to ensure we check characters
+            const lines = rawText.split(/\r?\n/).map(l => l.replace(/[^\x00-\xFF]/g, '')); // Basic Latin-1 filter
+
+            // Calculate dimensions based on longest line
+            let maxLineWidth = 0;
+            lines.forEach(line => {
+                try {
+                    const width = font.widthOfTextAtSize(line, fontSize);
+                    if (width > maxLineWidth) maxLineWidth = width;
+                } catch (e) {
+                    console.warn('Skipping unsupported character line:', line);
+                }
+            });
+
             const paddingX = 6;
             const paddingY = 6;
-            const outerWidth = textWidth + (2 * paddingX);
-            const outerHeight = textHeight + (2 * paddingY);
-            const outerX = x - paddingX;
-            const outerY = y - textHeight - paddingY;
+            const outerWidth = maxLineWidth + (2 * paddingX);
+            const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
 
+            // Adjust Y because PDF coordinates are bottom-up and we want the box to start at 'y' (top-left visual)
+            // If 'y' passed here is bottom-left of the element in HTML, we need to correct it.
+            // The previous code calculated: const finalY = pageHeight - (offsetY * scaleY) - 18;
+            // accepted x,y as bottom-left ish? Let's look at previous implementation.
+            // Previous: const outerY = y - textHeight - paddingY;
+            // It seems 'y' was treated as the baseline or bottom of the first line?
+            // Actually, HTML 'top' is top.
+            // In convertAnnotationsToPDF: finalY = pageHeight - (offsetY * scaleY) - 18;
+            // This 'finalY' seems to be the TOP of the element in PDF coordinates (since PDF Y=0 is bottom).
+            // Wait, PDF Y=0 is bottom. pageHeight - y is often Top.
+            // Let's stick to the previous logic's coordinate system but expand height.
+
+            // Previous logic:
+            // const outerY = y - textHeight - paddingY; 
+            // page.drawRectangle({ y: outerY ... })
+            // textY = outerY + outerHeight - fontSize - 4;
+
+            // If 'y' is the visual TOP of the element from HTML mapped to PDF:
+            // The previous logic seems to shift it down? 
+            // Let's assume 'y' is the top-left corner of where we want the box.
+            // In previous code: outerY = y - textHeight - paddingY. This suggests 'y' was maybe the bottom?
+            // Let's look at convertAnnotationsToPDF again.
+            // finalY = pageHeight - (offsetY * scaleY) - 18;
+            // HTML Y increases downwards. PDF Y increases upwards.
+            // If HTML y is 0 (top), finalY is pageHeight - 18. So 'y' passed to this function is roughly the TOP of the element in PDF coords.
+
+            // If 'y' is the TOP:
+            // Previous: outerY = y - textHeight - paddingY; -> This puts the box BELOW y? No, if y is top, y - height is even lower.
+            // Wait, if 'y' is top in PDF (high value), then y - height is the bottom of the box.
+            // So drawRectangle at y - height draws a box from (y-height) extending upwards by height? No, drawRectangle starts at x,y and goes width,height.
+            // So if we draw at y - height, the box goes from y-height to y. Correct.
+
+            // So for multiline:
+            // We want the box to extend downwards from 'y'.
+            // So the bottom of the box will be: y - outerHeight.
+            const rectBottomY = y - outerHeight;
+
+            // Draw background (Pink)
             page.drawRectangle({
-                x: outerX,
-                y: outerY,
+                x: x - paddingX,
+                y: rectBottomY,
                 width: outerWidth,
                 height: outerHeight,
-                color: PDFLib.rgb(0.741, 0.008, 0.216), // #bd0237
-                thickness: borderWidth,
+                color: PDFLib.rgb(0.913, 0.117, 0.388), // #E91E63
                 opacity: 1
             });
 
-            // Draw inner background (white)
-            const innerPadding = 1;
-            page.drawRectangle({
-                x: outerX + borderWidth + innerPadding,
-                y: outerY + borderWidth + innerPadding,
-                width: outerWidth - 2 * (borderWidth + innerPadding),
-                height: outerHeight - 2 * (borderWidth + innerPadding),
-                color: PDFLib.rgb(1, 1, 1),
-                opacity: 1
-            });
-
-            // Draw text
-            const textX = outerX + borderWidth + innerPadding + 2;
-            const textY = outerY + outerHeight - fontSize - 4;
-
-            page.drawText(text, {
-                x: textX,
-                y: textY,
-                size: fontSize,
-                color: PDFLib.rgb(0, 0, 0),
-                font
+            // Draw text lines
+            lines.forEach((line, index) => {
+                const textY = y - paddingY - (index + 1) * lineHeight + 4; // +4 adjustment to align baseline
+                page.drawText(line, {
+                    x: x, // Aligned to left padding
+                    y: textY,
+                    size: fontSize,
+                    color: PDFLib.rgb(1, 1, 1), // White
+                    font
+                });
             });
         }
 
