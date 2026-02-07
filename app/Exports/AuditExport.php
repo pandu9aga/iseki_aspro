@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Carbon\Carbon;
 
 class AuditExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithEvents
 {
@@ -39,6 +40,7 @@ class AuditExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
         return [
             'No',
             'Auditor',
+            'Audit Date',
             'Audit Time',
             'Procedure',
             'Member',
@@ -50,9 +52,10 @@ class AuditExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
         return [
             ++$this->rowNumber,
             $listReport->Auditor_Name ?? 'Unknown Auditor',
-            $listReport->Time_Approved_Auditor,
+            $listReport->Time_Approved_Auditor ? Carbon::parse($listReport->Time_Approved_Auditor)->format('Y-m-d') : '-',
+            $listReport->Time_Approved_Auditor ? Carbon::parse($listReport->Time_Approved_Auditor)->format('H:i:s') : '-',
             $listReport->Name_Procedure,
-            $listReport->report->member->nama ?? 'Unknown',
+            $listReport->report->member->Name_Member ?? 'Unknown',
         ];
     }
 
@@ -67,7 +70,7 @@ class AuditExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                $lastColumn = 'E';
+                $lastColumn = 'F';
                 $lastRow = $event->sheet->getHighestRow();
                 $cellRange = 'A1:' . $lastColumn . $lastRow;
                 

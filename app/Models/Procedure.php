@@ -31,13 +31,13 @@ class Procedure extends Model
         if (empty($picIds)) {
             return collect();
         }
-        return Member::whereIn('id', $picIds)->get();
+        return Member::whereIn('Id_Member', $picIds)->get();
     }
 
     // Helper method untuk mendapatkan nama-nama PIC
     public function getPicNamesAttribute()
     {
-        return $this->pics()->pluck('nama')->implode(', ');
+        return $this->pics()->pluck('Name_Member')->implode(', ');
     }
 
     protected static function boot()

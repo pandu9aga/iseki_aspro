@@ -57,7 +57,7 @@
                         <span class="text-xs">{{ $temuan->ListReport->Item_Procedure ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
-                        <span class="text-xs">{{ $temuan->ListReport->report->member->nama ?? '-' }}</span>
+                        <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
                         <span class="text-xs">{{ $temuan->User->Name_User ?? '-' }}</span>
@@ -115,3 +115,4 @@
         </tbody>
     </table>
 </div>
+

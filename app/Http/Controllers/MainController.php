@@ -56,15 +56,15 @@ class MainController extends Controller
             'NIK_Member' => 'required',
         ]);
 
-        $member = Member::where('nik', $request->NIK_Member)->first();
+        $member = Member::where('NIK_Member', $request->NIK_Member)->first();
 
         if (! $member) {
             return back()->withErrors(['loginError' => 'Invalid NIK']);
         }
 
-        session(['Id_Member' => $member->id]);
-        session(['NIK_Member' => $member->nik]);
-        session(['Name_Member' => $member->nama]);
+        session(['Id_Member' => $member->Id_Member]);
+        session(['NIK_Member' => $member->NIK_Member]);
+        session(['Name_Member' => $member->Name_Member]);
 
         return redirect()->route('home');
     }

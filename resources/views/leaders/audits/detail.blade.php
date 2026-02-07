@@ -51,7 +51,7 @@
                                         </td>
                                         <td>
                                             <p class="text-sm font-weight-normal mb-0">
-                                                {{ $audit->report->member->nama ?? 'Unknown' }}</p>
+                                                {{ $audit->report->member->Name_Member ?? 'Unknown' }}</p>
                                         </td>
                                         <td>
                                             <p class="text-sm font-weight-normal mb-0">{{ $audit->Name_Tractor }}</p>
@@ -84,3 +84,4 @@
         </div>
     </div>
 @endsection
+

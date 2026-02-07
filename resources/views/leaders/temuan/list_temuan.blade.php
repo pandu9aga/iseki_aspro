@@ -106,7 +106,7 @@
                                         <span class="text-xs">{{ $listReport->Item_Procedure }}</span>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <span class="text-xs">{{ $listReport->report->member->nama ?? '-' }}</span>
+                                        <span class="text-xs">{{ $listReport->report->member->Name_Member ?? '-' }}</span>
                                     </td>
                                     <td class="align-middle text-center">
                                         <span class="text-xs">{{ $auditorName }}</span>
@@ -216,3 +216,4 @@ function confirmDelete(temuanIds, auditorName, nameProcedure) {
 }
 </script>
 @endsection
+

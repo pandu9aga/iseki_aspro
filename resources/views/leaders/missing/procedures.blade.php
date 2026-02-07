@@ -117,8 +117,8 @@
                             @foreach($trainings as $training)
                                 <option value="{{ $training->Id_Report }}">
                                     {{ \Carbon\Carbon::parse($training->Start_Report)->format('d M Y') }} - 
-                                    {{ $training->member->nama ?? 'N/A' }} 
-                                    ({{ $training->member->nik ?? 'N/A' }})
+                                    {{ $training->member->Name_Member ?? 'N/A' }} 
+                                    ({{ $training->member->NIK_Member ?? 'N/A' }})
                                 </option>
                             @endforeach
                         </select>
@@ -199,3 +199,4 @@ $('#resetFormBtn').on('click', function() {
 });
 </script>
 @endsection
+

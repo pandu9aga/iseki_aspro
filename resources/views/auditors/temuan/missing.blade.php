@@ -137,7 +137,7 @@
                                                     <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->nama ?? '-' }}</span>
+                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
@@ -213,7 +213,7 @@
                                                     <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->nama ?? '-' }}</span>
+                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
@@ -293,3 +293,4 @@
         });
     </script>
 @endsection
+

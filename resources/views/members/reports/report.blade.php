@@ -103,79 +103,80 @@
     <script src="{{ asset('assets/js/pdf.min.js') }}"></script>
     <script src="{{ asset('assets/js/pdf-lib.min.js') }}"></script>
     <script>
-        let pdfUrl = "{{ asset($pdfPath) }}?t=" + new Date().getTime();
         pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
-        let pdfCanvas = document.getElementById('pdf-canvas');
-        let editorLayer = document.getElementById('editor-layer');
-        let checklistMode = false;
-        let currentMode = null; // 'check', 'ng', 'x', 'comment'
-        let selectedObject = null;
-        let history = [];
-        let redoStack = [];
-        let pdfScale = 1.5;
 
-        // --- Referensi Tombol dan Ikon ---
-        const checklistBtn = document.getElementById('checklist-btn');
-        const ngBtn = document.getElementById('ng-btn');
-        const xBtn = document.getElementById('x-btn');
-        const commentBtn = document.getElementById('comment-btn');
-        const checklistBtnIcon = document.getElementById('checklist-btn-icon');
-        const ngBtnIcon = document.getElementById('ng-btn-icon');
-        const xBtnIcon = document.getElementById('x-btn-icon');
-        const commentBtnIcon = document.getElementById('comment-btn-icon');
+        function RenderPDF(pdfUrl, canvasId) {
+            async function renderDefaultPDF() {
+                const canvasPDFDefault = document.getElementById(canvasId);
+                if (!canvasPDFDefault) return;
 
-        async function renderPDF() {
-            const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+                try {
+                    let pdf;
+                    try {
+                        pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+                    } catch (err) {
+                        console.warn('pdfjsLib.getDocument failed, trying fetch fallback:', err);
+                        const resp = await fetch(pdfUrl);
+                        const buffer = await resp.arrayBuffer();
+                        pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+                    }
 
-            const pageViewports = [];
-            let totalHeight = 0;
-            let maxWidth = 0;
+                    const ctx = canvasPDFDefault.getContext('2d');
+                    const viewports = [];
+                    let totalHeight = 0;
+                    let maxWidth = 0;
 
-            // Hitung ukuran total
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                const page = await pdf.getPage(pageNum);
-                const viewport = page.getViewport({
-                    scale: pdfScale
-                });
-                pageViewports.push({
-                    page,
-                    viewport
-                });
-                totalHeight += viewport.height;
-                maxWidth = Math.max(maxWidth, viewport.width);
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: pdfScale });
+                        viewports.push({ page, viewport });
+                        totalHeight += viewport.height;
+                        maxWidth = Math.max(maxWidth, viewport.width);
+                    }
+
+                    canvasPDFDefault.width = maxWidth;
+                    canvasPDFDefault.height = totalHeight;
+                    editorLayer.style.width = maxWidth + 'px';
+                    editorLayer.style.height = totalHeight + 'px';
+
+                    let currentY = 0;
+                    for (const { page, viewport } of viewports) {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = viewport.width;
+                        tempCanvas.height = viewport.height;
+                        await page.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
+                        ctx.drawImage(tempCanvas, 0, currentY);
+                        currentY += viewport.height;
+                    }
+                } catch (error) {
+                    console.error('RenderPDF error:', error, canvasId);
+                }
             }
 
-            pdfCanvas.width = maxWidth;
-            pdfCanvas.height = totalHeight;
-            editorLayer.style.width = maxWidth + 'px';
-            editorLayer.style.height = totalHeight + 'px';
-
-            const ctx = pdfCanvas.getContext('2d');
-
-            let currentY = 0;
-            for (const {
-                page,
-                viewport
-            }
-                of pageViewports) {
-                // Render ke kanvas kecil
-                const tmpCanvas = document.createElement('canvas');
-                tmpCanvas.width = viewport.width;
-                tmpCanvas.height = viewport.height;
-
-                const tmpCtx = tmpCanvas.getContext('2d');
-                await page.render({
-                    canvasContext: tmpCtx,
-                    viewport: viewport
-                }).promise;
-
-                // Gambar kanvas kecil ke kanvas utama
-                ctx.drawImage(tmpCanvas, 0, currentY);
-                currentY += viewport.height;
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', renderDefaultPDF);
+            } else {
+                renderDefaultPDF();
             }
         }
 
-        renderPDF();
+        function getPdfUrl(path) {
+            if (!path) return null;
+            let baseUrl = "{{ asset('') }}";
+            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+            let p = path.replace(/\\/g, '/');
+            if (!p.startsWith('/') && !p.startsWith('http')) p = '/' + p;
+
+            let url = p.startsWith('http') ? p : baseUrl + p;
+            url = url.replace(/ /g, '%20');
+            return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
+        }
+
+        const currentPdfUrl = getPdfUrl("{!! str_replace('\\', '/', $pdfPath) !!}");
+        if (currentPdfUrl) {
+            pdfUrl = currentPdfUrl; // Reuse global variable for download
+            RenderPDF(currentPdfUrl, "pdf-canvas");
+        }
 
         function saveState() {
             history.push(editorLayer.innerHTML);
@@ -509,7 +510,7 @@
             });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->nama }}-{{ $listReport->Name_Procedure }}.pdf';
+            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
             link.click();
         }
     </script>
@@ -676,7 +677,7 @@
             const fontSize = 8;
 
             // Pisah teks menjadi array baris
-            const lines = [now, "{{ $member->nama }}"];
+            const lines = [now, "{{ $member->Name_Member }}"];
             const lineHeight = fontSize + 2;
 
             // Mulai dari Y tertentu

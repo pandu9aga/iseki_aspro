@@ -42,7 +42,7 @@
                                 </a>
                             </div>
                             <div>Member - <a class="text-primary"
-                                    href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->nama }}</a>
+                                    href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->Name_Member }}</a>
                             </div>
                             <div>Tractor - <a class="text-primary"
                                     href="{{ route('list_report_detail', ['Id_Report' => $Id_Report, 'Name_Tractor' => $tractor->Name_Tractor]) }}">{{ $tractor->Name_Tractor }}</a>
@@ -191,7 +191,7 @@
                         <div class="input-group input-group-outline my-3 is-filled">
                             <label class="form-label">Name Member</label>
                             <input type="text" class="form-control" name="Name_Member"
-                                value="{{ $report->member->nama }}" required readonly>
+                                value="{{ $report->member->Name_Member }}" required readonly>
                         </div>
                         <div class="input-group input-group-outline my-3 is-filled">
                             <label class="form-label">Procedures</label>
@@ -245,3 +245,4 @@
         });
     </script>
 @endsection
+

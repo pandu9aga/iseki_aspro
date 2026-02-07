@@ -43,7 +43,7 @@
                         <span class="text-xs">{{ $temuan->ListReport->Item_Procedure ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
-                        <span class="text-xs">{{ $temuan->ListReport->report->member->nama ?? '-' }}</span>
+                        <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
                         <span class="text-xs">{{ $temuan->Time_Temuan ? \Carbon\Carbon::parse($temuan->Time_Temuan)->format('d/m/Y') : '-' }}</span>
@@ -95,3 +95,4 @@
         </tbody>
     </table>
 </div>
+

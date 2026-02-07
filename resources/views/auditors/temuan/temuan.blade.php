@@ -276,44 +276,44 @@
         }
 
         /* .bg-gradient-success {
-                background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-            }
+                                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+                                        }
 
-            .bg-gradient-info {
-                background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
-            }
+                                        .bg-gradient-info {
+                                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+                                        }
 
-            .bg-gradient-warning {
-                background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-                box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-            } */
+                                        .bg-gradient-warning {
+                                            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+                                            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+                                        } */
 
         /* Button Styling */
         /* .btn {
-                transition: all 0.3s ease;
-            }
+                                            transition: all 0.3s ease;
+                                        }
 
-            .btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            }
+                                        .btn:hover {
+                                            transform: translateY(-2px);
+                                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                        }
 
-            .btn-info {
-                background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                border: none;
-            }
+                                        .btn-info {
+                                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                            border: none;
+                                        }
 
-            .btn-success {
-                background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                border: none;
-            } */
+                                        .btn-success {
+                                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                            border: none;
+                                        } */
 
         /* Toolbar Styling */
         /* .bg-light {
-                background-color: #f8f9fa !important;
-            } */
+                                            background-color: #f8f9fa !important;
+                                        } */
 
         /* List Group Styling */
         .list-group-item {
@@ -366,81 +366,54 @@
         const PDF_SCALE = 1.5;
 
 
-        function RenderPDF(pdfUrl, canvasId) {
-            let PAGE_VIEWPORT_HEIGHTS = [];
-            const canvasPDFDefault = document.getElementById(canvasId);
-            const defaultPDFUrl = pdfUrl;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
+        function RenderPDF(pdfUrl, canvasId) {
             async function renderDefaultPDF() {
+                const canvasPDFDefault = document.getElementById(canvasId);
+                if (!canvasPDFDefault) return;
+
                 try {
                     let pdf;
                     try {
-                        pdf = await pdfjsLib.getDocument(defaultPDFUrl).promise;
+                        pdf = await pdfjsLib.getDocument(pdfUrl).promise;
                     } catch (err) {
-                        console.warn('pdfjsLib.getDocument(url) failed, trying fetch fallback:', err);
-                        const resp = await fetch(defaultPDFUrl, { credentials: 'same-origin' });
-                        if (!resp.ok) {
-                            throw new Error(`Failed to fetch PDF for fallback: ${resp.status} ${resp.statusText}`);
-                        }
+                        console.warn('pdfjsLib.getDocument failed, trying fetch fallback:', err);
+                        const resp = await fetch(pdfUrl);
                         const buffer = await resp.arrayBuffer();
                         pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
                     }
 
                     const ctx = canvasPDFDefault.getContext('2d');
+                    const viewports = [];
+                    let totalHeight = 0;
+                    let maxWidth = 0;
 
-                    // Calculate total dimensions
-                    const pageData = await calculatePageDimensions(pdf);
-                    setupCanvasSize(pageData.totalHeight, pageData.maxWidth);
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: PDF_SCALE });
+                        viewports.push({ page, viewport });
+                        totalHeight += viewport.height;
+                        maxWidth = Math.max(maxWidth, viewport.width);
+                    }
 
-                    // Render all pages
-                    await renderAllPages(pdf, pageData.viewports, ctx);
+                    canvasPDFDefault.width = maxWidth;
+                    canvasPDFDefault.height = totalHeight;
 
-                    console.log('Default PDF rendered successfully');
-                    console.log('Page heights:', PAGE_VIEWPORT_HEIGHTS);
+                    let currentY = 0;
+                    for (const { page, viewport } of viewports) {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = viewport.width;
+                        tempCanvas.height = viewport.height;
+                        await page.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
+                        ctx.drawImage(tempCanvas, 0, currentY);
+                        currentY += viewport.height;
+                    }
                 } catch (error) {
-                    console.error('Error rendering default PDF:', error);
+                    console.error('RenderPDF error:', error, canvasId);
                 }
             }
 
-            async function calculatePageDimensions(pdf) {
-                const viewports = [];
-                let totalHeight = 0;
-                let maxWidth = 0;
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: PDF_SCALE });
-
-                    viewports.push({ page, viewport });
-                    totalHeight += viewport.height;
-                    maxWidth = Math.max(maxWidth, viewport.width);
-                    PAGE_VIEWPORT_HEIGHTS.push(viewport.height);
-                }
-
-                return { viewports, totalHeight, maxWidth };
-            }
-
-            function setupCanvasSize(height, width) {
-                canvasPDFDefault.width = width;
-                canvasPDFDefault.height = height;
-            }
-
-            async function renderAllPages(pdf, viewports, ctx) {
-                let currentY = 0;
-
-                for (const { page, viewport } of viewports) {
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = viewport.width;
-                    tempCanvas.height = viewport.height;
-                    const tempCtx = tempCanvas.getContext('2d');
-
-                    await page.render({ canvasContext: tempCtx, viewport }).promise;
-                    ctx.drawImage(tempCanvas, 0, currentY);
-                    currentY += viewport.height;
-                }
-            }
-
-            // Auto-initialize when DOM is ready
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', renderDefaultPDF);
             } else {
@@ -448,13 +421,27 @@
             }
         }
 
-        RenderPDF("{{ asset($pdfPath) }}?t=" + new Date().getTime(), "default-pdf-canvas");
+        function getPdfUrl(path) {
+            if (!path) return null;
+            let baseUrl = "{{ asset('') }}";
+            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+            let p = path.replace(/\\/g, '/');
+            if (!p.startsWith('/') && !p.startsWith('http')) p = '/' + p;
+
+            let url = p.startsWith('http') ? p : baseUrl + p;
+            url = url.replace(/ /g, '%20');
+            return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
+        }
+
+        const urlOriginal = getPdfUrl("{!! str_replace('\\', '/', $pdfPath) !!}");
+        if (urlOriginal) RenderPDF(urlOriginal, "default-pdf-canvas");
 
         const listTemuan = @json($listTemuan);
         if (listTemuan && Array.isArray(listTemuan)) {
             listTemuan.forEach(temuan => {
                 let object = JSON.parse(temuan.Object_Temuan);
-                RenderPDF("{{ asset('') }}" + object.File_Path_Temuan + "?t=" + new Date().getTime(), "default-pdf-canvas-" + temuan.Id_Temuan);
+                const urlList = getPdfUrl(object.File_Path_Temuan);
+                if (urlList) RenderPDF(urlList, "default-pdf-canvas-" + temuan.Id_Temuan);
             });
         }
 
@@ -646,9 +633,7 @@
             const listTemuanNull = @json($ListTemuanNull);
 
             const CONFIG = {
-                pdfUrl: listTemuanNull && listTemuanNull.File_Path_Temuan
-                    ? "{{ asset('') }}" + listTemuanNull.File_Path_Temuan + "?t=" + new Date().getTime()
-                    : "",
+                pdfUrl: getPdfUrl(listTemuanNull ? listTemuanNull.File_Path_Temuan : null),
                 pdfScale: 1.5,
                 fontSize: {
                     timestamp: 8,
@@ -701,15 +686,28 @@
             // PDF RENDERING
             // ============================================
             async function renderPDF() {
-                const pdf = await pdfjsLib.getDocument(CONFIG.pdfUrl).promise;
-                const ctx = DOM.canvas.getContext('2d');
+                try {
+                    let pdf;
+                    try {
+                        pdf = await pdfjsLib.getDocument(CONFIG.pdfUrl).promise;
+                    } catch (err) {
+                        console.warn('pdfjsLib.getDocument failed, trying fetch fallback:', err);
+                        const resp = await fetch(CONFIG.pdfUrl);
+                        const buffer = await resp.arrayBuffer();
+                        pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+                    }
 
-                // Calculate total dimensions
-                const pageData = await calculatePageDimensions(pdf);
-                setupCanvasSize(pageData.totalHeight, pageData.maxWidth);
+                    const ctx = DOM.canvas.getContext('2d');
 
-                // Render all pages
-                await renderAllPages(pdf, pageData.viewports, ctx);
+                    // Calculate total dimensions
+                    const pageData = await calculatePageDimensions(pdf);
+                    setupCanvasSize(pageData.totalHeight, pageData.maxWidth);
+
+                    // Render all pages
+                    await renderAllPages(pdf, pageData.viewports, ctx);
+                } catch (error) {
+                    console.error('Editor PDF rendering error:', error);
+                }
             }
 
             async function calculatePageDimensions(pdf) {
@@ -753,7 +751,11 @@
             }
 
             // Initialize PDF rendering
-            renderPDF();
+            if (CONFIG.pdfUrl) {
+                renderPDF();
+            } else {
+                console.warn('PDF URL is empty in CONFIG');
+            }
 
             // ============================================
             // STATE MANAGEMENT
@@ -835,6 +837,10 @@
                     color: CONFIG.colors.comment.text,
                     backgroundColor: CONFIG.colors.comment.bg,
                     border: 'none',
+                    whiteSpace: 'pre-wrap', // Allow newlines
+                    minWidth: '100px',
+                    minHeight: '20px',
+                    outline: 'none'
                 });
 
                 comment.addEventListener('input', saveState);
@@ -848,7 +854,26 @@
             // EVENT HANDLERS
             // ============================================
             function setupDraggableEvents(element) {
-                element.setAttribute('draggable', true);
+                element.setAttribute('draggable', 'true');
+
+                // Disable dragging when editing to allow Enter key
+                element.addEventListener('focus', () => {
+                    element.removeAttribute('draggable');
+                });
+
+                element.addEventListener('blur', () => {
+                    element.setAttribute('draggable', 'true');
+                });
+
+                // Explicit Enter key handler for newlines
+                element.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Insert line break manually
+                        document.execCommand('insertLineBreak');
+                    }
+                });
 
                 element.addEventListener('dragstart', (e) => {
                     element.startX = e.clientX - element.offsetLeft;
@@ -1032,7 +1057,7 @@
                 setupSelectionEvents(element);
                 setupDraggableEvents(element);
             }
-            { { --Submit Report with Annotations--} }
+            {{--Submit Report with Annotations--}}
             // ============================================
             // UTILITIES
             // ============================================

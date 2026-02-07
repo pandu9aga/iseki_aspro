@@ -51,7 +51,7 @@
                                 <p class="text-xs text-primary mb-0">{{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}</p>
                             </td>
                             <td class="align-middle text-center">
-                                <p class="text-xs text-primary mb-0">{{ $report->member->nama }}</p>
+                                <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member }}</p>
                             </td>
                         </tr>
                         @endforeach
@@ -90,3 +90,4 @@
 new DataTable('#example');
 </script>
 @endsection
+

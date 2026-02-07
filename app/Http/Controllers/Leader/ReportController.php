@@ -126,8 +126,8 @@ class ReportController extends Controller
         $report = Report::where('Id_Report', $request->Id_Report)->with('member')->first();
         $procedures = Procedure::whereIn('Name_Procedure', $request->Name_Procedure)->get();
 
-        $name_member = $report->member->nama ?? 'Unknown';
-        $id_member = $report->member->id;
+        $name_member = $report->member->Name_Member ?? 'Unknown';
+        $id_member = $report->member->Id_Member;
         $timeReport = Carbon::parse($report->Start_Report)->format('Y-m-d');
 
         $fullPath = 'reports/'.$timeReport.'_'.$id_member;
@@ -185,7 +185,7 @@ class ReportController extends Controller
 
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->id;
+        $id_member = $listReport->report->member->Id_Member;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
@@ -200,7 +200,7 @@ class ReportController extends Controller
     {
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
-        $id_member = $listReport->report->member->id;
+        $id_member = $listReport->report->member->Id_Member;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
@@ -339,7 +339,7 @@ class ReportController extends Controller
         // Validasi input
         $request->validate([
             'Start_Report' => 'required|date',
-            'Id_Member' => ['required', 'integer', 'exists:App\Models\Member,id'], // Validasi Id_Member ada di tabel members
+            'Id_Member' => ['required', 'integer', 'exists:App\Models\Member,Id_Member'], // Validasi Id_Member ada di tabel members
         ]);
 
         // Temukan report berdasarkan ID

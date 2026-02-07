@@ -39,7 +39,7 @@
                                 {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}
                             </span>
                         </div>
-                        <div>Member - <span class="text-primary">{{ $member->nama }}</span></div>
+                        <div>Member - <span class="text-primary">{{ $member->Name_Member }}</span></div>
                     </div>
                 </div>
             </div>
@@ -146,3 +146,4 @@
 new DataTable('#example');
 </script>
 @endsection
+

@@ -33,7 +33,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 mx-auto">
-                        <div>Member - <span class="text-primary">{{ $member->nama }}</span></div>
+                        <div>Member - <span class="text-primary">{{ $member->Name_Member }}</span></div>
                     </div>
                 </div>
             </div>
@@ -91,3 +91,4 @@
 new DataTable('#example');
 </script>
 @endsection
+

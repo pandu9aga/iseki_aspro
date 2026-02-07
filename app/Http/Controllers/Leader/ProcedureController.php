@@ -259,7 +259,7 @@ class ProcedureController extends Controller
             ->get();
 
         // Tambahkan ini untuk mendapatkan semua member
-        $members = Member::orderBy('nama', 'asc')->get();
+        $members = Member::orderBy('Name_Member', 'asc')->get();
 
         return view('leaders.procedures.procedures', compact('page', 'tractor', 'photoTractor', 'area', 'procedures', 'members'));
     }
@@ -766,7 +766,7 @@ class ProcedureController extends Controller
                 continue;
             }
 
-            $name_member = $report->member->nama ?? 'Unknown';
+            $name_member = $report->member->Name_Member ?? 'Unknown';
             $id_member = $report->Id_Member;
             $timeReport = \Carbon\Carbon::parse($report->Start_Report)->format('Y-m-d');
             $fullPath = 'reports/'.$timeReport.'_'.$id_member;

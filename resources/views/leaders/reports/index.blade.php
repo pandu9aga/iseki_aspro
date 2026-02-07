@@ -1,4 +1,4 @@
-﻿@extends('layouts.leader')
+@extends('layouts.leader')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -72,7 +72,7 @@
                             @csrf
                             <button type="submit" class="btn btn-success"
                                 onclick="return confirm('Yakin buat template dari data bulan lalu ke tanggal 1 bulan ini?')">
-                                📋 Buat Template Bulan Ini dari Bulan Lalu
+                                ?? Buat Template Bulan Ini dari Bulan Lalu
                             </button>
                         </form>
                     </div> --}}

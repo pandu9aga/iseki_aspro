@@ -150,7 +150,7 @@ class TemuanLeaderController extends Controller
         $temuan = Temuan::with(['ListReport.report.member', 'User'])->findOrFail($Id_Temuan);
         $listReport = $temuan->ListReport;
 
-        $id_member = $listReport->report->member->id;
+        $id_member = $listReport->report->member->Id_Member;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
         $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
         $fileName = $listReport->Name_Procedure.'.pdf';

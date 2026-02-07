@@ -14,7 +14,7 @@ class Report extends Model
 
     public function member()
     {
-        return $this->belongsTo(Member::class, 'Id_Member', 'id');
+        return $this->belongsTo(Member::class, 'Id_Member', 'Id_Member');
     }
 
     public function list_report()

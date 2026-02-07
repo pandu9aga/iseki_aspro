@@ -23,7 +23,7 @@ class TemuanAuditorController extends Controller
         $listReport = List_Report::where('Id_List_Report', $Id_List_Report)->first();
 
         $current_user = User::where('Id_User', session('Id_User'))->first();
-        $id_member = $listReport->report->member->id;
+        $id_member = $listReport->report->member->Id_Member;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
         $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
         $fileName = $listReport->Name_Procedure.'.pdf';
@@ -82,7 +82,7 @@ class TemuanAuditorController extends Controller
                 if ($request->hasFile('photo_pdf')) {
                     $photo_pdf = $request->file('photo_pdf');
 
-                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->id;
+                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->Id_Member;
                     $directory = public_path($relativePath);
 
                     if (! file_exists($directory)) {
@@ -150,7 +150,7 @@ class TemuanAuditorController extends Controller
                 if ($request->hasFile('pdf')) {
                     $pdf = $request->file('pdf');
 
-                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->id;
+                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->Id_Member;
                     $directory = public_path($relativePath);
 
                     if (! file_exists($directory)) {
@@ -247,7 +247,7 @@ class TemuanAuditorController extends Controller
     {
         $page = 'temuan';
         $temuan = Temuan::with(['ListReport.report.member', 'User'])->where('Id_Temuan', $Id_Temuan)->firstOrFail();
-        $id_member = $temuan->ListReport->report->member->id;
+        $id_member = $temuan->ListReport->report->member->Id_Member;
         $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
         $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
         $fileName = $temuan->ListReport->Name_Procedure.'.pdf';

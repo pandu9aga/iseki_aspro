@@ -65,7 +65,7 @@
                                             {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}</p>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <p class="text-xs text-primary mb-0">{{ $report->member->nama }}</p>
+                                        <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member }}</p>
                                     </td>
                                     <td class="align-middle text-center">
                                         <div class="d-flex justify-content-center">
@@ -120,7 +120,7 @@
                             <label class="form-label">Members</label>
                             <select class="form-control select2" name="Id_Member[]" multiple required>
                                 @foreach ($members as $member)
-                                    <option value="{{ $member->id }}">{{ $member->nama }}</option>
+                                    <option value="{{ $member->Id_Member }}">{{ $member->Name_Member }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -158,7 +158,7 @@
                             <select class="form-control select2" name="Id_Member" id="edit_Id_Member" required>
                                 <!-- Edit hanya satu member -->
                                 @foreach ($members as $member)
-                                    <option value="{{ $member->id }}">{{ $member->nama }}</option>
+                                    <option value="{{ $member->Id_Member }}">{{ $member->Name_Member }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -316,3 +316,4 @@
         // });
     </script>
 @endsection
+

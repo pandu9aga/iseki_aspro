@@ -530,7 +530,7 @@
             const blob = new Blob([finalBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->nama }}-{{ $listReport->Name_Procedure }}.pdf';
+            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
             link.click();
         }
     </script>

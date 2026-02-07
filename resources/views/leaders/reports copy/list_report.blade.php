@@ -35,7 +35,7 @@
                     <div class="col-12 mx-auto">
                         <div>Team - <a class="text-primary" href="{{ route('process', ['Id_Team' => $report->process->team->Id_Team]) }}">{{ $report->process->team->Name_Team }}</a></div>
                         <div>Process - <a class="text-primary" href="{{ route('reporter', ['Id_Process' => $report->process->Id_Process]) }}">{{ $report->process->Name_Process }}</a></div>
-                        <div>Member - <a class="text-primary" href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->nama }}</a></div>
+                        <div>Member - <a class="text-primary" href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->Name_Member }}</a></div>
                     </div>
                 </div>
             </div>
@@ -148,7 +148,7 @@
                     </div>
                     <div class="input-group input-group-outline my-3 is-filled">
                         <label class="form-label">Name Member</label>
-                        <input type="text" class="form-control" name="Name_Member" value="{{ $report->member->nama }}" required readonly>
+                        <input type="text" class="form-control" name="Name_Member" value="{{ $report->member->Name_Member }}" required readonly>
                     </div>
                     <div class="input-group input-group-outline my-3 is-filled">
                         <label class="form-label">Procedures</label>
@@ -199,3 +199,4 @@ new DataTable('#example');
     });
 </script>
 @endsection
+
