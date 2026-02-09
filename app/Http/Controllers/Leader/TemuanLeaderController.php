@@ -32,6 +32,7 @@ class TemuanLeaderController extends Controller
             'Revisi prosedur' => [],
             'Perakitan tak sesuai' => [],
             'Shiyousho tak sesuai' => [],
+            'Tidak perlu penanganan' => [],
             'Lain-lain' => [],
             'Uncategorized' => []
         ];
@@ -41,7 +42,7 @@ class TemuanLeaderController extends Controller
             
             if (empty($tipe)) {
                 $tipeTemuanCategories['Uncategorized'][] = $temuan;
-            } elseif (in_array($tipe, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai'])) {
+            } elseif (in_array($tipe, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan'])) {
                 $tipeTemuanCategories[$tipe][] = $temuan;
             } else {
                 $tipeTemuanCategories['Lain-lain'][] = $temuan;
@@ -288,6 +289,7 @@ class TemuanLeaderController extends Controller
                 'Revisi prosedur' => $this->getCategoryStats($temuans, 'Revisi prosedur'),
                 'Perakitan tak sesuai' => $this->getCategoryStats($temuans, 'Perakitan tak sesuai'),
                 'Shiyousho tak sesuai' => $this->getCategoryStats($temuans, 'Shiyousho tak sesuai'),
+                'Tidak perlu penanganan' => $this->getCategoryStats($temuans, 'Tidak perlu penanganan'),
                 'Lain-lain' => $this->getOtherCategoryStats($temuans),
             ],
             'month' => $month,
@@ -327,7 +329,7 @@ class TemuanLeaderController extends Controller
     {
         $otherTemuans = $temuans->filter(function($temuan) {
             return !empty($temuan->Tipe_Temuan) && 
-                !in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai']);
+                !in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan']);
         });
 
         return [
@@ -357,9 +359,13 @@ class TemuanLeaderController extends Controller
             ->where('Time_Temuan', '<=', Carbon::now()->subDays(3))
             ->count();
 
-        // Temuan yang sudah 15 hari belum ada penanganan
+        // Temuan yang sudah 15 hari belum ada penanganan (kecuali "Tidak perlu penanganan")
         $noPenanganan = Temuan::whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
+            ->where(function($query) {
+                $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
+                    ->orWhereNull('Tipe_Temuan');
+            })
             ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
             ->count();
 
@@ -387,10 +393,14 @@ class TemuanLeaderController extends Controller
             ->orderBy('Time_Temuan', 'asc')
             ->get();
 
-        // Temuan yang sudah 15 hari belum ada penanganan
+        // Temuan yang sudah 15 hari belum ada penanganan (kecuali "Tidak perlu penanganan")
         $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
+            ->where(function($query) {
+                $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
+                    ->orWhereNull('Tipe_Temuan');
+            })
             ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
             ->orderBy('Time_Temuan', 'asc')
             ->get();

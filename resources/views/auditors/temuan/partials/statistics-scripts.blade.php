@@ -1,23 +1,23 @@
 <script>
-// Auto-load statistics on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadMonthlyStatistics();
-    loadMissingStatistics();
-    
-    // Refresh missing stats every 5 minutes
-    setInterval(loadMissingStatistics, 300000);
-});
+    // Auto-load statistics on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadMonthlyStatistics();
+        loadMissingStatistics();
 
-// Load monthly statistics
-async function loadMonthlyStatistics() {
-    const month = document.getElementById('monthPicker').value;
-    const container = document.getElementById('monthlyStatsContainer');
-    
-    try {
-        const response = await fetch(`{{ route('auditor-temuan.statistics.monthly') }}?month=${month}`);
-        const data = await response.json();
-        
-        container.innerHTML = `
+        // Refresh missing stats every 5 minutes
+        setInterval(loadMissingStatistics, 300000);
+    });
+
+    // Load monthly statistics
+    async function loadMonthlyStatistics() {
+        const month = document.getElementById('monthPicker').value;
+        const container = document.getElementById('monthlyStatsContainer');
+
+        try {
+            const response = await fetch(`{{ route('auditor-temuan.statistics.monthly') }}?month=${month}`);
+            const data = await response.json();
+
+            container.innerHTML = `
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="alert alert-info mb-0">
@@ -105,6 +105,32 @@ async function loadMonthlyStatistics() {
                         </div>
                     </div>
                 </div>
+
+                <!-- Tidak Perlu Penanganan -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card stat-card tidakperlu mb-0">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div class="stat-number text-secondary">${data.categories['Tidak perlu penanganan'].total}</div>
+                                <div class="stat-label">Tidak Perlu Penanganan</div>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-xs">Belum Penanganan</span>
+                                    <span class="status-badge belum">${data.categories['Tidak perlu penanganan'].belum_penanganan}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-xs">Menunggu Validasi</span>
+                                    <span class="status-badge menunggu">${data.categories['Tidak perlu penanganan'].menunggu_validasi}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-xs">Sudah Tervalidasi</span>
+                                    <span class="status-badge selesai">${data.categories['Tidak perlu penanganan'].sudah_tervalidasi}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Lain-lain -->
                 <div class="col-md-6 col-lg-3">
@@ -133,26 +159,26 @@ async function loadMonthlyStatistics() {
                 </div>
             </div>
         `;
-    } catch (error) {
-        console.error('Error loading monthly statistics:', error);
-        container.innerHTML = `
+        } catch (error) {
+            console.error('Error loading monthly statistics:', error);
+            container.innerHTML = `
             <div class="alert alert-danger">
                 <i class="material-symbols-rounded text-sm align-middle me-1">error</i>
                 Gagal memuat statistik. Silakan coba lagi.
             </div>
         `;
+        }
     }
-}
 
-// Load missing statistics
-async function loadMissingStatistics() {
-    const container = document.getElementById('missingStatsContainer');
-    
-    try {
-        const response = await fetch(`{{ route('auditor-temuan.statistics.missing') }}`);
-        const data = await response.json();
-        
-        container.innerHTML = `
+    // Load missing statistics
+    async function loadMissingStatistics() {
+        const container = document.getElementById('missingStatsContainer');
+
+        try {
+            const response = await fetch(`{{ route('auditor-temuan.statistics.missing') }}`);
+            const data = await response.json();
+
+            container.innerHTML = `
             <div class="row g-3">
                 <div class="col-md-4">
                     <div class="missing-stat-item text-center">
@@ -189,14 +215,14 @@ async function loadMissingStatistics() {
                 </div>
             `}
         `;
-    } catch (error) {
-        console.error('Error loading missing statistics:', error);
-        container.innerHTML = `
+        } catch (error) {
+            console.error('Error loading missing statistics:', error);
+            container.innerHTML = `
             <div class="alert alert-danger">
                 <i class="material-symbols-rounded text-sm align-middle me-1">error</i>
                 Gagal memuat statistik missing temuan. Silakan coba lagi.
             </div>
         `;
+        }
     }
-}
 </script>
