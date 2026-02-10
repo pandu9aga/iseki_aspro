@@ -3,16 +3,23 @@
         <thead>
             <tr>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">No</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tipe Temuan</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor - Area</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Prosedur</th>
-                <th class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-3">Item Prosedur</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pe-2">Action
+                </th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tipe Temuan
+                </th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor -
+                    Area</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Prosedur
+                </th>
+                <th class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-3">Item
+                    Prosedur</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Member</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Auditor</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Temuan</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Penanganan</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Temuan
+                </th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl
+                    Penanganan</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pe-2">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -21,9 +28,20 @@
                     <td class="align-middle text-center ps-2">
                         <span class="text-secondary text-xs font-weight-bold">{{ $index + 1 }}</span>
                     </td>
+                    <td class="align-middle text-center pe-2">
+                        @if($temuan->ListReport)
+                            <a href="{{ route('leader-temuan.show', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
+                                class="btn btn-sm btn-info mb-0" title="Lihat Detail">
+                                <i class="material-symbols-rounded text-sm">visibility</i>
+                            </a>
+                        @else
+                            <span class="text-xs text-muted">-</span>
+                        @endif
+                    </td>
                     <td class="align-middle text-center">
                         @if($current_user && $current_user->Username_User === 'saiful')
-                            <button class="btn btn-sm btn-link p-0 m-0" onclick="openTipeTemuanModal('{{ $temuan->Id_Temuan }}', '{{ $temuan->Tipe_Temuan }}')">
+                            <button class="btn btn-sm btn-link p-0 m-0"
+                                onclick="openTipeTemuanModal('{{ $temuan->Id_Temuan }}', '{{ $temuan->Tipe_Temuan }}')">
                                 @if($temuan->Tipe_Temuan)
                                     <span class="badge badge-sm bg-gradient-info">
                                         {{ $temuan->Tipe_Temuan }}
@@ -46,8 +64,10 @@
                     </td>
                     <td class="align-middle text-center">
                         <div class="d-flex flex-column align-items-center">
-                            <span class="text-xs font-weight-bold">{{ $temuan->ListReport ? $temuan->ListReport->Name_Tractor : '-' }}</span>
-                            <span class="text-xxs text-secondary">{{ $temuan->ListReport ? $temuan->ListReport->Name_Area : '' }}</span>
+                            <span
+                                class="text-xs font-weight-bold">{{ $temuan->ListReport ? $temuan->ListReport->Name_Tractor : '-' }}</span>
+                            <span
+                                class="text-xxs text-secondary">{{ $temuan->ListReport ? $temuan->ListReport->Name_Area : '' }}</span>
                         </div>
                     </td>
                     <td class="align-middle text-center">
@@ -63,7 +83,8 @@
                         <span class="text-xs">{{ $temuan->User->Name_User ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
-                        <span class="text-xs">{{ $temuan->Time_Temuan ? \Carbon\Carbon::parse($temuan->Time_Temuan)->format('d/m/Y') : '-' }}</span>
+                        <span
+                            class="text-xs">{{ $temuan->Time_Temuan ? \Carbon\Carbon::parse($temuan->Time_Temuan)->format('d/m/Y') : '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
                         @php
@@ -90,15 +111,6 @@
                             </span>
                         @endif
                     </td>
-                    <td class="align-middle text-center pe-2">
-                        @if($temuan->ListReport)
-                            <a href="{{ route('leader-temuan.show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" class="btn btn-sm btn-info mb-0" title="Lihat Detail">
-                                <i class="material-symbols-rounded text-sm">visibility</i>
-                            </a>
-                        @else
-                            <span class="text-xs text-muted">-</span>
-                        @endif
-                    </td>
                 </tr>
             @empty
                 <tr>
@@ -115,4 +127,3 @@
         </tbody>
     </table>
 </div>
-

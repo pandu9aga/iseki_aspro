@@ -205,12 +205,22 @@ class TemuanAuditorController extends Controller
     {
         $page = 'temuan';
         $Id_User = session('Id_User');
-        $date = $request->input('date') ?? Carbon::today()->format('Y-m-d');
+        
+        // Use session for month filter persistence
+        if ($request->has('month')) {
+            $month = $request->input('month');
+            session(['last_temuan_month' => $month]);
+        } else {
+            $month = session('last_temuan_month') ?? Carbon::now()->format('Y-m');
+        }
+
+        list($year, $monthNum) = explode('-', $month);
 
         $query = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
-            ->whereDate('Time_Temuan', $date);
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum);
 
         $temuans = $query->orderBy('Time_Temuan', 'desc')->get();
 
@@ -240,7 +250,7 @@ class TemuanAuditorController extends Controller
             'page' => $page,
             'temuans' => $temuans,
             'tipeTemuanCategories' => $tipeTemuanCategories,
-            'date' => $date,
+            'month' => $month,
         ]);
     }
 

@@ -29,7 +29,7 @@
             
             <div class="row g-3">
                 <!-- Revisi Prosedur -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2">
                     <div class="card stat-card revisi mb-0">
                         <div class="card-body">
                             <div class="text-center mb-3">
@@ -55,7 +55,7 @@
                 </div>
                 
                 <!-- Perakitan Tak Sesuai -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2">
                     <div class="card stat-card perakitan mb-0">
                         <div class="card-body">
                             <div class="text-center mb-3">
@@ -81,7 +81,7 @@
                 </div>
                 
                 <!-- Shiyousho Tak Sesuai -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2">
                     <div class="card stat-card shiyousho mb-0">
                         <div class="card-body">
                             <div class="text-center mb-3">
@@ -107,7 +107,7 @@
                 </div>
 
                 <!-- Tidak Perlu Penanganan -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2">
                     <div class="card stat-card tidakperlu mb-0">
                         <div class="card-body">
                             <div class="text-center mb-3">
@@ -133,7 +133,7 @@
                 </div>
                 
                 <!-- Lain-lain -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2">
                     <div class="card stat-card lainlain mb-0">
                         <div class="card-body">
                             <div class="text-center mb-3">

@@ -19,11 +19,21 @@ class TemuanLeaderController extends Controller
     public function index(Request $request)
     {
         $page = 'temuan';
-        $date = $request->input('date') ?? Carbon::today()->format('Y-m-d');
+        
+        // Use session for month filter persistence
+        if ($request->has('month')) {
+            $month = $request->input('month');
+            session(['last_temuan_month' => $month]);
+        } else {
+            $month = session('last_temuan_month') ?? Carbon::now()->format('Y-m');
+        }
+
+        list($year, $monthNum) = explode('-', $month);
 
         $query = Temuan::with(['ListReport.report.member', 'User'])
             ->whereNotNull('Time_Temuan')
-            ->whereDate('Time_Temuan', $date);
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum);
 
         $temuans = $query->orderBy('Time_Temuan', 'desc')->get();
 
@@ -53,7 +63,7 @@ class TemuanLeaderController extends Controller
             'page' => $page,
             'temuans' => $temuans,
             'tipeTemuanCategories' => $tipeTemuanCategories,
-            'date' => $date,
+            'month' => $month,
         ]);
     }
 

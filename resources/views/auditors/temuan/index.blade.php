@@ -54,9 +54,8 @@
                                         Statistik Temuan Bulanan
                                     </h6>
                                     <div class="d-flex align-items-center gap-2">
-                                        <input type="month" class="form-control form-control-sm" id="monthPicker" 
-                                            value="{{ \Carbon\Carbon::now()->format('Y-m') }}" 
-                                            style="width: 150px;">
+                                        <input type="month" class="form-control form-control-sm" id="monthPicker"
+                                            value="{{ \Carbon\Carbon::now()->format('Y-m') }}" style="width: 150px;">
                                         <button class="btn btn-sm btn-primary" onclick="loadMonthlyStatistics()">
                                             <i class="material-symbols-rounded text-sm">refresh</i>
                                         </button>
@@ -104,18 +103,20 @@
                 @include('auditors.temuan.partials.statistics-styles')
                 @include('auditors.temuan.partials.statistics-scripts')
 
-                <!-- Date Filter -->
+                <!-- Month Filter -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card shadow-sm">
                             <div class="card-body">
-                                <form method="GET" action="{{ route('auditor-report.temuan_index') }}" id="dateFilterForm">
+                                <form method="GET" action="{{ route('auditor-report.temuan_index') }}" id="monthFilterForm">
                                     <div class="row align-items-end">
                                         <div class="col-md-4 col-lg-3">
-                                            <label for="dateInput" class="form-label text-xs text-uppercase font-weight-bolder mb-2">
-                                                <i class="material-symbols-rounded text-xs">calendar_today</i> Filter Tanggal
+                                            <label for="monthInput"
+                                                class="form-label text-xs text-uppercase font-weight-bolder mb-2">
+                                                <i class="material-symbols-rounded text-xs">calendar_month</i> Filter Bulan
                                             </label>
-                                            <input type="date" class="form-control" name="date" id="dateInput" value="{{ $date ?? \Carbon\Carbon::today()->format('Y-m-d') }}" placeholder="Pilih tanggal">
+                                            <input type="month" class="form-control" name="month" id="monthInput"
+                                                value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}">
                                         </div>
                                         <div class="col-md-2">
                                             <button class="btn btn-primary w-100 mb-0" type="submit">
@@ -126,7 +127,8 @@
                                             <div class="alert alert-info mb-0 py-2" role="alert">
                                                 <small class="text-dark d-flex align-items-center">
                                                     <i class="material-symbols-rounded text-sm me-1">info</i>
-                                                    Menampilkan temuan pada: <strong class="ms-1">{{ \Carbon\Carbon::parse($date ?? \Carbon\Carbon::today())->format('d F Y') }}</strong>
+                                                    Menampilkan temuan pada bulan: <strong
+                                                        class="ms-1">{{ \Carbon\Carbon::parse($month ?? \Carbon\Carbon::now())->format('F Y') }}</strong>
                                                 </small>
                                             </div>
                                         </div>
@@ -147,14 +149,16 @@
                     <div class="card-header pb-0">
                         <ul class="nav nav-tabs" id="tipeTemuanTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-content" type="button" role="tab">
+                                <button class="nav-link active" id="all-tab" data-bs-toggle="tab"
+                                    data-bs-target="#all-content" type="button" role="tab">
                                     Semua <span class="badge bg-primary ms-1">{{ $temuans->count() }}</span>
                                 </button>
                             </li>
                             @foreach($tipeTemuanCategories as $category => $items)
                                 @if(count($items) > 0)
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="{{ Str::slug($category) }}-tab" data-bs-toggle="tab" data-bs-target="#{{ Str::slug($category) }}-content" type="button" role="tab">
+                                        <button class="nav-link" id="{{ Str::slug($category) }}-tab" data-bs-toggle="tab"
+                                            data-bs-target="#{{ Str::slug($category) }}-content" type="button" role="tab">
                                             {{ $category }} <span class="badge bg-primary ms-1">{{ count($items) }}</span>
                                         </button>
                                     </li>
@@ -295,9 +299,9 @@
     <script src="{{asset('assets/js/jquery-3.7.1.min.js')}}"></script>
     <script src="{{asset('assets/datatables/datatables.min.js')}}"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Initialize DataTables for each tab
-            $('.temuan-table').each(function() {
+            $('.temuan-table').each(function () {
                 const table = $(this);
                 const rowCount = table.find('tbody tr').length;
                 const hasData = table.find('tbody td[colspan]').length === 0;
@@ -305,7 +309,7 @@
                 if (rowCount > 0 && hasData) {
                     table.DataTable({
                         pageLength: 25,
-                        order: [[5, 'desc']],
+                        order: [[1, 'desc']],
                         language: {
                             emptyTable: "Tidak ada temuan pada tanggal ini."
                         }
