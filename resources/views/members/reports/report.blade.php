@@ -105,175 +105,247 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
-        function RenderPDF(pdfUrl, canvasId) {
-            async function renderDefaultPDF() {
-                const canvasPDFDefault = document.getElementById(canvasId);
-                if (!canvasPDFDefault) return;
+        // ============================================
+        // GLOBAL VARIABLES & CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            pdfUrl: (function () {
+                let path = "{!! str_replace('\\', '/', $pdfPath) !!}";
+                if (!path) return null;
+                let baseUrl = "{{ asset('') }}";
+                if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                let p = path.replace(/\\/g, '/');
+                if (!p.startsWith('/') && !p.startsWith('http')) p = '/' + p;
+                let url = p.startsWith('http') ? p : baseUrl + p;
+                url = url.replace(/ /g, '%20');
+                return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
+            })(),
+            pdfScale: 1.5,
+            fontSize: {
+                timestamp: 8,
+                comment: 12,
+                mark: 24
+            },
+            colors: {
+                check: { text: 'green', bg: 'rgba(0,255,0,0.3)' },
+                ng: { text: 'green', bg: 'rgba(255,0,0,0.3)' },
+                x: { text: 'green', bg: 'rgba(255,0,0,0.3)' },
+                comment: { text: 'white', bg: '#E91E63', border: 'transparent' }
+            }
+        };
 
+        // DOM Elements
+        const DOM = {
+            canvas: document.getElementById('pdf-canvas'),
+            editorLayer: document.getElementById('editor-layer'),
+            buttons: {
+                check: document.getElementById('checklist-btn'),
+                ng: document.getElementById('ng-btn'),
+                x: document.getElementById('x-btn'),
+                comment: document.getElementById('comment-btn'),
+                delete: document.getElementById('delete-btn')
+            },
+            icons: {
+                check: document.getElementById('checklist-btn-icon'),
+                ng: document.getElementById('ng-btn-icon'),
+                x: document.getElementById('x-btn-icon'),
+                comment: document.getElementById('comment-btn-icon')
+            }
+        };
+
+        // State Management
+        const STATE = {
+            checklistMode: false,
+            currentMode: null, // 'check', 'ng', 'x', 'comment'
+            selectedObject: null,
+            history: [],
+            redoStack: [],
+            pageViewportHeights: [],
+            images: []
+        };
+
+        // ============================================
+        // PDF RENDERING
+        // ============================================
+        async function renderPDF() {
+            if (!CONFIG.pdfUrl || !DOM.canvas) return;
+            try {
+                let pdf;
                 try {
-                    let pdf;
-                    try {
-                        pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-                    } catch (err) {
-                        console.warn('pdfjsLib.getDocument failed, trying fetch fallback:', err);
-                        const resp = await fetch(pdfUrl);
-                        const buffer = await resp.arrayBuffer();
-                        pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-                    }
-
-                    const ctx = canvasPDFDefault.getContext('2d');
-                    const viewports = [];
-                    let totalHeight = 0;
-                    let maxWidth = 0;
-
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const viewport = page.getViewport({ scale: pdfScale });
-                        viewports.push({ page, viewport });
-                        totalHeight += viewport.height;
-                        maxWidth = Math.max(maxWidth, viewport.width);
-                    }
-
-                    canvasPDFDefault.width = maxWidth;
-                    canvasPDFDefault.height = totalHeight;
-                    editorLayer.style.width = maxWidth + 'px';
-                    editorLayer.style.height = totalHeight + 'px';
-
-                    let currentY = 0;
-                    for (const { page, viewport } of viewports) {
-                        const tempCanvas = document.createElement('canvas');
-                        tempCanvas.width = viewport.width;
-                        tempCanvas.height = viewport.height;
-                        await page.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
-                        ctx.drawImage(tempCanvas, 0, currentY);
-                        currentY += viewport.height;
-                    }
-                } catch (error) {
-                    console.error('RenderPDF error:', error, canvasId);
+                    pdf = await pdfjsLib.getDocument(CONFIG.pdfUrl).promise;
+                } catch (err) {
+                    console.warn('pdfjsLib.getDocument failed, trying fetch fallback:', err);
+                    const resp = await fetch(CONFIG.pdfUrl);
+                    const buffer = await resp.arrayBuffer();
+                    pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
                 }
+                const ctx = DOM.canvas.getContext('2d');
+
+                // Calculate total dimensions
+                const pageData = await calculatePageDimensions(pdf);
+                setupCanvasSize(pageData.totalHeight, pageData.maxWidth);
+
+                // Render all pages
+                await renderAllPages(pdf, pageData.viewports, ctx);
+            } catch (error) {
+                console.error('RenderPDF error:', error);
+            }
+        }
+
+        async function calculatePageDimensions(pdf) {
+            const viewports = [];
+            let totalHeight = 0;
+            let maxWidth = 0;
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: CONFIG.pdfScale });
+
+                viewports.push({ page, viewport });
+                totalHeight += viewport.height;
+                maxWidth = Math.max(maxWidth, viewport.width);
+                STATE.pageViewportHeights.push(viewport.height);
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', renderDefaultPDF);
-            } else {
-                renderDefaultPDF();
+            return { viewports, totalHeight, maxWidth };
+        }
+
+        function setupCanvasSize(height, width) {
+            DOM.canvas.width = width;
+            DOM.canvas.height = height;
+            DOM.editorLayer.style.width = width + 'px';
+            DOM.editorLayer.style.height = height + 'px';
+        }
+
+        async function renderAllPages(pdf, viewports, ctx) {
+            let currentY = 0;
+
+            for (const { page, viewport } of viewports) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = viewport.width;
+                tempCanvas.height = viewport.height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                await page.render({ canvasContext: tempCtx, viewport }).promise;
+                ctx.drawImage(tempCanvas, 0, currentY);
+                currentY += viewport.height;
             }
         }
 
-        function getPdfUrl(path) {
-            if (!path) return null;
-            let baseUrl = "{{ asset('') }}";
-            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-            let p = path.replace(/\\/g, '/');
-            if (!p.startsWith('/') && !p.startsWith('http')) p = '/' + p;
+        // Initialize PDF rendering
+        renderPDF();
 
-            let url = p.startsWith('http') ? p : baseUrl + p;
-            url = url.replace(/ /g, '%20');
-            return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
-        }
-
-        const currentPdfUrl = getPdfUrl("{!! str_replace('\\', '/', $pdfPath) !!}");
-        if (currentPdfUrl) {
-            pdfUrl = currentPdfUrl; // Reuse global variable for download
-            RenderPDF(currentPdfUrl, "pdf-canvas");
-        }
-
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
         function saveState() {
-            history.push(editorLayer.innerHTML);
-            redoStack = [];
+            STATE.history.push(DOM.editorLayer.innerHTML);
+            STATE.redoStack = [];
         }
 
-        // --- Fungsi untuk membuat div yang bisa digeser (V, NG, X) ---
-        function createDraggableDiv(text, color = 'black') {
-            const div = document.createElement('div');
-            div.textContent = text;
-            let bgColor = 'rgba(255,255,255,0.5)'; // Default background
-            if (text === 'V') {
-                bgColor = 'rgba(0,255,0,0.3)'; // Hijau muda untuk V
-            } else if (text === 'X' || text === 'NG') {
-                bgColor = 'rgba(255,0,0,0.3)'; // Merah muda untuk X dan NG
+        function undo() {
+            if (STATE.history.length > 0) {
+                STATE.redoStack.push(STATE.history.pop());
+                DOM.editorLayer.innerHTML = STATE.history[STATE.history.length - 1] || '';
+                rebindEvents();
+                clearSelection();
             }
+        }
 
-            Object.assign(div.style, {
+        function redo() {
+            if (STATE.redoStack.length > 0) {
+                const state = STATE.redoStack.pop();
+                STATE.history.push(state);
+                DOM.editorLayer.innerHTML = state;
+                rebindEvents();
+            }
+        }
+
+        function clearSelection() {
+            STATE.selectedObject = null;
+            if (DOM.buttons.delete) DOM.buttons.delete.disabled = true;
+        }
+
+        // ============================================
+        // ANNOTATION CREATION
+        // ============================================
+        function createAnnotation(type, text = '', color = 'green') {
+            if (type === 'comment') {
+                return createEditableComment(text);
+            }
+            return createDraggableMark(text, color);
+        }
+
+        function createDraggableMark(text, color) {
+            const mark = document.createElement('div');
+            mark.textContent = text;
+
+            const config = CONFIG.colors[text.toLowerCase()] || CONFIG.colors.check;
+
+            Object.assign(mark.style, {
                 position: 'absolute',
                 top: '50px',
                 left: '50px',
                 cursor: 'move',
-                color,
-                background: bgColor,
+                color: color,
+                background: config.bg,
                 padding: '2px 5px',
-                fontSize: (text === 'V' || text === 'X' || text === 'NG') ? '24px' : '14px',
+                fontSize: CONFIG.fontSize.mark + 'px',
                 userSelect: 'none',
                 border: '1px solid transparent'
             });
-            div.setAttribute('draggable', true);
 
-            div.addEventListener('click', e => {
-                e.stopPropagation();
-                if (selectedObject) selectedObject.classList.remove('selected');
-                selectedObject = div;
-                div.classList.add('selected');
-                div.style.border = '2px dashed red';
-                document.getElementById('delete-btn').disabled = false;
-            });
+            setupDraggableEvents(mark);
+            setupSelectionEvents(mark);
 
-            div.addEventListener('dragstart', e => {
-                div.startX = e.clientX - div.offsetLeft;
-                div.startY = e.clientY - div.offsetTop;
-            });
-
-            div.addEventListener('dragend', e => {
-                let x = e.clientX - div.startX;
-                let y = e.clientY - div.startY;
-                const maxX = editorLayer.clientWidth - div.offsetWidth;
-                const maxY = editorLayer.clientHeight - div.offsetHeight;
-                x = Math.max(0, Math.min(x, maxX));
-                y = Math.max(0, Math.min(y, maxY));
-                div.style.left = x + 'px';
-                div.style.top = y + 'px';
-                saveState();
-            });
-
-            return div;
+            return mark;
         }
 
-        // --- Fungsi untuk membuat div teks yang bisa diedit (Comment) ---
-        function createEditableTextDiv(initialText = '', color = 'black') {
-            const div = document.createElement('div');
-            div.contentEditable = true;
-            div.textContent = initialText || '';
-            Object.assign(div.style, {
+        function createEditableComment(initialText = '') {
+            const comment = document.createElement('div');
+            comment.contentEditable = true;
+            comment.textContent = initialText;
+
+            Object.assign(comment.style, {
                 position: 'absolute',
                 top: '50px',
                 left: '50px',
                 cursor: 'move',
-                color: 'white', // White text
-                backgroundColor: '#E91E63', // Pink background
-                whiteSpace: 'pre-wrap', // Allow newlines
-                padding: '5px',
-                fontSize: '14px',
+                color: CONFIG.colors.comment.text,
+                backgroundColor: CONFIG.colors.comment.bg,
                 border: 'none',
                 minWidth: '100px',
                 minHeight: '20px',
+                padding: '5px',
+                fontSize: CONFIG.fontSize.comment + 'px',
+                whiteSpace: 'pre-wrap', // Allow newlines
                 outline: 'none'
             });
-            div.setAttribute('draggable', true);
 
-            div.addEventListener('input', () => {
-                saveState();
-            });
+            comment.addEventListener('input', saveState);
+            setupDraggableEvents(comment);
+            setupSelectionEvents(comment);
+
+            return comment;
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        function setupDraggableEvents(element) {
+            element.setAttribute('draggable', 'true');
 
             // Disable dragging when editing to allow Enter key
-            div.addEventListener('focus', () => {
-                div.removeAttribute('draggable');
+            element.addEventListener('focus', () => {
+                element.removeAttribute('draggable');
             });
 
-            div.addEventListener('blur', () => {
-                div.setAttribute('draggable', 'true');
+            element.addEventListener('blur', () => {
+                element.setAttribute('draggable', 'true');
             });
 
             // Explicit Enter key handler for newlines
-            div.addEventListener('keydown', (e) => {
+            element.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -282,250 +354,223 @@
                 }
             });
 
-            div.addEventListener('click', e => {
+            element.addEventListener('dragstart', (e) => {
+                element.startX = e.clientX - element.offsetLeft;
+                element.startY = e.clientY - element.offsetTop;
+            });
+
+            element.addEventListener('dragend', (e) => {
+                const x = constrainX(e.clientX - element.startX, element.offsetWidth);
+                const y = constrainY(e.clientY - element.startY, element.offsetHeight);
+
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
+                saveState();
+            });
+        }
+
+        function setupSelectionEvents(element) {
+            element.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (selectedObject) selectedObject.classList.remove('selected');
-                selectedObject = div;
-                div.classList.add('selected');
-                div.style.border = '2px dashed red'; // Border saat dipilih
-                document.getElementById('delete-btn').disabled = false;
+                selectElement(element);
             });
-
-            div.addEventListener('dragstart', e => {
-                div.startX = e.clientX - div.offsetLeft;
-                div.startY = e.clientY - div.offsetTop;
-            });
-
-            div.addEventListener('dragend', e => {
-                let x = e.clientX - div.startX;
-                let y = e.clientY - div.startY;
-                const maxX = editorLayer.clientWidth - div.offsetWidth;
-                const maxY = editorLayer.clientHeight - div.offsetHeight;
-                x = Math.max(0, Math.min(x, maxX));
-                y = Math.max(0, Math.min(y, maxY));
-                div.style.left = x + 'px';
-                div.style.top = y + 'px';
-                saveState();
-            });
-
-            return div;
         }
 
-        // --- Fungsi Toggle Checklist ---
-        function toggleChecklist(mode) {
-            // Reset semua tombol ke keadaan tidak aktif
-            checklistBtn.classList.remove('btn-success');
-            checklistBtn.classList.add('btn-primary');
-            ngBtn.classList.remove('btn-success');
-            ngBtn.classList.add('btn-primary');
-            xBtn.classList.remove('btn-success');
-            xBtn.classList.add('btn-primary');
-            commentBtn.classList.remove('btn-success');
-            commentBtn.classList.add('btn-primary');
-            checklistBtnIcon.textContent = 'edit_off';
-            ngBtnIcon.textContent = 'block';
-            xBtnIcon.textContent = 'close';
-            commentBtnIcon.textContent = 'text_fields';
+        function constrainX(x, width) {
+            const maxX = DOM.editorLayer.clientWidth - width;
+            return Math.max(0, Math.min(x, maxX));
+        }
 
-            // Jika mode yang diklik sama dengan mode aktif saat ini, matikan semua mode
-            if (currentMode === mode) {
-                checklistMode = false;
-                currentMode = null;
+        function constrainY(y, height) {
+            const maxY = DOM.editorLayer.clientHeight - height;
+            return Math.max(0, Math.min(y, maxY));
+        }
+
+        function selectElement(element) {
+            if (STATE.selectedObject) {
+                STATE.selectedObject.classList.remove('selected');
+                resetElementBorder(STATE.selectedObject);
+            }
+
+            STATE.selectedObject = element;
+            element.classList.add('selected');
+            element.style.border = '2px dashed red';
+            if (DOM.buttons.delete) DOM.buttons.delete.disabled = false;
+        }
+
+        function resetElementBorder(element) {
+            if (element.contentEditable === 'true') {
+                element.style.border = '2px dashed #fff'; // White selection for visibility on pink
             } else {
-                // Aktifkan mode yang diklik
-                checklistMode = true;
-                currentMode = mode;
-
-                // Perbarui tampilan tombol yang aktif
-                if (mode === 'check') {
-                    checklistBtn.classList.add('btn-success');
-                    checklistBtn.classList.remove('btn-primary');
-                    checklistBtnIcon.textContent = 'edit';
-                } else if (mode === 'ng') {
-                    ngBtn.classList.add('btn-success');
-                    ngBtn.classList.remove('btn-primary');
-                    ngBtnIcon.textContent = 'edit';
-                } else if (mode === 'x') {
-                    xBtn.classList.add('btn-success');
-                    xBtn.classList.remove('btn-primary');
-                    xBtnIcon.textContent = 'edit';
-                } else if (mode === 'comment') {
-                    commentBtn.classList.add('btn-success');
-                    commentBtn.classList.remove('btn-primary');
-                    commentBtnIcon.textContent = 'edit';
-                }
+                element.style.border = '1px solid transparent';
             }
         }
 
-        // --- Fungsi Delete ---
         function deleteSelected() {
-            if (selectedObject) {
-                editorLayer.removeChild(selectedObject);
-                selectedObject = null;
-                document.getElementById('delete-btn').disabled = true;
+            if (STATE.selectedObject) {
+                DOM.editorLayer.removeChild(STATE.selectedObject);
+                clearSelection();
                 saveState();
             }
         }
 
-        // --- Fungsi Undo ---
-        function undo() {
-            if (history.length > 0) {
-                redoStack.push(history.pop());
-                editorLayer.innerHTML = history[history.length - 1] || '';
-                rebindEvents();
-                selectedObject = null;
-                document.getElementById('delete-btn').disabled = true;
+        // ============================================
+        // TOOLBAR CONTROLS
+        // ============================================
+        function toggleChecklist(mode) {
+            // Reset all buttons to inactive state
+            resetAllButtons();
+
+            // Toggle mode
+            if (STATE.currentMode === mode) {
+                STATE.checklistMode = false;
+                STATE.currentMode = null;
+            } else {
+                STATE.checklistMode = true;
+                STATE.currentMode = mode;
+                activateButton(mode);
             }
         }
 
-        // --- Fungsi Redo ---
-        function redo() {
-            if (redoStack.length > 0) {
-                let state = redoStack.pop();
-                history.push(state);
-                editorLayer.innerHTML = state;
-                rebindEvents();
-            }
-        }
-
-        // --- Fungsi Rebind Events (penting untuk undo/redo) ---
-        function rebindEvents() {
-            editorLayer.querySelectorAll('div').forEach(div => {
-                // Hapus event listener lama
-                div.onclick = null;
-                div.ondragstart = null;
-                div.ondragend = null;
-                div.oninput = null; // Untuk komentar
-
-                // Tambahkan kembali event listener berdasarkan tipe div
-                if (div.contentEditable === 'true') {
-                    // Untuk div komentar
-                    div.addEventListener('click', e => {
-                        e.stopPropagation();
-                        if (selectedObject) selectedObject.classList.remove('selected');
-                        selectedObject = div;
-                        div.classList.add('selected');
-                        div.style.border = '2px dashed #fff';
-                        document.getElementById('delete-btn').disabled = false;
-                    });
-                    div.addEventListener('dragstart', e => {
-                        div.startX = e.clientX - div.offsetLeft;
-                        div.startY = e.clientY - div.offsetTop;
-                    });
-                    div.addEventListener('dragend', e => {
-                        let x = e.clientX - div.startX;
-                        let y = e.clientY - div.startY;
-                        const maxX = editorLayer.clientWidth - div.offsetWidth;
-                        const maxY = editorLayer.clientHeight - div.offsetHeight;
-                        x = Math.max(0, Math.min(x, maxX));
-                        y = Math.max(0, Math.min(y, maxY));
-                        div.style.left = x + 'px';
-                        div.style.top = y + 'px';
-                        saveState();
-                    });
-                    div.addEventListener('input', () => {
-                        saveState();
-                    });
-                } else {
-                    // Untuk div V, NG, dan X
-                    div.addEventListener('click', e => {
-                        e.stopPropagation();
-                        if (selectedObject) selectedObject.classList.remove('selected');
-                        selectedObject = div;
-                        div.classList.add('selected');
-                        div.style.border = '2px dashed red';
-                        document.getElementById('delete-btn').disabled = false;
-                    });
-                    div.addEventListener('dragstart', e => {
-                        div.startX = e.clientX - div.offsetLeft;
-                        div.startY = e.clientY - div.offsetTop;
-                    });
-                    div.addEventListener('dragend', e => {
-                        let x = e.clientX - div.startX;
-                        let y = e.clientY - div.startY;
-                        const maxX = editorLayer.clientWidth - div.offsetWidth;
-                        const maxY = editorLayer.clientHeight - div.offsetHeight;
-                        x = Math.max(0, Math.min(x, maxX));
-                        y = Math.max(0, Math.min(y, maxY));
-                        div.style.left = x + 'px';
-                        div.style.top = y + 'px';
-                        saveState();
-                    });
+        function resetAllButtons() {
+            const buttons = ['check', 'ng', 'x', 'comment'];
+            buttons.forEach(btn => {
+                if (DOM.buttons[btn]) {
+                    DOM.buttons[btn].classList.remove('btn-success');
+                    DOM.buttons[btn].classList.add('btn-primary');
                 }
             });
+
+            if (DOM.icons.check) DOM.icons.check.textContent = 'edit_off';
+            if (DOM.icons.ng) DOM.icons.ng.textContent = 'block';
+            if (DOM.icons.x) DOM.icons.x.textContent = 'close';
+            if (DOM.icons.comment) DOM.icons.comment.textContent = 'text_fields';
         }
 
-        // --- Event Listener Klik pada Editor Layer ---
-        editorLayer.addEventListener('click', function (e) {
-            if (!checklistMode) {
-                if (selectedObject) {
-                    selectedObject.classList.remove('selected');
-                    // Kembalikan border default
-                    if (selectedObject.tagName.toLowerCase() === 'div' && selectedObject.contentEditable !==
-                        'true') {
-                        selectedObject.style.border = '1px solid transparent';
-                    } else if (selectedObject.tagName.toLowerCase() === 'div' && selectedObject.contentEditable ===
-                        'true') {
-                        selectedObject.style.border = '2px dashed #fff'; // White selection for visibility on pink
-                    }
-                    selectedObject = null;
-                    document.getElementById('delete-btn').disabled = true;
-                }
+        function activateButton(mode) {
+            if (DOM.buttons[mode]) {
+                DOM.buttons[mode].classList.add('btn-success');
+                DOM.buttons[mode].classList.remove('btn-primary');
+            }
+            if (DOM.icons[mode]) DOM.icons[mode].textContent = 'edit';
+        }
+
+        // ============================================
+        // EDITOR LAYER INTERACTION
+        // ============================================
+        DOM.editorLayer.addEventListener('click', function (e) {
+            if (!STATE.checklistMode) {
+                handleClickOutsideAnnotation();
                 return;
             }
 
-            const rect = editorLayer.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const position = getClickPosition(e);
+            const annotation = createAnnotationByMode(STATE.currentMode);
 
-            let newElement;
-            if (currentMode === 'check') {
-                newElement = createDraggableDiv('V', 'green');
-            } else if (currentMode === 'ng') {
-                newElement = createDraggableDiv('NG', 'green');
-            } else if (currentMode === 'x') {
-                newElement = createDraggableDiv('X', 'green');
-            } else if (currentMode === 'comment') {
-                newElement = createEditableTextDiv('', 'black');
-            }
-
-            if (newElement) {
-                editorLayer.appendChild(newElement);
-
-                const w = newElement.offsetWidth / 2;
-                const h = newElement.offsetHeight / 2;
-                newElement.style.left = Math.max(0, x - w) + 'px';
-                newElement.style.top = Math.max(0, y - h) + 'px';
-
+            if (annotation) {
+                placeAnnotation(annotation, position);
                 saveState();
             }
         });
 
-        async function downloadPdf() {
-            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], {
-                type: 'application/pdf'
+        function handleClickOutsideAnnotation() {
+            if (STATE.selectedObject) {
+                STATE.selectedObject.classList.remove('selected');
+                resetElementBorder(STATE.selectedObject);
+                STATE.selectedObject = null;
+                if (DOM.buttons.delete) DOM.buttons.delete.disabled = true;
+            }
+        }
+
+        function getClickPosition(e) {
+            const rect = DOM.editorLayer.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function createAnnotationByMode(mode) {
+            const annotations = {
+                'check': () => createDraggableMark('V', 'green'),
+                'ng': () => createDraggableMark('NG', 'green'),
+                'x': () => createDraggableMark('X', 'green'),
+                'comment': () => createEditableComment('')
+            };
+
+            return annotations[mode] ? annotations[mode]() : null;
+        }
+
+        function placeAnnotation(element, position) {
+            DOM.editorLayer.appendChild(element);
+
+            const centerX = position.x - (element.offsetWidth / 2);
+            const centerY = position.y - (element.offsetHeight / 2);
+
+            element.style.left = Math.max(0, centerX) + 'px';
+            element.style.top = Math.max(0, centerY) + 'px';
+        }
+
+        // ============================================
+        // EVENT REBINDING (for Undo/Redo)
+        // ============================================
+        function rebindEvents() {
+            DOM.editorLayer.querySelectorAll('div').forEach(div => {
+                // Clear old event listeners
+                div.onclick = null;
+                div.ondragstart = null;
+                div.ondragend = null;
+                div.oninput = null;
+
+                // Re-attach based on element type
+                if (div.contentEditable === 'true') {
+                    rebindCommentEvents(div);
+                } else {
+                    rebindMarkEvents(div);
+                }
             });
+        }
+
+        function rebindCommentEvents(element) {
+            setupSelectionEvents(element);
+            setupDraggableEvents(element);
+            element.addEventListener('input', saveState);
+        }
+
+        function rebindMarkEvents(element) {
+            setupSelectionEvents(element);
+            setupDraggableEvents(element);
+        }
+
+        // ============================================
+        // PDF DOWNLOAD
+        // ============================================
+        async function downloadPdf() {
+            const pdfBytes = await fetch(CONFIG.pdfUrl).then(res => res.arrayBuffer());
+            const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+            const finalBytes = await pdfDoc.save();
+
+            const blob = new Blob([finalBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
             link.click();
         }
-    </script>
-    <script>
-        let images = [];
 
-        // Saat user pilih gambar
-        document.getElementById('imageInput').addEventListener('change', function (e) {
-            for (let file of e.target.files) {
-                images.push(file);
-                showPreview(file);
-            }
-        });
+        // ============================================
+        // PHOTO UPLOAD & MANAGEMENT
+        // ============================================
+        STATE.images = [];
 
-        // Tampilkan preview dengan tombol hapus
+        if (document.getElementById('imageInput')) {
+            document.getElementById('imageInput').addEventListener('change', function (e) {
+                for (let file of e.target.files) {
+                    STATE.images.push(file);
+                    showPreview(file);
+                }
+            });
+        }
+
         function showPreview(file) {
             const reader = new FileReader();
             reader.onload = function (e) {
@@ -558,89 +603,18 @@
 
                 delBtn.onclick = function () {
                     const index = Array.from(container.parentNode.children).indexOf(container);
-                    images.splice(index, 1);
+                    STATE.images.splice(index, 1);
                     container.remove();
                 };
 
                 container.appendChild(img);
                 container.appendChild(delBtn);
-                document.getElementById('preview').appendChild(container);
+                const previewDiv = document.getElementById('preview');
+                if (previewDiv) previewDiv.appendChild(container);
             };
             reader.readAsDataURL(file);
         }
 
-        // Generate PDF
-        async function generatePDF() {
-            const pdfDoc = await PDFLib.PDFDocument.create();
-            const PAGE_WIDTH = 841.89; // A4 landscape
-            const PAGE_HEIGHT = 595.28;
-
-            const SLOT_COLS = 2;
-            const SLOT_ROWS = 2;
-            const SLOT_W = PAGE_WIDTH / SLOT_COLS;
-            const SLOT_H = PAGE_HEIGHT / SLOT_ROWS;
-
-            let page = null;
-            let slotIndex = 0;
-
-            for (let file of images) {
-                if (slotIndex % 4 === 0) {
-                    page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-                }
-
-                const imgBytes = await file.arrayBuffer();
-                let imgEmbed = null;
-                try {
-                    if (file.type === 'image/png') {
-                        imgEmbed = await pdfDoc.embedPng(imgBytes);
-                    } else if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
-                        imgEmbed = await pdfDoc.embedJpg(imgBytes);
-                    } else {
-                        // fallback aman
-                        try {
-                            imgEmbed = await pdfDoc.embedJpg(imgBytes);
-                        } catch (e) {
-                            imgEmbed = await pdfDoc.embedPng(imgBytes);
-                        }
-                    }
-                } catch (err) {
-                    alert(`Gagal embed gambar: ${file.name}`);
-                    continue;
-                }
-
-                const {
-                    width,
-                    height
-                } = imgEmbed.size();
-                const scale = Math.min(SLOT_W / width, SLOT_H / height);
-
-                const col = slotIndex % 2;
-                const row = Math.floor((slotIndex % 4) / 2);
-
-                const x = col * SLOT_W + (SLOT_W - width * scale) / 2;
-                const y = PAGE_HEIGHT - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
-
-                page.drawImage(imgEmbed, {
-                    x: x,
-                    y: y,
-                    width: width * scale,
-                    height: height * scale
-                });
-
-                slotIndex++;
-            }
-
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], {
-                type: 'application/pdf'
-            });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'combined.pdf';
-            link.click();
-        }
-    </script>
-    <script>
         async function resizeImage(file, maxWidth, maxHeight) {
             return new Promise(resolve => {
                 const img = new Image();
@@ -663,227 +637,241 @@
             });
         }
 
+        // ============================================
+        // SUBMIT REPORT WITH ANNOTATIONS & PHOTOS
+        // ============================================
         async function submitReport() {
-            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-            const page = pdfDoc.getPages()[0]; // Asumsikan hanya halaman pertama yang diedit
-
-            // Tambahkan tanggal dan nama user di pojok atas kiri
-            const nowUTC = new Date();
-            const offsetWIB = 7 * 60; // WIB = UTC+7 dalam menit
-            const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
-            const now = localWIB.toISOString().slice(0, 19).replace('T', ' ');
+            // Load existing PDF
+            const existingPdf = await fetch(CONFIG.pdfUrl).then(r => r.arrayBuffer());
+            const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
+            const pages = pdfDoc.getPages();
             const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-            const fontSize = 8;
 
-            // Pisah teks menjadi array baris
-            const lines = [now, "{{ $member->Name_Member }}"];
+            // Add timestamp and member name
+            const nowUTC = new Date();
+            const offsetWIB = 7 * 60; // WIB = UTC+7 in minutes
+            const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
+            const timestamp = localWIB.toISOString().slice(0, 19).replace('T', ' ');
+            addTimestampToFirstPage(pages[0], font, timestamp);
+
+            // Convert HTML annotations to PDF
+            convertAnnotationsToPDF(pages, font);
+
+            // Create and merge photo PDF
+            const photoPdfBytes = await createPhotoPDF();
+            if (photoPdfBytes) {
+                const imgDoc = await PDFLib.PDFDocument.load(photoPdfBytes);
+                const copiedPages = await pdfDoc.copyPages(imgDoc, imgDoc.getPageIndices());
+                copiedPages.forEach(p => pdfDoc.addPage(p));
+            }
+
+            // Save and submit
+            const mergedBytes = await pdfDoc.save();
+            await uploadToServer(mergedBytes, timestamp);
+        }
+
+        function addTimestampToFirstPage(page, font, timestamp) {
+            const fontSize = CONFIG.fontSize.timestamp;
+            const lines = [timestamp, "{{ $member->Name_Member }}"];
+            let yStart = page.getHeight() - 10;
             const lineHeight = fontSize + 2;
 
-            // Mulai dari Y tertentu
-            let startY = page.getHeight() - 10;
-
-            // Tulis setiap baris
-            lines.forEach((line, i) => {
-                const textWidth = font.widthOfTextAtSize(line, fontSize);
+            lines.forEach((line, idx) => {
+                const width = font.widthOfTextAtSize(line, fontSize);
                 page.drawText(line, {
-                    x: 200, // Sesuaikan posisi X jika perlu
-                    y: startY - i * lineHeight,
+                    x: 200, // Adjusted X for member position
+                    y: yStart - idx * lineHeight,
                     size: fontSize,
-                    font: font,
-                    color: PDFLib.rgb(0, 0.6, 0), // Warna hijau
+                    font,
+                    color: PDFLib.rgb(0, 0.6, 0) // Green for member
                 });
             });
+        }
 
-            // Tambahkan text/checklist dari editor layer ke PDF
-            const pageWidth = page.getWidth();
-            const pageHeight = page.getHeight();
-            const canvasWidth = pdfCanvas.width;
-            const canvasHeight = pdfCanvas.height;
+        function convertAnnotationsToPDF(pages, font) {
+            // Calculate page offsets
+            const canvasW = DOM.canvas.width;
+            let yOffsets = [0];
+            for (let i = 0; i < STATE.pageViewportHeights.length - 1; i++) {
+                yOffsets.push(yOffsets[i] + STATE.pageViewportHeights[i]);
+            }
 
-            // Hitung offset halaman berdasarkan tinggi viewport per halaman (untuk multi-halaman jika diperlukan)
-            // Karena versi Member ini hanya mengedit halaman pertama, kita asumsikan satu halaman.
-            // Jika PDF multi-halaman diedit, logika ini perlu disesuaikan seperti di versi Leader.
-            // Untuk saat ini, kita gunakan logika dasar untuk halaman pertama.
+            // Process each annotation
+            DOM.editorLayer.querySelectorAll('div').forEach(div => {
+                const x = parseFloat(div.style.left);
+                const y = parseFloat(div.style.top);
 
-            editorLayer.querySelectorAll('div').forEach(div => {
-                let x = parseFloat(div.style.left);
-                let y = parseFloat(div.style.top);
+                // Find which page this annotation belongs to
+                let pageIndex = yOffsets.findIndex((offset, i) => y < offset + STATE.pageViewportHeights[i]);
+                if (pageIndex === -1) pageIndex = pages.length - 1;
 
-                // Skala posisi dari canvas ke PDF (hanya halaman pertama)
-                let scaledX = x * (pageWidth / canvasWidth);
-                let scaledY = y * (pageHeight / canvasHeight);
-                // PDF Y=0 adalah di bawah, Canvas Y=0 adalah di atas, jadi balik Y
-                let finalY = pageHeight - scaledY - 18; // 18 adalah kira-kira tinggi teks
+                const page = pages[pageIndex];
+                const pageHeight = page.getHeight();
+                const pageWidth = page.getWidth();
 
-                // --- Periksa apakah elemen ini adalah komentar (menggunakan contentEditable) ---
+                // Calculate position on PDF page
+                const offsetY = y - yOffsets[pageIndex];
+                const scaleX = pageWidth / canvasW;
+                const scaleY = pageHeight / STATE.pageViewportHeights[pageIndex];
+                const finalX = x * scaleX;
+                const finalY = pageHeight - (offsetY * scaleY) - 18;
+
+                // Render annotation to PDF
                 if (div.contentEditable === 'true') {
-                    const text = div.textContent;
-                    // Hindari menyimpan placeholder teks jika kosong
-                    if (text && text.trim() !== '' && text.trim() !== 'Tulis komentar...') {
-                        const fontSizeComment = 12; // Ukuran teks komentar di PDF
-                        const lineHeight = fontSizeComment + 4;
-
-                        // Split text by newlines (handle contentEditable behavior)
-                        const rawText = div.innerText.replace(/[\u200B-\u200D\uFEFF]/g, '');
-                        const lines = rawText.split(/\r?\n/).map(l => l.replace(/[^\x00-\xFF]/g, ''));
-
-                        // Calculate max width
-                        let maxLineWidth = 0;
-                        lines.forEach(line => {
-                            try {
-                                const width = font.widthOfTextAtSize(line, fontSizeComment);
-                                if (width > maxLineWidth) maxLineWidth = width;
-                            } catch (e) {
-                                console.warn('Skipping unsupported character line:', line);
-                            }
-                        });
-
-                        const paddingX = 6;
-                        const paddingY = 6;
-                        const outerWidth = maxLineWidth + (2 * paddingX);
-                        const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
-
-                        // Adjust position (similar to previous fixes)
-                        // scaledX/scaledY are canvas coords converted to PDF dim ratios.
-                        // finalY = pageHeight - scaledY - 18
-                        // We want to draw extending DOWN from finalY.
-
-                        const outerX = scaledX - paddingX;
-                        const rectBottomY = finalY - outerHeight;
-
-                        // --- 1. Gambar background pink ---
-                        page.drawRectangle({
-                            x: outerX,
-                            y: rectBottomY,
-                            width: outerWidth,
-                            height: outerHeight,
-                            color: PDFLib.rgb(0.913, 0.117, 0.388), // #E91E63
-                            opacity: 1
-                        });
-
-                        // --- 2. Gambar teks putih ---
-                        lines.forEach((line, index) => {
-                            const textY = finalY - paddingY - (index + 1) * lineHeight + 4;
-
-                            page.drawText(line, {
-                                x: scaledX, // Align left
-                                y: textY,
-                                size: fontSizeComment,
-                                color: PDFLib.rgb(1, 1, 1), // Putih
-                                font
-                            });
-                        });
-                    }
+                    renderCommentToPDF(page, div, finalX, finalY, font);
                 } else {
-                    // --- Ini adalah elemen V, X, atau NG ---
-                    // Gunakan logika serupa dengan versi Leader untuk V, X, NG
-                    const textContent = div.textContent;
-                    const size = (textContent === 'V' || textContent === 'X' || textContent === 'NG') ? 18 : 12;
-
-                    // Hitung panjang teks (kira-kira, tidak super presisi)
-                    const textWidth = 20 * textContent.length * 0.6;
-                    const textHeight = 18; // tinggi line kira-kira
-
-                    // Gambar kotak background putih 50%
-                    page.drawRectangle({
-                        x: scaledX - 2,
-                        y: finalY - 2,
-                        width: textWidth + 4,
-                        height: textHeight + 4,
-                        color: PDFLib.rgb(1, 1, 1),
-                        opacity: 0.5
-                    });
-
-                    // Warna teks disesuaikan berdasarkan warna yang ditetapkan di style elemen HTML
-                    let textColor = PDFLib.rgb(0, 0, 0); // Default hitam
-                    if (div.style.color === 'red') {
-                        textColor = PDFLib.rgb(1, 0, 0); // Merah
-                    } else if (div.style.color === 'green') {
-                        textColor = PDFLib.rgb(0, 1, 0); // Hijau
-                    }
-
-                    page.drawText(textContent, {
-                        x: scaledX,
-                        y: finalY,
-                        size: size,
-                        color: textColor,
-                        font
-                    });
+                    renderMarkToPDF(page, div, finalX, finalY, font);
                 }
             });
+        }
 
-            // Embed gambar jadi PDF baru (ini adalah bagian dari submit gambar)
-            const imgPdfDoc = await PDFLib.PDFDocument.create();
-            const PAGE_WIDTH = 841.89;
+        function renderCommentToPDF(page, element, x, y, font) {
+            const rawText = element.innerText.replace(/[\u200B-\u200D\uFEFF]/g, '');
+            const lines = rawText.split(/\r?\n/).map(l => l.replace(/[^\x00-\xFF]/g, ''));
+            const text = lines.join('').trim();
+            if (!text || text === 'Tulis komentar...') return;
+
+            const fontSize = CONFIG.fontSize.comment;
+            const lineHeight = fontSize + 4;
+
+            // Calculate dimensions based on longest line
+            let maxLineWidth = 0;
+            lines.forEach(line => {
+                try {
+                    const width = font.widthOfTextAtSize(line, fontSize);
+                    if (width > maxLineWidth) maxLineWidth = width;
+                } catch (e) { }
+            });
+
+            const paddingX = 6;
+            const paddingY = 6;
+            const outerWidth = maxLineWidth + (2 * paddingX);
+            const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
+            const outerX = x - paddingX;
+            const rectBottomY = y - outerHeight;
+
+            // Background pink
+            page.drawRectangle({
+                x: outerX,
+                y: rectBottomY,
+                width: outerWidth,
+                height: outerHeight,
+                color: PDFLib.rgb(0.913, 0.117, 0.388),
+                opacity: 1
+            });
+
+            // Text white
+            lines.forEach((line, index) => {
+                const textY = y - paddingY - (index + 1) * lineHeight + 4;
+                page.drawText(line, {
+                    x: x,
+                    y: textY,
+                    size: fontSize,
+                    color: PDFLib.rgb(1, 1, 1),
+                    font
+                });
+            });
+        }
+
+        function renderMarkToPDF(page, element, x, y, font) {
+            const text = element.textContent;
+            const size = (text === 'V' || text === 'X' || text === 'NG') ? 18 : 12;
+            const textWidth = 20 * text.length * 0.6;
+            const textHeight = 18;
+
+            // Background white 50%
+            page.drawRectangle({
+                x: x - 2,
+                y: y - 2,
+                width: textWidth + 4,
+                height: textHeight + 4,
+                color: PDFLib.rgb(1, 1, 1),
+                opacity: 0.5
+            });
+
+            // Member marks are always green
+            const color = PDFLib.rgb(0, 0.6, 0);
+
+            page.drawText(text, {
+                x: x,
+                y: y,
+                size: size,
+                color: color,
+                font
+            });
+        }
+
+        async function createPhotoPDF() {
+            if (STATE.images.length === 0) return null;
+
+            const photoDoc = await PDFLib.PDFDocument.create();
+            const PAGE_WIDTH = 841.89; // A4 landscape
             const PAGE_HEIGHT = 595.28;
             const MARGIN = 20;
-            const SLOT_COLS = 2,
-                SLOT_ROWS = 2;
-            const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
-            const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
+            const SLOT_COLS = 2, SLOT_ROWS = 2;
+            const SLOT_W = (PAGE_WIDTH - (MARGIN * 2)) / SLOT_COLS;
+            const SLOT_H = (PAGE_HEIGHT - (MARGIN * 2)) / SLOT_ROWS;
 
-            let imgPage = null,
-                slotIndex = 0;
-            for (let file of images) {
+            let page = null;
+            let slotIndex = 0;
+
+            for (let file of STATE.images) {
                 if (slotIndex % 4 === 0) {
-                    imgPage = imgPdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                    page = photoDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
                 }
+
                 const resizedBlob = await resizeImage(file, 1000, 1000);
                 const imgBytes = await resizedBlob.arrayBuffer();
-                // const imgBytes = await file.arrayBuffer();
-                let imgEmbed = file.type.includes('png') ?
-                    await imgPdfDoc.embedPng(imgBytes) :
-                    await imgPdfDoc.embedJpg(imgBytes);
+                let imgEmbed;
+                try {
+                    imgEmbed = file.type.includes('png') ?
+                        await photoDoc.embedPng(imgBytes) :
+                        await photoDoc.embedJpg(imgBytes);
+                } catch (e) {
+                    continue;
+                }
 
-                const {
-                    width,
-                    height
-                } = imgEmbed.size();
+                const { width, height } = imgEmbed.size();
                 const scale = Math.min(SLOT_W / width, SLOT_H / height);
                 const col = slotIndex % 2;
                 const row = Math.floor((slotIndex % 4) / 2);
                 const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
                 const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
 
-                imgPage.drawImage(imgEmbed, {
-                    x,
-                    y,
+                page.drawImage(imgEmbed, {
+                    x, y,
                     width: width * scale,
                     height: height * scale
                 });
                 slotIndex++;
             }
 
-            // Gabung PDF canvas (dengan V, NG, X, Comment) + PDF gambar
-            const [imgPdfBytes] = await imgPdfDoc.save().then(b => [b]);
-            const imgDoc = await PDFLib.PDFDocument.load(imgPdfBytes);
-            const copiedPages = await pdfDoc.copyPages(imgDoc, imgDoc.getPageIndices());
-            copiedPages.forEach(p => pdfDoc.addPage(p));
+            return await photoDoc.save();
+        }
 
-            const mergedBytes = await pdfDoc.save();
-
-            // Kirim ke server
+        async function uploadToServer(pdfBytes, timestamp) {
             const formData = new FormData();
-            formData.append('pdf', new Blob([mergedBytes], {
-                type: 'application/pdf'
-            }));
-            formData.append('timestamp', now);
+            formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
+            formData.append('timestamp', timestamp);
 
-            fetch(`{{ route('report_list_member.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: formData
-            }).then(res => {
+            const url = `{{ route('report_list_member.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`;
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                });
+
                 if (res.ok) {
                     alert('Report submitted successfully!');
                     location.reload();
                 } else {
-                    alert('Failed to submit report');
+                    alert('Failed to submit report. Server returned ' + res.status);
                 }
-            });
+            } catch (error) {
+                alert('An error occurred during submission: ' + error.message);
+            }
         }
     </script>
 @endsection
