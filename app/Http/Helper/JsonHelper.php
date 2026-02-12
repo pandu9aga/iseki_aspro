@@ -15,10 +15,8 @@ use Illuminate\Contracts\Support\Jsonable;
  * TEMUAN PROPERTIES (Auditor Side)
  * ============================================================================
  *
- * @property string $UploudFoto_Time_Temuan Upload timestamp for temuan photos
  * @property string $Name_User_Temuan Name of auditor who created the temuan
  * @property string $File_Path_Temuan Relative file path to temuan PDF
- * @property string $Photo_PDF_Temuan Filename of temuan PDF
  * @property string $Submit_Time_Temuan Timestamp when temuan was submitted
  * @property array $Comments_Temuan Array of comments/annotations for temuan
  *

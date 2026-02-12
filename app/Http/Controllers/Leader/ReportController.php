@@ -33,6 +33,7 @@ class ReportController extends Controller
             ->get();
 
         $members = Member::all();
+        debugbar()->info($members);
 
         return view('leaders.reports.reporter', compact('page', 'reports', 'members', 'year', 'month'));
     }
@@ -141,7 +142,7 @@ class ReportController extends Controller
 
                 // Tambahkan id_member ke Pic_Procedure jika belum ada
                 $picProcedure = $procedure->Pic_Procedure ?? [];
-                if (!in_array($id_member, $picProcedure)) {
+                if (! in_array($id_member, $picProcedure)) {
                     $picProcedure[] = $id_member;
                     $procedure->Pic_Procedure = $picProcedure;
                     $procedure->save();

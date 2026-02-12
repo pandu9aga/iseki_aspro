@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use App\Http\Helper\JsonHelper;
 use Illuminate\Database\Eloquent\Model;
 
 class Temuan extends Model
 {
     protected $table = 'temuans';
+
     protected $primaryKey = 'Id_Temuan';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -47,5 +48,4 @@ class Temuan extends Model
         'Time_Temuan' => 'datetime',
         'Time_Penanganan' => 'datetime',
     ];
-
 }

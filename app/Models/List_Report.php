@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class List_Report extends Model
 {
     protected $table = 'list_reports';
+
     protected $primaryKey = 'Id_List_Report';
+
     public $timestamps = false;
 
     protected $fillable = [

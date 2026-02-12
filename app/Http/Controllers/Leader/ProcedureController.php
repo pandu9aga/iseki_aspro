@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use App\Models\Area;
+use App\Models\Member;
 use App\Models\Procedure;
 use App\Models\Tractor;
-use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -671,23 +671,56 @@ class ProcedureController extends Controller
     public function index_missing()
     {
         $page = 'missing';
-        
+
         // Hanya ambil tractor yang memiliki procedure tanpa PIC
-        $tractors = Tractor::whereHas('procedures', function($query) {
+        $tractors = Tractor::whereHas('procedures', function ($query) {
             $query->whereNull('Pic_Procedure')
                 ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
         })->orderBy('Name_Tractor', 'asc')->get();
 
         // Hitung jumlah procedure tanpa PIC untuk setiap tractor
+        // well this code will be very slow on large datasets since this same as query runs N times where N is number of tractors
+        //        $tractorProcedureCounts = [];
+        //        foreach ($tractors as $tractor) {
+        //            $tractorProcedureCounts[$tractor->Name_Tractor]['missing'] = Procedure::where('Name_Tractor', $tractor->Name_Tractor)
+        //                ->where(function($query) {
+        //                    $query->whereNull('Pic_Procedure')
+        //                        ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
+        //                })
+        //                ->count();
+        //        }
+
+        // Optimized query to get counts in one go
+        $tractorProcedurelist = Procedure::all();
+
         $tractorProcedureCounts = [];
-        foreach ($tractors as $tractor) {
-            $tractorProcedureCounts[$tractor->Name_Tractor] = Procedure::where('Name_Tractor', $tractor->Name_Tractor)
-                ->where(function($query) {
-                    $query->whereNull('Pic_Procedure')
-                        ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
-                })
-                ->count();
+        foreach ($tractorProcedurelist as $tractorProcedure) {
+            if (! isset($tractorProcedureCounts[$tractorProcedure->Name_Tractor])) {
+                $tractorProcedureCounts[$tractorProcedure->Name_Tractor] = [
+                    'missing' => 0,
+                    'has' => 0,
+                    'total' => 0,
+                    'percent' => 0,
+                ];
+            }
+            if (is_null($tractorProcedure->Pic_Procedure)) {
+                $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['missing'] += 1;
+            }
+            if (! is_null($tractorProcedure->Pic_Procedure)) {
+                $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['has'] += 1;
+            }
+            if (isset($tractorProcedureCounts[$tractorProcedure->Name_Tractor]['missing']) && isset($tractorProcedureCounts[$tractorProcedure->Name_Tractor]['has'])) {
+                $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['total'] = $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['missing'] + $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['has'];
+                if ($tractorProcedureCounts[$tractorProcedure->Name_Tractor]['total'] > 0) {
+                    $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['percent'] = round(($tractorProcedureCounts[$tractorProcedure->Name_Tractor]['has'] / $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['total']) * 100, 0);
+                } else {
+                    $tractorProcedureCounts[$tractorProcedure->Name_Tractor]['percent'] = 0;
+                }
+            }
         }
+
+        debugbar()->info($tractorProcedureCounts);
+        debugbar()->info($tractorProcedurelist);
 
         return view('leaders.missing.index', compact('page', 'tractors', 'tractorProcedureCounts'));
     }
@@ -697,10 +730,10 @@ class ProcedureController extends Controller
         $page = 'missing';
         $tractor = $Name_Tractor;
         $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
-        
+
         // Hanya ambil area yang memiliki procedure tanpa PIC
         $areas = Area::where('Name_Tractor', $Name_Tractor)
-            ->whereHas('procedures', function($query) {
+            ->whereHas('procedures', function ($query) {
                 $query->whereNull('Pic_Procedure')
                     ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
             })
@@ -716,11 +749,11 @@ class ProcedureController extends Controller
         $tractor = $Name_Tractor;
         $photoTractor = Tractor::where('Name_Tractor', $Name_Tractor)->value('Photo_Tractor');
         $area = $Name_Area;
-        
+
         // Hanya ambil procedure yang tidak memiliki PIC
         $procedures = Procedure::where('Name_Tractor', $Name_Tractor)
             ->where('Name_Area', $Name_Area)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('Pic_Procedure')
                     ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
             })
@@ -763,6 +796,7 @@ class ProcedureController extends Controller
 
             if ($exists) {
                 $skipCount++;
+
                 continue;
             }
 
@@ -795,7 +829,7 @@ class ProcedureController extends Controller
             }
 
             // Kumpulkan member IDs untuk update Pic_Procedure
-            if (!in_array($id_member, $memberIds)) {
+            if (! in_array($id_member, $memberIds)) {
                 $memberIds[] = $id_member;
             }
 
@@ -803,12 +837,12 @@ class ProcedureController extends Controller
         }
 
         // Update Pic_Procedure dengan menambahkan member IDs baru
-        if (!empty($memberIds)) {
+        if (! empty($memberIds)) {
             $currentPics = $procedure->Pic_Procedure ?? [];
-            
+
             // Merge dengan PIC yang sudah ada (hindari duplikat)
             $updatedPics = array_unique(array_merge($currentPics, $memberIds));
-            
+
             // Update procedure
             $procedure->Pic_Procedure = $updatedPics;
             $procedure->save();
@@ -818,7 +852,7 @@ class ProcedureController extends Controller
         if ($skipCount > 0) {
             $message .= " ({$skipCount} training dilewati karena sudah ada)";
         }
-        $message .= " dan menambahkan " . count($memberIds) . " PIC";
+        $message .= ' dan menambahkan '.count($memberIds).' PIC';
 
         return back()->with('success', $message);
     }

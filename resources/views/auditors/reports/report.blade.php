@@ -29,10 +29,16 @@
                     </h4>
 
                     {{-- @if(is_null($listReport->Time_Approved_Auditor)) --}}
-                    <button class="btn btn-warning mt-3" style="white-space:nowrap;"
-                        onclick="window.location.href = '{{ route('auditor-report.temuan_report', ['Id_List_Report' => $listReport->Id_List_Report]) }}'">
-                        Tambahkan Temuan
-                    </button>
+{{--                    <button class="btn btn-warning mt-3" style="white-space:nowrap;"--}}
+{{--                        onclick="window.location.href = '{{ route('auditor-report.temuan_report', ['Id_List_Report' => $listReport->Id_List_Report]) }}'">--}}
+{{--                        Tambahkan Temuan--}}
+{{--                    </button>--}}
+                    @if($listReport->temuans && count($listReport->temuans) > 0)
+                        <button class="btn btn-warning mt-3" style="white-space:nowrap;"
+                                onclick="window.location.href = '{{ route('auditor-report.temuan_show',['Id_Temuan' => $listReport->temuans[0]->Id_Temuan]) }}'">
+                            Lihat Temuan
+                        </button>
+                    @endif
                     {{-- @endif --}}
                 </div>
                 <br>
@@ -80,7 +86,7 @@
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
                 @endif
 
-                <div id="pdf-container" style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
+                <div id="pdf-container" style="border:1px solid #ccc; height:100%; overflow:auto; position:relative; width:100%; max-width:100%; left:50%; transform:translateX(-50%);">
                     <canvas id="pdf-canvas"></canvas>
                     <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                 </div>
@@ -95,7 +101,8 @@
                     </div>
                     <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
                     <br>
-                    <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Report</button>
+                    <button onclick="submitReport('submit')" class="btn btn-primary mt-3">Submit Report</button>
+                    <button onclick="submitReport('temuan')" class="btn btn-warning mt-3 ms-9">Submit Temuan</button>
                 @endif
             </div>
         </section>
@@ -660,6 +667,12 @@
         }
     </script>
     <script>
+
+        const FINAL_STATE = {
+            comments:[]
+        }
+
+
         async function resizeImage(file, maxWidth, maxHeight) {
             return new Promise(resolve => {
                 const img = new Image();
@@ -685,7 +698,7 @@
         // ============================================
         // SUBMIT REPORT WITH ANNOTATIONS & PHOTOS
         // ============================================
-        async function submitReport() {
+        async function submitReport(type) {
             // Load existing PDF
             const existingPdf = await fetch(CONFIG.pdfUrl).then(r => r.arrayBuffer());
             const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
@@ -708,7 +721,13 @@
 
             // Save and submit
             const mergedBytes = await pdfDoc.save();
-            await uploadToServer(mergedBytes);
+            if (type === 'submit') {
+                console.log('submitReporting');
+                await uploadToServerReport(mergedBytes);
+            } else if (type === 'temuan') {
+                console.log('submitTemuan');
+                await uploadToServerTemuan(mergedBytes);
+            }
         }
 
         function addTimestampToFirstPage(page, font) {
@@ -815,29 +834,27 @@
             // Let's stick to the previous logic's coordinate system but expand height.
 
             // Previous logic:
-            // const outerY = y - textHeight - paddingY; 
+            // const outerY = y - textHeight - paddingY;
             // page.drawRectangle({ y: outerY ... })
             // textY = outerY + outerHeight - fontSize - 4;
 
             // If 'y' is the visual TOP of the element from HTML mapped to PDF:
-            // The previous logic seems to shift it down? 
+            // The previous logic seems to shift it down?
             // Let's assume 'y' is the top-left corner of where we want the box.
-            // In previous code: outerY = y - textHeight - paddingY. This suggests 'y' was maybe the bottom?
-            // Let's look at convertAnnotationsToPDF again.
-            // finalY = pageHeight - (offsetY * scaleY) - 18;
-            // HTML Y increases downwards. PDF Y increases upwards.
-            // If HTML y is 0 (top), finalY is pageHeight - 18. So 'y' passed to this function is roughly the TOP of the element in PDF coords.
-
-            // If 'y' is the TOP:
-            // Previous: outerY = y - textHeight - paddingY; -> This puts the box BELOW y? No, if y is top, y - height is even lower.
-            // Wait, if 'y' is top in PDF (high value), then y - height is the bottom of the box.
-            // So drawRectangle at y - height draws a box from (y-height) extending upwards by height? No, drawRectangle starts at x,y and goes width,height.
+            // In previous code: outerY = y - textHeight - paddingY. This puts the box BELOW y? No, if y is top, y - height is even lower.
+            // Wait, if 'y' is top in PDF (high value), then y - height draws a box from (y-height) extending upwards by height? No, drawRectangle starts at x,y and goes width,height.
             // So if we draw at y - height, the box goes from y-height to y. Correct.
 
             // So for multiline:
             // We want the box to extend downwards from 'y'.
             // So the bottom of the box will be: y - outerHeight.
             const rectBottomY = y - outerHeight;
+
+            FINAL_STATE.comments.push({
+                'text': text,
+                'position': { 'x': x, 'y': y },
+                'fontSize': fontSize
+            })
 
             // Draw background (Pink)
             page.drawRectangle({
@@ -940,7 +957,7 @@
             return await pdfDoc.save();
         }
 
-        async function uploadToServer(pdfBytes) {
+        async function uploadToServerReport(pdfBytes) {
             const nowUTC = new Date();
             const offsetWIB = 7 * 60;
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
@@ -958,6 +975,30 @@
                 body: formData
             });
 
+            if (response.ok) {
+                alert('Report submitted successfully!');
+                location.reload();
+            } else {
+                alert('Failed to submit report');
+            }
+        }
+        async function uploadToServerTemuan(pdfBytes) {
+            const nowUTC = new Date();
+            const offsetWIB = 7 * 60;
+            const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
+            const timestamp = localWIB.toISOString().slice(0, 19).replace('T', ' ');
+
+            const formData = new FormData();
+            formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
+            formData.append('comments',JSON.stringify(FINAL_STATE.comments))
+            formData.append('Id_List_Report', '{{ $listReport->Id_List_Report }}');
+            formData.append('timestamp', timestamp);
+
+            const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: formData
+            });
             if (response.ok) {
                 alert('Report submitted successfully!');
                 location.reload();

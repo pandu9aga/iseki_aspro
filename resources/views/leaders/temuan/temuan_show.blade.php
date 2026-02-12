@@ -132,22 +132,6 @@
                     @endif
                 @endif
 
-                <!-- PDF Viewer -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header pb-0">
-                        <h6 class="mb-0">
-                            <i class="material-symbols-rounded text-sm align-middle me-1">picture_as_pdf</i>
-                            Preview Dokumen Asli
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="pdf-container" class="border rounded"
-                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
-                            <canvas id="default-pdf-canvas"></canvas>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Temuan Section -->
                 @php
                     $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
@@ -194,7 +178,7 @@
                         </a>
 
                         <div id="pdf-container-temuan" class="border rounded mb-3"
-                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                            style="height:100%; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas-temuan"></canvas>
                         </div>
 
@@ -250,7 +234,7 @@
                             <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
 
                             <div class="mt-4">
-                                <button class="btn btn-success" onclick="uploudFoto()">
+                                <button class="btn btn-success" id="upload-penanganan-btn" onclick="uploudFoto()">
                                     <i class="material-symbols-rounded text-sm">upload</i> Submit Penanganan
                                 </button>
                             </div>
@@ -327,7 +311,7 @@
                             </a>
 
                             <div id="pdf-container-penanganan" class="border rounded mb-3"
-                                style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                                style="height: max( ); overflow:auto; position:relative; background: #f5f5f5;">
                                 <canvas id="default-pdf-canvas-penanganan"></canvas>
                             </div>
 
@@ -395,7 +379,7 @@
                         <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Temuan</button>
+                        <button id="submit-report-btn" onclick="submitReport()" class="btn btn-primary mt-3">Submit Temuan</button>
                         {{-- <button onclick="deleteReport()" class="btn btn-danger mt-3">Delete Temuan</button>--}}
                     </div>
                 @endif
@@ -533,18 +517,14 @@
             return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
         }
 
-        const urlOriginal = getPdfUrl("{!! str_replace('\\', '/', $pdfPath) !!}");
-        if (urlOriginal) RenderPDF(urlOriginal, "default-pdf-canvas");
-
         @if($object->get('File_Path_Temuan'))
             const urlTemuan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Temuan')) !!}");
             if (urlTemuan) RenderPDF(urlTemuan, "default-pdf-canvas-temuan");
         @endif
-
-            @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
-                const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
-                if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
-            @endif
+        @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
+        const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
+        if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
+        @endif
 
         document.addEventListener('DOMContentLoaded', function () {
             const tipeTemuanSelect = document.getElementById('tipe_temuan');
@@ -709,13 +689,19 @@
                     return;
                 }
 
-                const photoPDFBlob = await generatePDFReturnBlob();
-                const formData = new FormData();
-                formData.append('Id_Temuan', '{{ $temuan->Id_Temuan }}');
-                formData.append('photo_pdf', photoPDFBlob, 'penanganan_photos.pdf');
-                formData.append('timestamp', new Date().toISOString());
+                // Disable button to prevent double submission
+                const submitBtn = document.getElementById('upload-penanganan-btn');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="material-symbols-rounded text-sm">hourglass_empty</i> Submitting...';
 
                 try {
+                    const photoPDFBlob = await generatePDFReturnBlob();
+                    const formData = new FormData();
+                    formData.append('Id_Temuan', '{{ $temuan->Id_Temuan }}');
+                    formData.append('photo_pdf', photoPDFBlob, 'penanganan_photos.pdf');
+                    formData.append('timestamp', new Date().toISOString());
+
                     const response = await fetch("{{ route('leader-temuan.penanganan.create') }}", {
                         method: 'POST',
                         headers: {
@@ -732,18 +718,37 @@
                         window.location.reload();
                     } else {
                         alert('Gagal submit penanganan: ' + (result.message || 'Unknown error'));
+                        // Re-enable button on error
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
                     }
                 } catch (error) {
                     console.error('Error submitting penanganan:', error);
                     alert('Terjadi kesalahan saat submit penanganan.');
+                    // Re-enable button on error
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
                 }
             }
         </script>
     @endif
 
-    @if(!$object->Is_Submit_Penanganan && $object->UploudFoto_Time_Penanganan)
+    @if((!$object->Is_Submit_Penanganan) && $object->UploudFoto_Time_Penanganan)
         {{--editable layout however this was for only for annotation and editable layout--}}
         <script>
+            // Helper to normalize and encode PDF URLs
+            function getPdfUrl(path) {
+                if (!path) return null;
+                let baseUrl = "{{ asset('') }}";
+                if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                let p = path.replace(/\\/g, '/');
+                if (!p.startsWith('/') && !p.startsWith('http')) p = '/' + p;
+
+                let url = p.startsWith('http') ? p : baseUrl + p;
+                url = url.replace(/ /g, '%20');
+                return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
+            }
+
             // ============================================
             // GLOBAL VARIABLES & CONFIGURATION
             // ============================================
@@ -764,24 +769,26 @@
             };
             pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
-            // DOM Elements
-            const DOM = {
-                canvas: document.getElementById('pdf-canvas-editor'),
-                editorLayer: document.getElementById('editor-layer'),
+            // DOM Elements (initialized after DOM is ready)
+            let DOM = {
+                canvas: null,
+                editorLayer: null,
                 buttons: {
-                    check: document.getElementById('checklist-btn'),
-                    ng: document.getElementById('ng-btn'),
-                    x: document.getElementById('x-btn'),
-                    comment: document.getElementById('comment-btn'),
-                    delete: document.getElementById('delete-btn')
+                    check: null,
+                    ng: null,
+                    x: null,
+                    comment: null,
+                    delete: null
                 },
                 icons: {
-                    check: document.getElementById('checklist-btn-icon'),
-                    ng: document.getElementById('ng-btn-icon'),
-                    x: document.getElementById('x-btn-icon'),
-                    comment: document.getElementById('comment-btn-icon')
+                    check: null,
+                    ng: null,
+                    x: null,
+                    comment: null
                 }
             };
+
+            let domInitialized = false;
 
             // State Management
             const STATE = {
@@ -798,10 +805,43 @@
                 comments: [],
             }
 
+            // Initialize DOM references
+            function initializeDOM() {
+                if (domInitialized) return; // Prevent double initialization
+
+                DOM = {
+                    canvas: document.getElementById('pdf-canvas-editor'),
+                    editorLayer: document.getElementById('editor-layer'),
+                    buttons: {
+                        check: document.getElementById('checklist-btn'),
+                        ng: document.getElementById('ng-btn'),
+                        x: document.getElementById('x-btn'),
+                        comment: document.getElementById('comment-btn'),
+                        delete: document.getElementById('delete-btn')
+                    },
+                    icons: {
+                        check: document.getElementById('checklist-btn-icon'),
+                        ng: document.getElementById('ng-btn-icon'),
+                        x: document.getElementById('x-btn-icon'),
+                        comment: document.getElementById('comment-btn-icon')
+                    }
+                };
+                domInitialized = true;
+            }
+
+            // Ensure DOM is initialized (lazy initialization)
+            function ensureDOM() {
+                if (!domInitialized) {
+                    initializeDOM();
+                }
+            }
+
             // ============================================
             // PDF RENDERING
             // ============================================
             async function renderPDF() {
+                ensureDOM(); // Ensure DOM is initialized
+
                 try {
                     let pdf;
                     try {
@@ -811,6 +851,11 @@
                         const resp = await fetch(CONFIG.pdfUrl);
                         const buffer = await resp.arrayBuffer();
                         pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+                    }
+
+                    if (!DOM.canvas) {
+                        console.error('Canvas element not found');
+                        return;
                     }
 
                     const ctx = DOM.canvas.getContext('2d');
@@ -866,20 +911,25 @@
                 }
             }
 
-            // Initialize PDF rendering
-            renderPDF();
 
             // ============================================
             // STATE MANAGEMENT
             // ============================================
+            // STATE MANAGEMENT
+            // ============================================
             function saveState() {
-                STATE.history.push(DOM.editorLayer.innerHTML);
-                STATE.redoStack = [];
-                console.log(STATE)
+                ensureDOM(); // Ensure DOM is initialized
+                if (DOM.editorLayer) {
+                    STATE.history.push(DOM.editorLayer.innerHTML);
+                    STATE.redoStack = [];
+                    console.log(STATE)
+                }
             }
 
             function undo() {
-                if (STATE.history.length > 0) {
+                ensureDOM(); // Ensure DOM is initialized
+
+                if (STATE.history.length > 0 && DOM.editorLayer) {
                     STATE.redoStack.push(STATE.history.pop());
                     DOM.editorLayer.innerHTML = STATE.history[STATE.history.length - 1] || '';
                     rebindEvents();
@@ -888,7 +938,9 @@
             }
 
             function redo() {
-                if (STATE.redoStack.length > 0) {
+                ensureDOM(); // Ensure DOM is initialized
+
+                if (STATE.redoStack.length > 0 && DOM.editorLayer) {
                     const state = STATE.redoStack.pop();
                     STATE.history.push(state);
                     DOM.editorLayer.innerHTML = state;
@@ -897,8 +949,10 @@
             }
 
             function clearSelection() {
+                ensureDOM(); // Ensure DOM is initialized
+
                 STATE.selectedObject = null;
-                DOM.buttons.delete.disabled = true;
+                if (DOM.buttons.delete) DOM.buttons.delete.disabled = true;
             }
 
             // ============================================
@@ -1020,6 +1074,8 @@
             }
 
             function selectElement(element) {
+                ensureDOM(); // Ensure DOM is initialized
+
                 if (STATE.selectedObject) {
                     STATE.selectedObject.classList.remove('selected');
                     resetElementBorder(STATE.selectedObject);
@@ -1028,7 +1084,7 @@
                 STATE.selectedObject = element;
                 element.classList.add('selected');
                 element.style.border = '2px dashed red';
-                DOM.buttons.delete.disabled = false;
+                if (DOM.buttons.delete) DOM.buttons.delete.disabled = false;
             }
 
             function resetElementBorder(element) {
@@ -1040,7 +1096,9 @@
             }
 
             function deleteSelected() {
-                if (STATE.selectedObject) {
+                ensureDOM(); // Ensure DOM is initialized
+
+                if (STATE.selectedObject && DOM.editorLayer) {
                     DOM.editorLayer.removeChild(STATE.selectedObject);
                     clearSelection();
                     saveState();
@@ -1067,50 +1125,74 @@
             function resetAllButtons() {
                 const buttons = ['check', 'ng', 'x', 'comment'];
                 buttons.forEach(btn => {
-                    DOM.buttons[btn].classList.remove('btn-success');
-                    DOM.buttons[btn].classList.add('btn-primary');
+                    if (DOM.buttons[btn]) {
+                        DOM.buttons[btn].classList.remove('btn-success');
+                        DOM.buttons[btn].classList.add('btn-primary');
+                    }
                 });
 
-                DOM.icons.check.textContent = 'edit_off';
-                DOM.icons.ng.textContent = 'block';
-                DOM.icons.x.textContent = 'close';
-                DOM.icons.comment.textContent = 'text_fields';
+                if (DOM.icons.check) DOM.icons.check.textContent = 'edit_off';
+                if (DOM.icons.ng) DOM.icons.ng.textContent = 'block';
+                if (DOM.icons.x) DOM.icons.x.textContent = 'close';
+                if (DOM.icons.comment) DOM.icons.comment.textContent = 'text_fields';
             }
 
             function activateButton(mode) {
-                DOM.buttons[mode].classList.add('btn-success');
-                DOM.buttons[mode].classList.remove('btn-primary');
-                DOM.icons[mode].textContent = 'edit';
+                if (DOM.buttons[mode]) {
+                    DOM.buttons[mode].classList.add('btn-success');
+                    DOM.buttons[mode].classList.remove('btn-primary');
+                }
+                if (DOM.icons[mode]) {
+                    DOM.icons[mode].textContent = 'edit';
+                }
             }
 
             // ============================================
             // EDITOR LAYER INTERACTION
             // ============================================
-            DOM.editorLayer.addEventListener('click', function (e) {
-                if (!STATE.checklistMode) {
-                    handleClickOutsideAnnotation();
+
+            // Setup event listeners for editor layer
+            function setupEditorLayerEvents() {
+                ensureDOM(); // Ensure DOM is initialized
+
+                if (!DOM.editorLayer) {
+                    console.error('Editor layer not found');
                     return;
                 }
 
-                const position = getClickPosition(e);
-                const annotation = createAnnotationByMode(STATE.currentMode);
+                // Click event for adding annotations
+                DOM.editorLayer.addEventListener('click', function (e) {
+                    if (!STATE.checklistMode) {
+                        handleClickOutsideAnnotation();
+                        return;
+                    }
 
-                if (annotation) {
-                    placeAnnotation(annotation, position);
-                    saveState();
-                }
-            });
+                    const position = getClickPosition(e);
+                    const annotation = createAnnotationByMode(STATE.currentMode);
+
+                    if (annotation) {
+                        placeAnnotation(annotation, position);
+                        saveState();
+                    }
+                });
+            }
 
             function handleClickOutsideAnnotation() {
+                ensureDOM(); // Ensure DOM is initialized
+
                 if (STATE.selectedObject) {
                     STATE.selectedObject.classList.remove('selected');
                     resetElementBorder(STATE.selectedObject);
                     STATE.selectedObject = null;
-                    DOM.buttons.delete.disabled = true;
+                    if (DOM.buttons.delete) DOM.buttons.delete.disabled = true;
                 }
             }
 
             function getClickPosition(e) {
+                ensureDOM(); // Ensure DOM is initialized
+
+                if (!DOM.editorLayer) return { x: 0, y: 0 };
+
                 const rect = DOM.editorLayer.getBoundingClientRect();
                 return {
                     x: e.clientX - rect.left,
@@ -1130,6 +1212,10 @@
             }
 
             function placeAnnotation(element, position) {
+                ensureDOM(); // Ensure DOM is initialized
+
+                if (!DOM.editorLayer) return;
+
                 DOM.editorLayer.appendChild(element);
 
                 const centerX = position.x - (element.offsetWidth / 2);
@@ -1143,6 +1229,10 @@
             // EVENT REBINDING (for Undo/Redo)
             // ============================================
             function rebindEvents() {
+                ensureDOM(); // Ensure DOM is initialized
+
+                if (!DOM.editorLayer) return;
+
                 DOM.editorLayer.querySelectorAll('div').forEach(div => {
                     // Clear old event listeners
                     div.onclick = null;
@@ -1169,7 +1259,7 @@
                 setupSelectionEvents(element);
                 setupDraggableEvents(element);
             }
-            { { --Submit Report with Annotations--} }
+            {{-- Submit Report with Annotations --}}
             // ============================================
             // UTILITIES
             // ============================================
@@ -1349,12 +1439,26 @@
             // ============================================
 
             async function submitReport() {
+                // Disable button to prevent double submission
+                const submitBtn = document.getElementById('submit-report-btn');
+                if (!submitBtn) {
+                    console.error('Submit button not found');
+                    return;
+                }
+
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="material-symbols-rounded text-sm">hourglass_empty</i> Submitting...';
+
                 try {
                     const pdfBytes = await loadAndAnnotatePDF();
                     await uploadToServer(pdfBytes);
                 } catch (error) {
                     console.error('Submit error:', error);
                     alert('Failed to submit report: ' + error.message);
+                    // Re-enable button on error
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
                 }
             }
 
@@ -1393,8 +1497,37 @@
                 }
             }
 
-            // Initialize PDF rendering
-            renderPDF();
+            // Make critical functions globally accessible
+            window.toggleChecklist = toggleChecklist;
+            window.undo = undo;
+            window.redo = redo;
+            window.deleteSelected = deleteSelected;
+            window.submitReport = submitReport;
+
+            console.log('Temuan editor functions loaded:', {
+                toggleChecklist: typeof window.toggleChecklist,
+                undo: typeof window.undo,
+                redo: typeof window.redo,
+                deleteSelected: typeof window.deleteSelected,
+                submitReport: typeof window.submitReport
+            });
+
+            // Initialize DOM and PDF rendering
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('DOM Content Loaded - Initializing...');
+                    initializeDOM();
+                    setupEditorLayerEvents();
+                    renderPDF();
+                    console.log('Initialization complete');
+                });
+            } else {
+                console.log('DOM already loaded - Initializing immediately...');
+                initializeDOM();
+                setupEditorLayerEvents();
+                renderPDF();
+                console.log('Initialization complete');
+            }
         </script>
     @endif
 

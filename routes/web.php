@@ -175,12 +175,12 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
     });
 
     Route::prefix('temuan_auditor')->group(function () {
-        Route::get('show/{Id_List_Report}', [TemuanAuditorController::class, 'temuan_report'])->name('auditor-report.temuan_report');
-        Route::post('auditor/temuan/create', [TemuanAuditorController::class, 'create_temuan'])->name('auditor-report.temuan_create');
+        //        Route::get('show/{Id_List_Report}', [TemuanAuditorController::class, 'temuan_report'])->name('auditor-report.temuan_report');
+        //        Route::post('auditor/temuan/create', [TemuanAuditorController::class, 'create_temuan'])->name('auditor-report.temuan_create');
         Route::post('auditor/temuan/submit', [TemuanAuditorController::class, 'submit_temuan'])->name('auditor-report.temuan_submit');
         Route::prefix('list')->group(function () {
-            Route::get("/", [TemuanAuditorController::class, 'index'])->name('auditor-report.temuan_index');
-            Route::get("/show/{Id_Temuan}", [TemuanAuditorController::class, 'show'])->name('auditor-report.temuan_show');
+            Route::get('/', [TemuanAuditorController::class, 'index'])->name('auditor-report.temuan_index');
+            Route::get('/show/{Id_Temuan}', [TemuanAuditorController::class, 'show'])->name('auditor-report.temuan_show');
             Route::patch('validate/{Id_Temuan}', [TemuanAuditorController::class, 'validateTemuan'])->name('auditor-temuan.validate');
         });
         Route::get('statistics/monthly', [TemuanAuditorController::class, 'getMonthlyStatistics'])->name('auditor-temuan.statistics.monthly');

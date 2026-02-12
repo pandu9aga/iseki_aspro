@@ -10,17 +10,17 @@ class AuditorMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!session()->has('Id_User')) {
+        if (! session()->has('Id_User')) {
             return redirect()->route('login')->withErrors(['accessDenied' => 'You must login first']);
         }
 
-        if(session('Id_Type_User') != 1) {
+        if (session('Id_Type_User') != 1) {
             session()->forget('Id_User');
             session()->forget('Id_Type_User');
+
             return redirect()->route('login')->withErrors(['accessDenied' => 'You must login with admin account']);
         }
 
         return $next($request);
     }
 }
-

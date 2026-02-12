@@ -11,48 +11,129 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class TemuanAuditorController extends Controller
 {
     private string $base_path = 'storage/temuans/';
 
-    public function temuan_report(string $Id_List_Report)
-    {
-        $page = 'temuan';
-        $listReport = List_Report::where('Id_List_Report', $Id_List_Report)->first();
+    //    public function temuan_report(string $Id_List_Report)
+    //    {
+    //        $page = 'temuan';
+    //        $listReport = List_Report::where('Id_List_Report', $Id_List_Report)->first();
+    //
+    //        $current_user = User::where('Id_User', session('Id_User'))->first();
+    //        $id_member = $listReport->report->member->Id_Member;
+    //        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
+    //        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
+    //        $fileName = $listReport->Name_Procedure.'.pdf';
+    //        $pdfPath = $fullPath.'/'.$fileName;
+    //
+    //        $listTemuan = Temuan::where('Id_List_Report', $Id_List_Report)->where('Id_User', $current_user->Id_User)->whereNotNull('Time_Temuan')->get();
+    //        $totalListTemuan = $listTemuan->count();
+    //
+    //        $ListTemuanNull = Temuan::where('Id_List_Report', $Id_List_Report)->where('Id_User', $current_user->Id_User)->whereNull('Time_Temuan')->first();
+    //        $totalListTemuanNull = $ListTemuanNull ? 1 : 0;
+    //
+    //        return view('auditors.temuan.temuan', [
+    //            'page' => $page,
+    //            'listReport' => $listReport,
+    //            'current_user' => $current_user,
+    //            'pdfPath' => $pdfPath,
+    //            'listTemuan' => $listTemuan,
+    //            'totalListTemuan' => $totalListTemuan,
+    //            'ListTemuanNull' => array_merge([
+    //                'Id_Temuan' => $ListTemuanNull?->Id_Temuan], $ListTemuanNull ? (new JsonHelper($ListTemuanNull->Object_Temuan))->toArray() : []) ?? [],
+    //            'totalListTemuanNull' => $totalListTemuanNull,
+    //        ]);
+    //    }
 
-        $current_user = User::where('Id_User', session('Id_User'))->first();
-        $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
-        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
-        $fileName = $listReport->Name_Procedure.'.pdf';
-        $pdfPath = $fullPath.'/'.$fileName;
+    //    public function create_temuan(Request $request)
+    //    {
+    //        $data = $request->validate([
+    //            'Id_List_Report' => 'required|int',
+    //            'photo_pdf' => 'required|file',
+    //        ]);
+    //
+    //        $listReport = List_Report::with('report.member')->findOrFail($data['Id_List_Report']);
+    //        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
+    //        $current_user = User::where('Id_User', session('Id_User'))->firstOrFail();
+    //
+    //        try {
+    //            return DB::transaction(function () use ($request, $data, $listReport, $timeReport, $current_user) {
+    //                $jsonData = new JsonHelper;
+    //                $jsonData->UploudFoto_Time_Temuan = now()->toDateTimeString();
+    //                $jsonData->Name_User_Temuan = $current_user->Name_User;
+    //                $jsonData->File_Path_Temuan = '';
+    //                $jsonData->Is_Submit_Penanganan = false;
+    //                $jsonData->UploudFoto_Time_Penanganan = '';
+    //                $jsonData->File_Path_Penanganan = '';
+    //                $jsonData->Name_User_Penanganan = '';
+    //                $jsonData->Validation_Notes = '';
+    //                $jsonData->Validation_Time = '';
+    //
+    //                $temuan = new Temuan;
+    //                $temuan->Id_List_Report = $data['Id_List_Report'];
+    //                $temuan->Id_User = $current_user->Id_User;
+    //                $temuan->Object_Temuan = $jsonData->toJson();
+    //
+    //                $temuan->save();
+    //
+    //                if ($request->hasFile('photo_pdf')) {
+    //                    $photo_pdf = $request->file('photo_pdf');
+    //
+    //                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->Id_Member;
+    //                    $directory = public_path($relativePath);
+    //
+    //                    if (! file_exists($directory)) {
+    //                        if (! mkdir($directory, 0755, true) && ! is_dir($directory)) {
+    //                            throw new \RuntimeException('Failed to create directory: '.$directory);
+    //                        }
+    //                    }
+    //
+    //                    $extension = $photo_pdf->getClientOriginalExtension();
+    //                    $fileName = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.'.$extension;
+    //
+    //                    if (! $photo_pdf->move($directory, $fileName)) {
+    //                        throw new \RuntimeException('Failed to move uploaded file');
+    //                    }
+    //
+    //                    $jsonData->Photo_PDF_Temuan = $fileName;
+    //                    $jsonData->File_Path_Temuan = $relativePath.'/'.$fileName;
+    //
+    //                    $temuan->Object_Temuan = $jsonData;
+    //
+    //                    $temuan->save();
+    //                }
+    //
+    //                return response()->json([
+    //                    'success' => true,
+    //                    'message' => 'Temuan berhasil ditambahkan',
+    //                    'data' => [
+    //                        'Id_Temuan' => $temuan->Id_Temuan,
+    //                        'file_path' => $jsonData->File_Path_Temuan ?? null,
+    //                    ],
+    //                ]);
+    //            });
+    //        } catch (\Exception $e) {
+    //            Log::error('Failed to create temuan', [
+    //                'error' => $e->getMessage(),
+    //                'trace' => $e->getTraceAsString(),
+    //            ]);
+    //
+    //            return response()->json([
+    //                'success' => false,
+    //                'message' => 'Gagal menambahkan temuan: '.$e->getMessage(),
+    //            ], 500);
+    //        }
+    //    }
 
-        $listTemuan = Temuan::where('Id_List_Report', $Id_List_Report)->where('Id_User', $current_user->Id_User)->whereNotNull('Time_Temuan')->get();
-        $totalListTemuan = $listTemuan->count();
-
-        $ListTemuanNull = Temuan::where('Id_List_Report', $Id_List_Report)->where('Id_User', $current_user->Id_User)->whereNull('Time_Temuan')->first();
-        $totalListTemuanNull = $ListTemuanNull ? 1 : 0;
-
-        return view('auditors.temuan.temuan', [
-            'page' => $page,
-            'listReport' => $listReport,
-            'current_user' => $current_user,
-            'pdfPath' => $pdfPath,
-            'listTemuan' => $listTemuan,
-            'totalListTemuan' => $totalListTemuan,
-            'ListTemuanNull' => array_merge([
-                'Id_Temuan' => $ListTemuanNull?->Id_Temuan], $ListTemuanNull ? (new JsonHelper($ListTemuanNull->Object_Temuan))->toArray() : []) ?? [],
-            'totalListTemuanNull' => $totalListTemuanNull,
-        ]);
-    }
-
-    public function create_temuan(Request $request)
+    public function submit_temuan(Request $request)
     {
         $data = $request->validate([
             'Id_List_Report' => 'required|int',
-            'photo_pdf' => 'required|file',
+            'pdf' => 'required|file',
+            'timestamp' => 'required|string',
+            'comments' => 'nullable|string',
         ]);
 
         $listReport = List_Report::with('report.member')->findOrFail($data['Id_List_Report']);
@@ -62,7 +143,6 @@ class TemuanAuditorController extends Controller
         try {
             return DB::transaction(function () use ($request, $data, $listReport, $timeReport, $current_user) {
                 $jsonData = new JsonHelper;
-                $jsonData->UploudFoto_Time_Temuan = now()->toDateTimeString();
                 $jsonData->Name_User_Temuan = $current_user->Name_User;
                 $jsonData->File_Path_Temuan = '';
                 $jsonData->Is_Submit_Penanganan = false;
@@ -79,31 +159,49 @@ class TemuanAuditorController extends Controller
 
                 $temuan->save();
 
-                if ($request->hasFile('photo_pdf')) {
-                    $photo_pdf = $request->file('photo_pdf');
+                if ($request->hasFile('pdf')) {
+                    $pdf = $request->file('pdf');
 
                     $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->Id_Member;
                     $directory = public_path($relativePath);
+                    $path = 'storage/reports/'.$timeReport.'_'.$listReport->report->member->Id_Member;
+                    $filename_report = $listReport->Name_Procedure.'.pdf';
 
+                    $fullPath = public_path($path);
+                    if (! file_exists($fullPath)) {
+                        mkdir($fullPath, 0755, true);
+                    }
                     if (! file_exists($directory)) {
                         if (! mkdir($directory, 0755, true) && ! is_dir($directory)) {
                             throw new \RuntimeException('Failed to create directory: '.$directory);
                         }
                     }
 
-                    $extension = $photo_pdf->getClientOriginalExtension();
-                    $fileName = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.'.$extension;
+                    $filename = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.pdf';
 
-                    if (! $photo_pdf->move($directory, $fileName)) {
-                        throw new \RuntimeException('Failed to move uploaded file');
+                    if (! $pdf->move($directory, $filename) || ! copy($directory.'/'.$filename, $fullPath.'/'.$filename_report)) {
+                        throw new \RuntimeException('Failed to move PDF file');
                     }
 
-                    $jsonData->Photo_PDF_Temuan = $fileName;
-                    $jsonData->File_Path_Temuan = $relativePath.'/'.$fileName;
+                    $jsonData->File_Path_Temuan = $relativePath.'/'.$filename;
+                    $jsonData->Submit_Time_Temuan = Carbon::now()->toDateTimeString();
+                    $jsonData->Comments_Temuan = json_decode($data['comments'] ?? '', true) ?? '';
 
                     $temuan->Object_Temuan = $jsonData;
-
+                    $temuan->Time_Temuan = $data['timestamp'];
                     $temuan->save();
+                    $listReport->Time_Approved_Auditor = $request->input('timestamp');
+                    $listReport->Auditor_Name = session('Username_User');
+                    $listReport->save();
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Temuan berhasil disubmit',
+                        'data' => [
+                            'Id_Temuan' => $temuan->Id_Temuan,
+                            'file_path' => $jsonData->File_Path_Temuan,
+                        ],
+                    ]);
                 }
 
                 return response()->json([
@@ -128,84 +226,11 @@ class TemuanAuditorController extends Controller
         }
     }
 
-    public function submit_temuan(Request $request)
-    {
-        $data = $request->validate([
-            'Id_Temuan' => 'required|int',
-            'Id_List_Report' => 'required|int',
-            'pdf' => 'required|file',
-            'timestamp' => 'required|string',
-            'comments' => 'nullable|string',
-        ]);
-
-        try {
-            return DB::transaction(function () use ($request, $data) {
-                $temuan = Temuan::findOrFail($data['Id_Temuan']);
-                $jsonData = new JsonHelper($temuan->Object_Temuan);
-
-                $listReport = List_Report::with('report.member')->findOrFail($data['Id_List_Report']);
-                $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
-                $current_user = User::where('Id_User', session('Id_User'))->firstOrFail();
-
-                if ($request->hasFile('pdf')) {
-                    $pdf = $request->file('pdf');
-
-                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->Id_Member;
-                    $directory = public_path($relativePath);
-
-                    if (! file_exists($directory)) {
-                        if (! mkdir($directory, 0755, true) && ! is_dir($directory)) {
-                            throw new \RuntimeException('Failed to create directory: '.$directory);
-                        }
-                    }
-
-                    $filename = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.pdf';
-
-                    if (! $pdf->move($directory, $filename)) {
-                        throw new \RuntimeException('Failed to move PDF file');
-                    }
-
-                    $jsonData->File_Path_Temuan = $relativePath.'/'.$filename;
-                    $jsonData->Submit_Time_Temuan = Carbon::now()->toDateTimeString();
-                    $jsonData->Comments_Temuan = json_decode($data['comments'] ?? '', true) ?? '';
-
-                    $temuan->Object_Temuan = $jsonData;
-                    $temuan->Time_Temuan = $data['timestamp'];
-                    $temuan->save();
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Temuan berhasil disubmit',
-                        'data' => [
-                            'Id_Temuan' => $temuan->Id_Temuan,
-                            'file_path' => $jsonData->File_Path_Temuan,
-                        ],
-                    ]);
-                }
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No PDF file uploaded',
-                ], 400);
-            });
-        } catch (\Exception $e) {
-            Log::error('Failed to submit temuan', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal submit temuan: '.$e->getMessage(),
-            ], 500);
-        }
-    }
-
     public function index(Request $request)
     {
         $page = 'temuan';
         $Id_User = session('Id_User');
-        
+
         // Use session for month filter persistence
         if ($request->has('month')) {
             $month = $request->input('month');
@@ -214,7 +239,7 @@ class TemuanAuditorController extends Controller
             $month = session('last_temuan_month') ?? Carbon::now()->format('Y-m');
         }
 
-        list($year, $monthNum) = explode('-', $month);
+        [$year, $monthNum] = explode('-', $month);
 
         $query = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
@@ -231,12 +256,12 @@ class TemuanAuditorController extends Controller
             'Shiyousho tak sesuai' => [],
             'Tidak perlu penanganan' => [],
             'Lain-lain' => [],
-            'Uncategorized' => []
+            'Uncategorized' => [],
         ];
 
         foreach ($temuans as $temuan) {
             $tipe = $temuan->Tipe_Temuan;
-            
+
             if (empty($tipe)) {
                 $tipeTemuanCategories['Uncategorized'][] = $temuan;
             } elseif (in_array($tipe, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan'])) {
@@ -314,7 +339,7 @@ class TemuanAuditorController extends Controller
     {
         $month = $request->input('month', Carbon::now()->format('Y-m'));
         $Id_User = session('Id_User');
-        list($year, $monthNum) = explode('-', $month);
+        [$year, $monthNum] = explode('-', $month);
 
         $temuans = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
@@ -333,7 +358,7 @@ class TemuanAuditorController extends Controller
                 'Lain-lain' => $this->getOtherCategoryStats($temuans),
             ],
             'month' => $month,
-            'monthName' => Carbon::createFromFormat('Y-m', $month)->format('F Y')
+            'monthName' => Carbon::createFromFormat('Y-m', $month)->format('F Y'),
         ];
 
         return response()->json($statistics);
@@ -344,20 +369,20 @@ class TemuanAuditorController extends Controller
      */
     private function getCategoryStats($temuans, $category)
     {
-        $categoryTemuans = $temuans->filter(function($temuan) use ($category) {
+        $categoryTemuans = $temuans->filter(function ($temuan) use ($category) {
             return $temuan->Tipe_Temuan === $category;
         });
 
         return [
             'total' => $categoryTemuans->count(),
-            'belum_penanganan' => $categoryTemuans->filter(function($temuan) {
+            'belum_penanganan' => $categoryTemuans->filter(function ($temuan) {
                 return is_null($temuan->Time_Penanganan);
             })->count(),
-            'menunggu_validasi' => $categoryTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && !$temuan->Status_Temuan;
+            'menunggu_validasi' => $categoryTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && ! $temuan->Status_Temuan;
             })->count(),
-            'sudah_tervalidasi' => $categoryTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
+            'sudah_tervalidasi' => $categoryTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
             })->count(),
         ];
     }
@@ -367,21 +392,21 @@ class TemuanAuditorController extends Controller
      */
     private function getOtherCategoryStats($temuans)
     {
-        $otherTemuans = $temuans->filter(function($temuan) {
-            return !empty($temuan->Tipe_Temuan) && 
-                !in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan']);
+        $otherTemuans = $temuans->filter(function ($temuan) {
+            return ! empty($temuan->Tipe_Temuan) &&
+                ! in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan']);
         });
 
         return [
             'total' => $otherTemuans->count(),
-            'belum_penanganan' => $otherTemuans->filter(function($temuan) {
+            'belum_penanganan' => $otherTemuans->filter(function ($temuan) {
                 return is_null($temuan->Time_Penanganan);
             })->count(),
-            'menunggu_validasi' => $otherTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && !$temuan->Status_Temuan;
+            'menunggu_validasi' => $otherTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && ! $temuan->Status_Temuan;
             })->count(),
-            'sudah_tervalidasi' => $otherTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
+            'sudah_tervalidasi' => $otherTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
             })->count(),
         ];
     }
@@ -394,11 +419,11 @@ class TemuanAuditorController extends Controller
     public function getMissingStatistics()
     {
         $Id_User = session('Id_User');
-        
+
         // Temuan yang sudah 3 hari belum dikategorikan
         $uncategorized = Temuan::where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
@@ -409,7 +434,7 @@ class TemuanAuditorController extends Controller
         $noPenanganan = Temuan::where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
                     ->orWhereNull('Tipe_Temuan');
             })
@@ -419,7 +444,7 @@ class TemuanAuditorController extends Controller
         $statistics = [
             'uncategorized_3days' => $uncategorized,
             'no_penanganan_15days' => $noPenanganan,
-            'total_missing' => $uncategorized + $noPenanganan
+            'total_missing' => $uncategorized + $noPenanganan,
         ];
 
         return response()->json($statistics);
@@ -434,12 +459,12 @@ class TemuanAuditorController extends Controller
     {
         $page = 'temuan';
         $Id_User = session('Id_User');
-        
+
         // Temuan yang sudah 3 hari belum dikategorikan
         $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
@@ -452,7 +477,7 @@ class TemuanAuditorController extends Controller
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
                     ->orWhereNull('Tipe_Temuan');
             })

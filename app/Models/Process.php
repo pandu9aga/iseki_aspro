@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Process extends Model
 {
     protected $table = 'processes';
+
     protected $primaryKey = 'Id_Process';
+
     public $timestamps = false;
 
     protected $fillable = ['Id_Team', 'Name_Process', 'Time_Created_Process'];

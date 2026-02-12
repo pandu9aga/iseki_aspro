@@ -8,15 +8,17 @@ use Illuminate\Support\Facades\Storage;
 class Procedure extends Model
 {
     protected $table = 'procedures';
+
     protected $primaryKey = 'Id_Procedure';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'Name_Procedure', 
-        'Name_Area', 
-        'Name_Tractor', 
-        'Item_Procedure', 
-        'Pic_Procedure'
+        'Name_Procedure',
+        'Name_Area',
+        'Name_Tractor',
+        'Item_Procedure',
+        'Pic_Procedure',
     ];
 
     // Cast Pic_Procedure sebagai array
@@ -31,6 +33,7 @@ class Procedure extends Model
         if (empty($picIds)) {
             return collect();
         }
+
         return Member::whereIn('Id_Member', $picIds)->get();
     }
 

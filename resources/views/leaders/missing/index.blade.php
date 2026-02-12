@@ -54,16 +54,20 @@
                         <div class="bg-gray-100 border-radius-xl p-2 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                             <a href="{{ route('missing.area.index', ['Name_Tractor' => $t->Name_Tractor]) }}">
                                 <div class="hover-card bg-white border-radius-xl align-items-center d-flex flex-column justify-content-center w-100 p-1 shadow-lg">
-                                    <div style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
+                                    <div style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;position: relative;">
                                         <img src="{{ asset($t->Photo_Tractor ?? 'storage/tractors/default.png') }}"
                                             alt="{{ $t->Name_Tractor }}"
                                             style="max-width: 180px; max-height: 180px; width: auto; height: auto;">
+                                        <div style="position: absolute; top: 0;right: 0" class="badge bg-warning text-dark">{{ $tractorProcedureCounts[$t->Name_Tractor]['percent'] ?? 0 }}%</div>
                                     </div>
                                     <b class="text-primary">{{ $t->Name_Tractor }}</b>
-                                    
-                                    <div>
+
+                                    <div class="text-center content-center">
                                         <span class="badge bg-warning">
-                                            {{ $tractorProcedureCounts[$t->Name_Tractor] ?? 0 }} Missing PIC
+                                            {{ $tractorProcedureCounts[$t->Name_Tractor]['missing'] ?? 0 }} Missing PIC
+                                        </span>
+                                        <span class="badge bg-success">
+                                            {{ $tractorProcedureCounts[$t->Name_Tractor]['has'] ?? 0 }} has PIC
                                         </span>
                                     </div>
                                 </div>

@@ -55,23 +55,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- PDF Viewer -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header pb-0">
-                        <h6 class="mb-0">
-                            <i class="material-symbols-rounded text-sm align-middle me-1">picture_as_pdf</i>
-                            Preview Dokumen Asli
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="pdf-container" class="border rounded"
-                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
-                            <canvas id="default-pdf-canvas"></canvas>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Temuan Section -->
                 @php
                     $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
@@ -81,6 +64,10 @@
 
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header pb-0">
+                        <h6 class="mb-0">
+                            <i class="material-symbols-rounded text-sm align-middle me-1">picture_as_pdf</i>
+                            Preview Dokumen
+                        </h6>
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h6 class="mb-2">
@@ -117,7 +104,7 @@
                         </a>
 
                         <div id="pdf-container-temuan" class="border rounded mb-3"
-                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
+                            style="height:100%; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas-temuan"></canvas>
                         </div>
 
@@ -514,19 +501,15 @@
             url = url.replace(/\\/g, '/').replace(/ /g, '%20');
             return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
         }
-
-        const urlOriginal = getPdfUrl("{!! str_replace('\\', '/', $pdfPath) !!}");
-        if (urlOriginal) RenderPDF(urlOriginal, "default-pdf-canvas");
-
         @if($object->get('File_Path_Temuan'))
             const urlTemuan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Temuan')) !!}");
             if (urlTemuan) RenderPDF(urlTemuan, "default-pdf-canvas-temuan");
         @endif
 
-            @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
-                const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
-                if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
-            @endif
+        @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
+        const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
+        if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
+        @endif
     </script>
 
     <script>

@@ -19,7 +19,7 @@ class TemuanLeaderController extends Controller
     public function index(Request $request)
     {
         $page = 'temuan';
-        
+
         // Use session for month filter persistence
         if ($request->has('month')) {
             $month = $request->input('month');
@@ -28,7 +28,7 @@ class TemuanLeaderController extends Controller
             $month = session('last_temuan_month') ?? Carbon::now()->format('Y-m');
         }
 
-        list($year, $monthNum) = explode('-', $month);
+        [$year, $monthNum] = explode('-', $month);
 
         $query = Temuan::with(['ListReport.report.member', 'User'])
             ->whereNotNull('Time_Temuan')
@@ -44,12 +44,12 @@ class TemuanLeaderController extends Controller
             'Shiyousho tak sesuai' => [],
             'Tidak perlu penanganan' => [],
             'Lain-lain' => [],
-            'Uncategorized' => []
+            'Uncategorized' => [],
         ];
 
         foreach ($temuans as $temuan) {
             $tipe = $temuan->Tipe_Temuan;
-            
+
             if (empty($tipe)) {
                 $tipeTemuanCategories['Uncategorized'][] = $temuan;
             } elseif (in_array($tipe, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan'])) {
@@ -77,7 +77,7 @@ class TemuanLeaderController extends Controller
         $temuan = Temuan::findOrFail($Id_Temuan);
 
         // If "Lain-lain" is selected, use custom input
-        if ($data['tipe_temuan'] === 'Lain-lain' && !empty($data['tipe_temuan_custom'])) {
+        if ($data['tipe_temuan'] === 'Lain-lain' && ! empty($data['tipe_temuan_custom'])) {
             $temuan->Tipe_Temuan = $data['tipe_temuan_custom'];
         } else {
             $temuan->Tipe_Temuan = $data['tipe_temuan'];
@@ -285,7 +285,7 @@ class TemuanLeaderController extends Controller
     public function getMonthlyStatistics(Request $request)
     {
         $month = $request->input('month', Carbon::now()->format('Y-m'));
-        list($year, $monthNum) = explode('-', $month);
+        [$year, $monthNum] = explode('-', $month);
 
         $temuans = Temuan::with(['ListReport.report.member', 'User'])
             ->whereNotNull('Time_Temuan')
@@ -303,7 +303,7 @@ class TemuanLeaderController extends Controller
                 'Lain-lain' => $this->getOtherCategoryStats($temuans),
             ],
             'month' => $month,
-            'monthName' => Carbon::createFromFormat('Y-m', $month)->format('F Y')
+            'monthName' => Carbon::createFromFormat('Y-m', $month)->format('F Y'),
         ];
 
         return response()->json($statistics);
@@ -314,20 +314,20 @@ class TemuanLeaderController extends Controller
      */
     private function getCategoryStats($temuans, $category)
     {
-        $categoryTemuans = $temuans->filter(function($temuan) use ($category) {
+        $categoryTemuans = $temuans->filter(function ($temuan) use ($category) {
             return $temuan->Tipe_Temuan === $category;
         });
 
         return [
             'total' => $categoryTemuans->count(),
-            'belum_penanganan' => $categoryTemuans->filter(function($temuan) {
+            'belum_penanganan' => $categoryTemuans->filter(function ($temuan) {
                 return is_null($temuan->Time_Penanganan);
             })->count(),
-            'menunggu_validasi' => $categoryTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && !$temuan->Status_Temuan;
+            'menunggu_validasi' => $categoryTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && ! $temuan->Status_Temuan;
             })->count(),
-            'sudah_tervalidasi' => $categoryTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
+            'sudah_tervalidasi' => $categoryTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
             })->count(),
         ];
     }
@@ -337,21 +337,21 @@ class TemuanLeaderController extends Controller
      */
     private function getOtherCategoryStats($temuans)
     {
-        $otherTemuans = $temuans->filter(function($temuan) {
-            return !empty($temuan->Tipe_Temuan) && 
-                !in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan']);
+        $otherTemuans = $temuans->filter(function ($temuan) {
+            return ! empty($temuan->Tipe_Temuan) &&
+                ! in_array($temuan->Tipe_Temuan, ['Revisi prosedur', 'Perakitan tak sesuai', 'Shiyousho tak sesuai', 'Tidak perlu penanganan']);
         });
 
         return [
             'total' => $otherTemuans->count(),
-            'belum_penanganan' => $otherTemuans->filter(function($temuan) {
+            'belum_penanganan' => $otherTemuans->filter(function ($temuan) {
                 return is_null($temuan->Time_Penanganan);
             })->count(),
-            'menunggu_validasi' => $otherTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && !$temuan->Status_Temuan;
+            'menunggu_validasi' => $otherTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && ! $temuan->Status_Temuan;
             })->count(),
-            'sudah_tervalidasi' => $otherTemuans->filter(function($temuan) {
-                return !is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
+            'sudah_tervalidasi' => $otherTemuans->filter(function ($temuan) {
+                return ! is_null($temuan->Time_Penanganan) && $temuan->Status_Temuan;
             })->count(),
         ];
     }
@@ -359,10 +359,10 @@ class TemuanLeaderController extends Controller
     public function getMissingStatistics()
     {
         $now = Carbon::now();
-        
+
         // Temuan yang sudah 3 hari belum dikategorikan
         $uncategorized = Temuan::whereNotNull('Time_Temuan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
@@ -372,7 +372,7 @@ class TemuanLeaderController extends Controller
         // Temuan yang sudah 15 hari belum ada penanganan (kecuali "Tidak perlu penanganan")
         $noPenanganan = Temuan::whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
                     ->orWhereNull('Tipe_Temuan');
             })
@@ -382,7 +382,7 @@ class TemuanLeaderController extends Controller
         $statistics = [
             'uncategorized_3days' => $uncategorized,
             'no_penanganan_15days' => $noPenanganan,
-            'total_missing' => $uncategorized + $noPenanganan
+            'total_missing' => $uncategorized + $noPenanganan,
         ];
 
         return response()->json($statistics);
@@ -391,11 +391,11 @@ class TemuanLeaderController extends Controller
     public function missingTemuan()
     {
         $page = 'temuan';
-        
+
         // Temuan yang sudah 3 hari belum dikategorikan
         $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->whereNotNull('Time_Temuan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
@@ -407,7 +407,7 @@ class TemuanLeaderController extends Controller
         $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
                     ->orWhereNull('Tipe_Temuan');
             })

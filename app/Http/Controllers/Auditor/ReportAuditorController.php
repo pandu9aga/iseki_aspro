@@ -86,7 +86,7 @@ class ReportAuditorController extends Controller
         $Id_User = session('Id_User');
         $user = User::where('Id_User', $Id_User)->first();
 
-        $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
+        $listReport = List_Report::with(['report', 'Temuans'])->findOrFail($Id_List_Report);
 
         $id_member = $listReport->report->member->Id_Member;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');

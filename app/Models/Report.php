@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Report extends Model
 {
     protected $table = 'reports';
+
     protected $primaryKey = 'Id_Report';
+
     public $timestamps = false;
 
     protected $fillable = ['Start_Report', 'Name_Report', 'Id_Member'];

@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Leader;
 
+use App\Exports\AuditExport;
 use App\Http\Controllers\Controller;
 use App\Models\List_Report;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Exports\AuditExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AuditController extends Controller
@@ -20,11 +18,11 @@ class AuditController extends Controller
         $month = $month ?? date('m');
 
         $auditors = User::where('Id_Type_User', 1)->get();
-        
+
         $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
-        
+
         $auditStats = [];
-        
+
         foreach ($auditors as $auditor) {
             $dailyCounts = [];
             for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -34,11 +32,11 @@ class AuditController extends Controller
                     ->count();
                 $dailyCounts[$day] = $count;
             }
-            
+
             $auditStats[] = [
                 'name' => $auditor->Username_User,
                 'counts' => $dailyCounts,
-                'total' => array_sum($dailyCounts)
+                'total' => array_sum($dailyCounts),
             ];
         }
 
@@ -52,12 +50,12 @@ class AuditController extends Controller
                 ->count();
             $unknownCounts[$day] = $count;
         }
-        
+
         if (array_sum($unknownCounts) > 0) {
             $auditStats[] = [
                 'name' => 'Unknown Auditor',
                 'counts' => $unknownCounts,
-                'total' => array_sum($unknownCounts)
+                'total' => array_sum($unknownCounts),
             ];
         }
 
@@ -68,7 +66,7 @@ class AuditController extends Controller
     {
         $page = 'audit';
         $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-        
+
         $query = List_Report::with('report.member')
             ->whereDate('Time_Approved_Auditor', $date);
 
@@ -86,6 +84,7 @@ class AuditController extends Controller
     public function exportExcel($year, $month)
     {
         $fileName = 'Audit_Report_'.$year.'_'.$month.'.xlsx';
+
         return Excel::download(new AuditExport($year, $month), $fileName);
     }
 }

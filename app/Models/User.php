@@ -6,7 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Model;
 
 class User extends Authenticatable
 {
@@ -48,6 +47,7 @@ class User extends Authenticatable
     }
 
     protected $table = 'users'; // Nama tabel
+
     protected $primaryKey = 'Id_User'; // Nama primary key
 
     public $timestamps = false; // Jika tabel tidak memiliki created_at dan updated_at

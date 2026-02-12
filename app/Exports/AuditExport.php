@@ -3,20 +3,22 @@
 namespace App\Exports;
 
 use App\Models\List_Report;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Carbon\Carbon;
 
-class AuditExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithEvents
+class AuditExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithMapping, WithStyles
 {
     protected $year;
+
     protected $month;
+
     private $rowNumber = 0;
 
     public function __construct($year, $month)
@@ -69,14 +71,14 @@ class AuditExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $lastColumn = 'F';
                 $lastRow = $event->sheet->getHighestRow();
-                $cellRange = 'A1:' . $lastColumn . $lastRow;
-                
+                $cellRange = 'A1:'.$lastColumn.$lastRow;
+
                 // Auto filter
-                $event->sheet->getDelegate()->setAutoFilter('A1:' . $lastColumn . '1');
-                
+                $event->sheet->getDelegate()->setAutoFilter('A1:'.$lastColumn.'1');
+
                 // Borders
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray([
                     'borders' => [
