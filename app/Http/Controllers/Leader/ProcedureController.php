@@ -673,7 +673,8 @@ class ProcedureController extends Controller
         $page = 'missing';
 
         // Hanya ambil tractor yang memiliki procedure tanpa PIC
-        $tractors = Tractor::whereHas('procedures', function ($query) {
+        $tractors = Tractor::whereNot('Name_Tractor','PAINTING')->whereHas('procedures', function ($query) {
+//        $tractors = Tractor::whereHas('procedures', function ($query) {
             $query->whereNull('Pic_Procedure')
                 ->orWhereRaw('JSON_LENGTH(Pic_Procedure) = 0');
         })->orderBy('Name_Tractor', 'asc')->get();

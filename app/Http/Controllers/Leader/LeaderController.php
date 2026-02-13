@@ -18,7 +18,8 @@ class LeaderController extends Controller
         $user = User::find($Id_User);
 
         $procedures = Procedure::count();
-        $missing = Procedure::whereNull('Pic_Procedure')->count();
+        $missing = Procedure::whereNot('Name_Tractor',"PAINTING")->whereNull('Pic_Procedure')->count();
+//        $missing = Procedure::whereNull('Pic_Procedure')->count();
 
         return view('leaders.dashboard', compact('page', 'today', 'user', 'procedures', 'missing'));
     }
