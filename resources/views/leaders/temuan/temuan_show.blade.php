@@ -379,7 +379,8 @@
                         <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <button id="submit-report-btn" onclick="submitReport()" class="btn btn-primary mt-3">Submit Temuan</button>
+                        <button id="submit-report-btn" onclick="submitReport()" class="btn btn-primary mt-3">Submit
+                            Temuan</button>
                         {{-- <button onclick="deleteReport()" class="btn btn-danger mt-3">Delete Temuan</button>--}}
                     </div>
                 @endif
@@ -521,10 +522,10 @@
             const urlTemuan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Temuan')) !!}");
             if (urlTemuan) RenderPDF(urlTemuan, "default-pdf-canvas-temuan");
         @endif
-        @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
-        const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
-        if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
-        @endif
+            @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
+                const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
+                if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
+            @endif
 
         document.addEventListener('DOMContentLoaded', function () {
             const tipeTemuanSelect = document.getElementById('tipe_temuan');
@@ -764,7 +765,7 @@
                     check: { text: 'blue', bg: 'rgba(0,255,0,0.3)' },
                     ng: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
                     x: { text: 'blue', bg: 'rgba(255,0,0,0.3)' },
-                    comment: { text: 'white', bg: '#E91E63', border: 'transparent' }
+                    comment: { text: 'white', bg: '#8B4513', border: 'transparent' }
                 }
             };
             pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
@@ -1259,7 +1260,7 @@
                 setupSelectionEvents(element);
                 setupDraggableEvents(element);
             }
-            {{-- Submit Report with Annotations --}}
+            { { --Submit Report with Annotations--} }
             // ============================================
             // UTILITIES
             // ============================================
@@ -1379,9 +1380,9 @@
                     'fontSize': fontSize
                 })
 
-                // Outer background (pink)
+                // Outer background (brown)
                 drawRectangle(page, boxX, boxY, outerWidth, outerHeight,
-                    PDFLib.rgb(0.913, 0.117, 0.388)); // #E91E63
+                    PDFLib.rgb(0.545, 0.271, 0.075)); // #8B4513 (Brown)
 
                 // Text lines
                 lines.forEach((line, index) => {
@@ -1514,7 +1515,7 @@
 
             // Initialize DOM and PDF rendering
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
+                document.addEventListener('DOMContentLoaded', function () {
                     console.log('DOM Content Loaded - Initializing...');
                     initializeDOM();
                     setupEditorLayerEvents();
@@ -1568,39 +1569,39 @@
         }
 
         /* .bg-gradient-success {
-                                                                                        background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                                                                                        box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-                                                                                    }
+                                                                                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                                                                            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+                                                                                        }
 
-                                                                                    .bg-gradient-info {
-                                                                                        background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                                                                                        box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
-                                                                                    }
+                                                                                        .bg-gradient-info {
+                                                                                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                                                                            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+                                                                                        }
 
-                                                                                    .bg-gradient-warning {
-                                                                                        background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-                                                                                        box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-                                                                                    } */
+                                                                                        .bg-gradient-warning {
+                                                                                            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+                                                                                            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+                                                                                        } */
 
         /* Button Styling */
         /* .btn {
-                                                                                        transition: all 0.3s ease;
-                                                                                    }
+                                                                                            transition: all 0.3s ease;
+                                                                                        }
 
-                                                                                    .btn:hover {
-                                                                                        transform: translateY(-2px);
-                                                                                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                                                                                    }
+                                                                                        .btn:hover {
+                                                                                            transform: translateY(-2px);
+                                                                                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                                                                        }
 
-                                                                                    .btn-info {
-                                                                                        background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                                                                                        border: none;
-                                                                                    }
+                                                                                        .btn-info {
+                                                                                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                                                                            border: none;
+                                                                                        }
 
-                                                                                    .btn-success {
-                                                                                        background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                                                                                        border: none;
-                                                                                    } */
+                                                                                        .btn-success {
+                                                                                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                                                                            border: none;
+                                                                                        } */
 
         /* List Group Styling */
         .list-group-item {

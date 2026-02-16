@@ -241,7 +241,7 @@
                 left: '50px',
                 cursor: 'move',
                 color: 'white', // White text
-                backgroundColor: '#E91E63', // Pink background
+                backgroundColor: '#8B4513', // Brown background
                 whiteSpace: 'pre-wrap', // Allow newlines
                 padding: '5px',
                 fontSize: '14px',
@@ -602,13 +602,13 @@
                         const outerX = finalX - paddingX;
                         const rectBottomY = finalY - outerHeight;
 
-                        // --- 1. Gambar background pink ---
+                        // --- 1. Gambar background cokelat ---
                         page.drawRectangle({
                             x: outerX,
                             y: rectBottomY,
                             width: outerWidth,
                             height: outerHeight,
-                            color: PDFLib.rgb(0.913, 0.117, 0.388), // #E91E63
+                            color: PDFLib.rgb(0.545, 0.271, 0.075), // #8B4513 (Brown)
                             opacity: 1
                         });
 
