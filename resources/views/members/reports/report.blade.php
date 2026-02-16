@@ -77,13 +77,17 @@
                 <br><br>
                 @if (is_null($listReport->Time_List_Report))
                     <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
-                    <div class="input-group input-group-outline my-3 is-filled">
-                        <label class="form-label">Photos</label>
-                        <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*"
-                            capture="environment">
-                        {{-- <input type="file" class="form-control image-input" name="{{ $part->photo_angle->Id_Photo_Angle }}"
-                            data-preview="#preview-{{ $part->photo_angle->Id_Photo_Angle }}" accept="image/*"
-                            capture="environment"> --}}
+                    <div class="my-3">
+                        <label class="form-label d-block">Upload Photos</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
+                                <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
+                            </button>
+                            <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
+                                <i class="material-symbols-rounded text-sm">collections</i> Gallery
+                            </button>
+                        </div>
+                        <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
                     </div>
                     <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
                     <br>
@@ -596,6 +600,16 @@
                 };
                 img.src = URL.createObjectURL(file);
             });
+        }
+
+        function triggerPhotoInput(mode) {
+            const input = document.getElementById('imageInput');
+            if (mode === 'camera') {
+                input.setAttribute('capture', 'environment');
+            } else {
+                input.removeAttribute('capture');
+            }
+            input.click();
         }
 
         // ============================================

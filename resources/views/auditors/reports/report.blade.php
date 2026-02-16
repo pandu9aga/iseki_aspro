@@ -29,13 +29,13 @@
                     </h4>
 
                     {{-- @if(is_null($listReport->Time_Approved_Auditor)) --}}
-{{--                    <button class="btn btn-warning mt-3" style="white-space:nowrap;"--}}
-{{--                        onclick="window.location.href = '{{ route('auditor-report.temuan_report', ['Id_List_Report' => $listReport->Id_List_Report]) }}'">--}}
-{{--                        Tambahkan Temuan--}}
-{{--                    </button>--}}
+                    {{-- <button class="btn btn-warning mt-3" style="white-space:nowrap;" --}} {{--
+                        onclick="window.location.href = '{{ route('auditor-report.temuan_report', ['Id_List_Report' => $listReport->Id_List_Report]) }}'">--}}
+                        {{-- Tambahkan Temuan--}}
+                        {{-- </button>--}}
                     @if($listReport->temuans && count($listReport->temuans) > 0)
                         <button class="btn btn-warning mt-3" style="white-space:nowrap;"
-                                onclick="window.location.href = '{{ route('auditor-report.temuan_show',['Id_Temuan' => $listReport->temuans[0]->Id_Temuan]) }}'">
+                            onclick="window.location.href = '{{ route('auditor-report.temuan_show', ['Id_Temuan' => $listReport->temuans[0]->Id_Temuan]) }}'">
                             Lihat Temuan
                         </button>
                     @endif
@@ -86,7 +86,8 @@
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
                 @endif
 
-                <div id="pdf-container" style="border:1px solid #ccc; height:100%; overflow:auto; position:relative; width:100%; max-width:100%; left:50%; transform:translateX(-50%);">
+                <div id="pdf-container"
+                    style="border:1px solid #ccc; height:100%; overflow:auto; position:relative; width:100%; max-width:100%; left:50%; transform:translateX(-50%);">
                     <canvas id="pdf-canvas"></canvas>
                     <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                 </div>
@@ -94,10 +95,17 @@
                 <br><br>
                 @if (is_null($listReport->Time_Approved_Auditor))
                     <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
-                    <div class="input-group input-group-outline my-3 is-filled">
-                        <label class="form-label">Photos</label>
-                        <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*"
-                            capture="environment">
+                    <div class="my-3">
+                        <label class="form-label d-block">Upload Photos</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
+                                <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
+                            </button>
+                            <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
+                                <i class="material-symbols-rounded text-sm">collections</i> Gallery
+                            </button>
+                        </div>
+                        <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
                     </div>
                     <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
                     <br>
@@ -549,6 +557,16 @@
         // Photo state
         STATE.images = [];
 
+        function triggerPhotoInput(mode) {
+            const input = document.getElementById('imageInput');
+            if (mode === 'camera') {
+                input.setAttribute('capture', 'environment');
+            } else {
+                input.removeAttribute('capture');
+            }
+            input.click();
+        }
+
         // Handle image selection
         document.getElementById('imageInput').addEventListener('change', function (e) {
             for (let file of e.target.files) {
@@ -669,7 +687,7 @@
     <script>
 
         const FINAL_STATE = {
-            comments:[]
+            comments: []
         }
 
 
@@ -990,7 +1008,7 @@
 
             const formData = new FormData();
             formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
-            formData.append('comments',JSON.stringify(FINAL_STATE.comments))
+            formData.append('comments', JSON.stringify(FINAL_STATE.comments))
             formData.append('Id_List_Report', '{{ $listReport->Id_List_Report }}');
             formData.append('timestamp', timestamp);
 

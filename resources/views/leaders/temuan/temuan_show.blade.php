@@ -227,9 +227,18 @@
                                 <i class="material-symbols-rounded text-sm align-middle me-1">photo_camera</i>
                                 Upload Foto Penanganan: <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
                             </label>
-                            <div class="input-group input-group-outline mb-3">
-                                <input type="file" class="form-control image-input" id="imageInput" multiple accept="image/*"
-                                    capture="environment">
+                            <div class="mb-3">
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary mb-0"
+                                        onclick="triggerPhotoInput('camera')">
+                                        <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info mb-0"
+                                        onclick="triggerPhotoInput('gallery')">
+                                        <i class="material-symbols-rounded text-sm">collections</i> Gallery
+                                    </button>
+                                </div>
+                                <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
                             </div>
                             <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
 
@@ -553,6 +562,16 @@
         <script>
             // Photo state
             let images = [];
+
+            function triggerPhotoInput(mode) {
+                const input = document.getElementById('imageInput');
+                if (mode === 'camera') {
+                    input.setAttribute('capture', 'environment');
+                } else {
+                    input.removeAttribute('capture');
+                }
+                input.click();
+            }
 
             // Handle image selection
             document.getElementById('imageInput').addEventListener('change', function (e) {
@@ -1569,39 +1588,39 @@
         }
 
         /* .bg-gradient-success {
-                                                                                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                                                                                            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-                                                                                        }
+                                                                                                    background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                                                                                    box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+                                                                                                }
 
-                                                                                        .bg-gradient-info {
-                                                                                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                                                                                            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
-                                                                                        }
+                                                                                                .bg-gradient-info {
+                                                                                                    background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                                                                                    box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+                                                                                                }
 
-                                                                                        .bg-gradient-warning {
-                                                                                            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-                                                                                            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-                                                                                        } */
+                                                                                                .bg-gradient-warning {
+                                                                                                    background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+                                                                                                    box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+                                                                                                } */
 
         /* Button Styling */
         /* .btn {
-                                                                                            transition: all 0.3s ease;
-                                                                                        }
+                                                                                                    transition: all 0.3s ease;
+                                                                                                }
 
-                                                                                        .btn:hover {
-                                                                                            transform: translateY(-2px);
-                                                                                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                                                                                        }
+                                                                                                .btn:hover {
+                                                                                                    transform: translateY(-2px);
+                                                                                                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                                                                                }
 
-                                                                                        .btn-info {
-                                                                                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                                                                                            border: none;
-                                                                                        }
+                                                                                                .btn-info {
+                                                                                                    background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                                                                                                    border: none;
+                                                                                                }
 
-                                                                                        .btn-success {
-                                                                                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                                                                                            border: none;
-                                                                                        } */
+                                                                                                .btn-success {
+                                                                                                    background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                                                                                                    border: none;
+                                                                                                } */
 
         /* List Group Styling */
         .list-group-item {
