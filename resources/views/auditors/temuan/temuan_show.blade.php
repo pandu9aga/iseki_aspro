@@ -316,38 +316,38 @@
         }
 
         /* .bg-gradient-success {
-                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                            box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
-                        }
+                    background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                    box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
+                }
 
-                        .bg-gradient-info {
-                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
-                        }
+                .bg-gradient-info {
+                    background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                    box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+                }
 
-                        .bg-gradient-warning {
-                            background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
-                            box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
-                        }
+                .bg-gradient-warning {
+                    background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);
+                    box-shadow: 0 2px 4px rgba(251, 140, 0, 0.3);
+                }
 
-                        .btn {
-                            transition: all 0.3s ease;
-                        }
+                .btn {
+                    transition: all 0.3s ease;
+                }
 
-                        .btn:hover {
-                            transform: translateY(-2px);
-                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                        }
+                .btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                }
 
-                        .btn-info {
-                            background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
-                            border: none;
-                        }
+                .btn-info {
+                    background: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+                    border: none;
+                }
 
-                        .btn-success {
-                            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
-                            border: none;
-                        } */
+                .btn-success {
+                    background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+                    border: none;
+                } */
 
         /* List Group Styling */
         .list-group-item {
@@ -506,10 +506,10 @@
             if (urlTemuan) RenderPDF(urlTemuan, "default-pdf-canvas-temuan");
         @endif
 
-        @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
-        const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
-        if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
-        @endif
+            @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
+                const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
+                if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
+            @endif
     </script>
 
     <script>
@@ -526,7 +526,5 @@
             }
         });
     </script>
-
-
 
 @endsection
