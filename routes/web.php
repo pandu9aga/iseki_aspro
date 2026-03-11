@@ -120,6 +120,7 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
             Route::get('/show/{Id_Temuan}', [TemuanLeaderController::class, 'show'])->name('leader-temuan.show');
             Route::post('penanganan/create', [TemuanLeaderController::class, 'createPenanganan'])->name('leader-temuan.penanganan.create');
             Route::post('penanganan/submit', [TemuanLeaderController::class, 'submitPenanganan'])->name('leader-temuan.penanganan.submit');
+            Route::delete('penanganan/delete/{Id_Temuan}', [TemuanLeaderController::class, 'deletePenanganan'])->name('leader-temuan.penanganan.delete');
         });
         Route::delete('delete/{Id_Temuan}', [TemuanLeaderController::class, 'deleteTemuan'])->name('leader-temuan.delete');
         Route::post('submit-penanganan', [TemuanLeaderController::class, 'submitPenanganan'])->name('leader-temuan.submit-penanganan');

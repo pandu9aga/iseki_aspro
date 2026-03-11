@@ -104,15 +104,55 @@ class TemuanLeaderController extends Controller
         }
     }
 
+    public function deletePenanganan(string $Id_Temuan)
+    {
+        $temuan = Temuan::findOrFail($Id_Temuan);
+
+        try {
+            $objectdata = new JsonHelper($temuan->Object_Temuan);
+            $filePath = $objectdata->get('File_Path_Penanganan', '');
+
+            if ($filePath) {
+                $this->deleteFile($filePath);
+            }
+
+            $objectdata->Is_Submit_Penanganan = false;
+            $objectdata->UploudFoto_Time_Penanganan = '';
+            $objectdata->File_Path_Penanganan = '';
+            $objectdata->Name_User_Penanganan = '';
+            $objectdata->Validation_Notes = '';
+            $objectdata->Validation_Time = '';
+            $objectdata->Comments_Penanganan = [];
+
+            $temuan->Object_Temuan = $objectdata;
+            $temuan->Time_Penanganan = null;
+            $temuan->Status_Temuan = 0;
+            $temuan->save();
+
+            return redirect()->back()->with('success', 'Penanganan deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting penanganan: '.$e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', 'Failed to delete Penanganan. Please check the logs.');
+        }
+    }
+
     private function deleteTemuanFile(Temuan $temuan): void
     {
         $objectdata = new JsonHelper($temuan->Object_Temuan);
-        $filePath = $objectdata->get('File_Path', '');
-
-        if (! $filePath) {
-            return;
+        
+        $filePathTemuan = $objectdata->get('File_Path_Temuan', '');
+        if ($filePathTemuan) {
+            $this->deleteFile($filePathTemuan);
         }
 
+        $filePathPenanganan = $objectdata->get('File_Path_Penanganan', '');
+        if ($filePathPenanganan) {
+            $this->deleteFile($filePathPenanganan);
+        }
+    }
+
+    private function deleteFile(string $filePath): void
+    {
         // Convert to absolute path
         $absolutePath = Str::startsWith($filePath, ['http://', 'https://'])
             ? public_path(parse_url($filePath, PHP_URL_PATH))
@@ -121,7 +161,7 @@ class TemuanLeaderController extends Controller
         // Delete file if exists
         if (file_exists($absolutePath) && is_file($absolutePath)) {
             unlink($absolutePath);
-            Log::info("Deleted temuan file: {$absolutePath}");
+            Log::info("Deleted file: {$absolutePath}");
 
             // Remove parent directory if empty
             $parentDir = dirname($absolutePath);
@@ -130,7 +170,7 @@ class TemuanLeaderController extends Controller
                 Log::info("Removed empty directory: {$parentDir}");
             }
         } else {
-            Log::warning("Temuan file not found: {$absolutePath}");
+            Log::warning("File not found: {$absolutePath}");
         }
     }
 
