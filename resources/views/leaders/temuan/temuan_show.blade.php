@@ -56,7 +56,8 @@
                     $current_user_check = \App\Models\User::find(session('Id_User'));
                 @endphp
 
-                @if($current_user_check && $current_user_check->Username_User === 'saiful')
+                @if($current_user && in_array($current_user->Username_User, ['saiful', 'mulyono']))
+                {{-- @if($current_user_check && $current_user_check->Username_User === 'saiful') --}}
                     <div class="card shadow-sm mb-4">
                         <div class="card-header pb-0">
                             <h6 class="mb-0">

@@ -48,7 +48,7 @@
                         </form>
                     </td>
                     <td class="align-middle text-center">
-                        @if($current_user && $current_user->Username_User === 'saiful')
+                        @if($current_user && in_array($current_user->Username_User, ['saiful', 'mulyono']))
                             <button class="btn btn-sm btn-link p-0 m-0"
                                 onclick="openTipeTemuanModal('{{ $temuan->Id_Temuan }}', '{{ $temuan->Tipe_Temuan }}')">
                                 @if($temuan->Tipe_Temuan)
