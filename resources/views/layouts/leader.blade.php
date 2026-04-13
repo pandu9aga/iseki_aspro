@@ -40,6 +40,10 @@
     <link rel="stylesheet" href="{{ asset('assets/css/choices.min.css') }}">
 
     @yield('style')
+
+    <!-- Dynamic Favicon -->
+    <script src="/iseki_pro_app/js/dynamic-favicon.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Aspro"); });</script>
 </head>
 
 <body class="index-page bg-gray-200">

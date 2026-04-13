@@ -65,6 +65,15 @@
 <link id="pagestyle" href="./assets/css/material-kit.css?v=3.1.0" rel="stylesheet" />
 
 
+
+    <!-- Dynamic Favicon -->
+    <script src="/iseki_pro_app/js/dynamic-favicon.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Aspro"); });</script>
+
+    <!-- Dynamic Favicon Assets -->
+    <link rel="stylesheet" href="/iseki_pro_app/css/icon.css">
+    <script src="/iseki_pro_app/js/dynamic-favicon.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Aspro"); });</script>
 </head>
 
 <body class="index-page bg-gray-200">
