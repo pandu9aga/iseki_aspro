@@ -168,6 +168,10 @@
                                     <span class="badge bg-gradient-success">
                                         <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
                                     </span>
+                                @elseif($object->get('Is_Rejected'))
+                                    <span class="badge bg-gradient-danger">
+                                        <i class="material-symbols-rounded text-xs me-1">cancel</i>Ditolak
+                                    </span>
                                 @elseif($object->Is_Submit_Penanganan)
                                     <span class="badge bg-gradient-info">
                                         <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi
@@ -220,6 +224,39 @@
                         @endif
                     </div>
                 </div>
+
+                <!-- Rejection Info (if previously rejected) -->
+                @if($object->get('Is_Rejected') && !$object->Is_Submit_Penanganan)
+                    <div class="card mb-4 shadow-sm border-danger">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <i class="material-symbols-rounded text-danger text-2xl me-2">cancel</i>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-danger mb-2">Penanganan Anda Ditolak</h6>
+                                    @if($object->get('Rejection_Time'))
+                                        <small class="d-block mb-2">
+                                            <i class="material-symbols-rounded text-xs align-middle">schedule</i>
+                                            <strong>Waktu Penolakan:</strong>
+                                            {{ \Carbon\Carbon::parse($object->get('Rejection_Time'))->format('d F Y, H:i') }} WIB
+                                        </small>
+                                    @endif
+                                    @if($object->get('Rejection_Notes'))
+                                        <div class="mt-2 p-2 bg-light rounded">
+                                            <small>
+                                                <i class="material-symbols-rounded text-xs align-middle">comment</i>
+                                                <strong>Alasan Penolakan:</strong><br>
+                                                <em class="text-dark">"{{ $object->get('Rejection_Notes') }}"</em>
+                                            </small>
+                                        </div>
+                                    @endif
+                                    <div class="mt-2">
+                                        <small class="text-muted">Silakan update penanganan baru di bawah ini.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Form Penanganan -->
                 @if(!$object->get('UploudFoto_Time_Penanganan', false))

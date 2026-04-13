@@ -183,6 +183,9 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
             Route::get('/', [TemuanAuditorController::class, 'index'])->name('auditor-report.temuan_index');
             Route::get('/show/{Id_Temuan}', [TemuanAuditorController::class, 'show'])->name('auditor-report.temuan_show');
             Route::patch('validate/{Id_Temuan}', [TemuanAuditorController::class, 'validateTemuan'])->name('auditor-temuan.validate');
+            Route::patch('reject/{Id_Temuan}', [TemuanAuditorController::class, 'rejectTemuan'])->name('auditor-temuan.reject');
+            Route::delete('delete/{Id_Temuan}', [TemuanAuditorController::class, 'deleteTemuan'])->name('auditor-temuan.delete');
+            Route::delete('penanganan/delete/{Id_Temuan}', [TemuanAuditorController::class, 'deletePenanganan'])->name('auditor-temuan.penanganan.delete');
         });
         Route::get('statistics/monthly', [TemuanAuditorController::class, 'getMonthlyStatistics'])->name('auditor-temuan.statistics.monthly');
         Route::get('statistics/missing', [TemuanAuditorController::class, 'getMissingStatistics'])->name('auditor-temuan.statistics.missing');

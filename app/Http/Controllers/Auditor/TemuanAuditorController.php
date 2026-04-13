@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TemuanAuditorController extends Controller
 {
@@ -328,6 +329,179 @@ class TemuanAuditorController extends Controller
                 ->back()
                 ->with('error', 'Gagal memvalidasi temuan: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Reject a penanganan - clears penanganan data and allows re-submission.
+     */
+    public function rejectTemuan(Request $request, string $Id_Temuan)
+    {
+        $data = $request->validate([
+            'validation_notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($data, $Id_Temuan) {
+                $temuan = Temuan::findOrFail($Id_Temuan);
+                $jsonData = new JsonHelper($temuan->Object_Temuan);
+
+                // Delete the penanganan file if exists
+                $filePath = $jsonData->get('File_Path_Penanganan', '');
+                if ($filePath) {
+                    $this->deleteFile($filePath);
+                }
+
+                // Set rejection info
+                $jsonData->Is_Rejected = true;
+                $jsonData->Rejection_Notes = $data['validation_notes'] ?? '';
+                $jsonData->Rejection_Time = Carbon::now()->toDateTimeString();
+
+                // Clear penanganan data so Leader can re-submit
+                $jsonData->Is_Submit_Penanganan = false;
+                $jsonData->UploudFoto_Time_Penanganan = '';
+                $jsonData->File_Path_Penanganan = '';
+                $jsonData->Name_User_Penanganan = '';
+                $jsonData->Validation_Notes = '';
+                $jsonData->Validation_Time = '';
+                $jsonData->Comments_Penanganan = [];
+
+                $temuan->Object_Temuan = $jsonData;
+                $temuan->Time_Penanganan = null;
+                $temuan->Status_Temuan = 0;
+                $temuan->save();
+
+                return redirect()
+                    ->back()
+                    ->with('success', 'Penanganan ditolak. Leader dapat mengupdate penanganan baru.');
+            });
+        } catch (\Exception $e) {
+            Log::error('Failed to reject temuan', [
+                'Id_Temuan' => $Id_Temuan,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Gagal menolak penanganan: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a temuan and all associated files.
+     */
+    public function deleteTemuan(string $Id_Temuan)
+    {
+        $temuan = Temuan::findOrFail($Id_Temuan);
+
+        try {
+            $this->deleteTemuanFiles($temuan);
+            $temuan->delete();
+
+            return redirect()->route('auditor-report.temuan_index')->with('success', 'Temuan berhasil dihapus beserta semua data terkait.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting temuan: '.$e->getMessage(), ['exception' => $e]);
+
+            return redirect()->route('auditor-report.temuan_index')->with('error', 'Gagal menghapus Temuan. Silakan periksa log.');
+        }
+    }
+
+    /**
+     * Delete a penanganan only (reset to waiting for penanganan).
+     */
+    public function deletePenanganan(string $Id_Temuan)
+    {
+        $temuan = Temuan::findOrFail($Id_Temuan);
+
+        try {
+            $objectdata = new JsonHelper($temuan->Object_Temuan);
+            $filePath = $objectdata->get('File_Path_Penanganan', '');
+
+            if ($filePath) {
+                $this->deleteFile($filePath);
+            }
+
+            $objectdata->Is_Submit_Penanganan = false;
+            $objectdata->UploudFoto_Time_Penanganan = '';
+            $objectdata->File_Path_Penanganan = '';
+            $objectdata->Name_User_Penanganan = '';
+            $objectdata->Validation_Notes = '';
+            $objectdata->Validation_Time = '';
+            $objectdata->Comments_Penanganan = [];
+            $objectdata->Is_Rejected = false;
+            $objectdata->Rejection_Notes = '';
+            $objectdata->Rejection_Time = '';
+
+            $temuan->Object_Temuan = $objectdata;
+            $temuan->Time_Penanganan = null;
+            $temuan->Status_Temuan = 0;
+            $temuan->save();
+
+            return redirect()->back()->with('success', 'Penanganan berhasil dihapus. Status kembali ke Menunggu Penanganan.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting penanganan: '.$e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', 'Gagal menghapus Penanganan. Silakan periksa log.');
+        }
+    }
+
+    // ============================================
+    // File Helper Methods
+    // ============================================
+
+    private function deleteTemuanFiles(Temuan $temuan): void
+    {
+        $objectdata = new JsonHelper($temuan->Object_Temuan);
+
+        $filePathTemuan = $objectdata->get('File_Path_Temuan', '');
+        if ($filePathTemuan) {
+            $this->deleteFile($filePathTemuan);
+        }
+
+        $filePathPenanganan = $objectdata->get('File_Path_Penanganan', '');
+        if ($filePathPenanganan) {
+            $this->deleteFile($filePathPenanganan);
+        }
+    }
+
+    private function deleteFile(string $filePath): void
+    {
+        $absolutePath = Str::startsWith($filePath, ['http://', 'https://'])
+            ? public_path(parse_url($filePath, PHP_URL_PATH))
+            : public_path($filePath);
+
+        if (file_exists($absolutePath) && is_file($absolutePath)) {
+            unlink($absolutePath);
+            Log::info("Deleted file: {$absolutePath}");
+
+            $parentDir = dirname($absolutePath);
+            if ($this->isDirectoryEmpty($parentDir) && $this->isSafeToDelete($parentDir)) {
+                rmdir($parentDir);
+                Log::info("Removed empty directory: {$parentDir}");
+            }
+        } else {
+            Log::warning("File not found: {$absolutePath}");
+        }
+    }
+
+    private function isDirectoryEmpty(string $dir): bool
+    {
+        return is_dir($dir) && count(scandir($dir)) === 2;
+    }
+
+    private function isSafeToDelete(string $dir): bool
+    {
+        $safeRoots = [
+            public_path('storage'),
+            storage_path('app/public'),
+        ];
+
+        foreach ($safeRoots as $root) {
+            if (Str::startsWith($dir, $root) && $dir !== $root) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

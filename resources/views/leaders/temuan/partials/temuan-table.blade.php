@@ -110,6 +110,10 @@
                             <span class="badge badge-sm bg-gradient-success">
                                 <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
                             </span>
+                        @elseif($object->get('Is_Rejected'))
+                            <span class="badge badge-sm bg-gradient-danger">
+                                <i class="material-symbols-rounded text-xs me-1">cancel</i>Ditolak
+                            </span>
                         @elseif($object->Is_Submit_Penanganan)
                             <span class="badge badge-sm bg-gradient-info">
                                 <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi

@@ -123,6 +123,9 @@ class TemuanLeaderController extends Controller
             $objectdata->Validation_Notes = '';
             $objectdata->Validation_Time = '';
             $objectdata->Comments_Penanganan = [];
+            $objectdata->Is_Rejected = false;
+            $objectdata->Rejection_Notes = '';
+            $objectdata->Rejection_Time = '';
 
             $temuan->Object_Temuan = $objectdata;
             $temuan->Time_Penanganan = null;
@@ -258,6 +261,9 @@ class TemuanLeaderController extends Controller
                 }
                 $jsonData->File_Path_Penanganan = $relativePath.'/'.$filename;
                 $jsonData->Is_Submit_Penanganan = true;
+                $jsonData->Is_Rejected = false;
+                $jsonData->Rejection_Notes = '';
+                $jsonData->Rejection_Time = '';
 
                 $temuan->Object_Temuan = $jsonData;
                 $temuan->Time_Penanganan = Carbon::now()->toDateTimeString();

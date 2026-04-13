@@ -80,9 +80,24 @@
                                 </p>
                             </div>
                             <div class="d-flex flex-column gap-2 align-items-end">
+                                <div class="d-flex gap-2">
+                                    <form action="{{ route('auditor-temuan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
+                                        method="POST" class="d-inline"
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus temuan ini? Semua file terkait (temuan & penanganan) akan ikut terhapus.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger mb-0">
+                                            <i class="material-symbols-rounded text-sm align-middle">delete</i> Hapus Temuan
+                                        </button>
+                                    </form>
+                                </div>
                                 @if($temuan->Status_Temuan)
                                     <span class="badge bg-gradient-success">
                                         <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
+                                    </span>
+                                @elseif($object->get('Is_Rejected'))
+                                    <span class="badge bg-gradient-danger">
+                                        <i class="material-symbols-rounded text-xs me-1">cancel</i>Ditolak
                                     </span>
                                 @elseif($object->Is_Submit_Penanganan)
                                     <span class="badge bg-gradient-info">
@@ -137,6 +152,39 @@
                     </div>
                 </div>
 
+                {{-- Rejection Info (if previously rejected) --}}
+                @if($object->get('Is_Rejected') && !$object->Is_Submit_Penanganan)
+                    <div class="card mb-4 shadow-sm border-danger">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <i class="material-symbols-rounded text-danger text-2xl me-2">cancel</i>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-danger mb-2">Penanganan Sebelumnya Ditolak</h6>
+                                    @if($object->get('Rejection_Time'))
+                                        <small class="d-block mb-2">
+                                            <i class="material-symbols-rounded text-xs align-middle">schedule</i>
+                                            <strong>Waktu Penolakan:</strong>
+                                            {{ \Carbon\Carbon::parse($object->get('Rejection_Time'))->format('d F Y, H:i') }} WIB
+                                        </small>
+                                    @endif
+                                    @if($object->get('Rejection_Notes'))
+                                        <div class="mt-2 p-2 bg-light rounded">
+                                            <small>
+                                                <i class="material-symbols-rounded text-xs align-middle">comment</i>
+                                                <strong>Alasan Penolakan:</strong><br>
+                                                <em class="text-dark">"{{ $object->get('Rejection_Notes') }}"</em>
+                                            </small>
+                                        </div>
+                                    @endif
+                                    <div class="mt-2">
+                                        <small class="text-muted">Menunggu Leader untuk mengupdate penanganan baru.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Penanganan Section -->
                 @if($object->Is_Submit_Penanganan)
                     <div class="card mt-4 mb-4 shadow-sm">
@@ -155,6 +203,17 @@
                                     </p>
                                 </div>
                                 <div class="d-flex flex-column gap-2 align-items-end">
+                                    <div class="d-flex gap-2">
+                                        <form action="{{ route('auditor-temuan.penanganan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
+                                            method="POST" class="d-inline"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus penanganan ini? Status akan kembali ke Menunggu Penanganan.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger mb-0">
+                                                <i class="material-symbols-rounded text-sm align-middle">delete</i> Hapus Penanganan
+                                            </button>
+                                        </form>
+                                    </div>
                                     @if($temuan->Status_Temuan)
                                         <span class="badge bg-gradient-success">
                                             <i class="material-symbols-rounded text-xs me-1">check_circle</i>Tervalidasi
@@ -253,14 +312,41 @@
                                             <div class="mb-3">
                                                 <label for="validation_notes" class="form-label text-sm font-weight-bold">
                                                     <i class="material-symbols-rounded text-xs align-middle me-1">comment</i>
-                                                    Catatan Validasi (Opsional)
+                                                    Catatan (Opsional)
                                                 </label>
                                                 <textarea class="form-control" id="validation_notes" name="validation_notes"
-                                                    rows="3" placeholder="Tambahkan catatan validasi jika diperlukan..."></textarea>
+                                                    rows="3" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
                                             </div>
 
-                                            <button type="submit" class="btn btn-success">
-                                                <i class="material-symbols-rounded text-sm">check_circle</i> Validasi Selesai
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" class="btn btn-success">
+                                                    <i class="material-symbols-rounded text-sm">check_circle</i> Validasi Selesai
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <hr class="my-3">
+
+                                        <h6 class="text-danger mb-3">
+                                            <i class="material-symbols-rounded text-sm align-middle me-1">cancel</i>
+                                            Tolak Penanganan
+                                        </h6>
+                                        <form action="{{ route('auditor-temuan.reject', $temuan->Id_Temuan) }}" method="POST"
+                                            id="rejectForm">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            <div class="mb-3">
+                                                <label for="reject_notes" class="form-label text-sm font-weight-bold">
+                                                    <i class="material-symbols-rounded text-xs align-middle me-1">comment</i>
+                                                    Alasan Penolakan
+                                                </label>
+                                                <textarea class="form-control" id="reject_notes" name="validation_notes"
+                                                    rows="3" placeholder="Jelaskan alasan penolakan penanganan..."></textarea>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="material-symbols-rounded text-sm">cancel</i> Tolak Penanganan
                                             </button>
                                         </form>
                                     </div>
@@ -515,10 +601,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const validateForm = document.getElementById('validateForm');
+            const rejectForm = document.getElementById('rejectForm');
 
             if (validateForm) {
                 validateForm.addEventListener('submit', function (e) {
                     if (!confirm('Apakah Anda yakin ingin memvalidasi dan menandai temuan ini sebagai SELESAI?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+
+            if (rejectForm) {
+                rejectForm.addEventListener('submit', function (e) {
+                    if (!confirm('Apakah Anda yakin ingin MENOLAK penanganan ini? Leader harus mengupdate penanganan baru.')) {
                         e.preventDefault();
                         return false;
                     }
