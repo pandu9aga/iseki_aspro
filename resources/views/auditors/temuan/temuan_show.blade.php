@@ -81,15 +81,6 @@
                             </div>
                             <div class="d-flex flex-column gap-2 align-items-end">
                                 <div class="d-flex gap-2">
-                                    <form action="{{ route('auditor-temuan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
-                                        method="POST" class="d-inline"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus temuan ini? Semua file terkait (temuan & penanganan) akan ikut terhapus.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger mb-0">
-                                            <i class="material-symbols-rounded text-sm align-middle">delete</i> Hapus Temuan
-                                        </button>
-                                    </form>
                                 </div>
                                 @if($temuan->Status_Temuan)
                                     <span class="badge bg-gradient-success">
@@ -204,15 +195,6 @@
                                 </div>
                                 <div class="d-flex flex-column gap-2 align-items-end">
                                     <div class="d-flex gap-2">
-                                        <form action="{{ route('auditor-temuan.penanganan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
-                                            method="POST" class="d-inline"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus penanganan ini? Status akan kembali ke Menunggu Penanganan.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger mb-0">
-                                                <i class="material-symbols-rounded text-sm align-middle">delete</i> Hapus Penanganan
-                                            </button>
-                                        </form>
                                     </div>
                                     @if($temuan->Status_Temuan)
                                         <span class="badge bg-gradient-success">

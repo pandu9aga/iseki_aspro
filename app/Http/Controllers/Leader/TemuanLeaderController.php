@@ -90,6 +90,11 @@ class TemuanLeaderController extends Controller
 
     public function deleteTemuan(string $Id_Temuan)
     {
+        $current_user = User::find(session('Id_User'));
+        if (!$current_user || !in_array($current_user->Username_User, ['saiful', 'mulyono'])) {
+            return redirect()->route('leader-temuan.list')->with('error', 'Unauthorized to delete Temuan.');
+        }
+
         $temuan = Temuan::findOrFail($Id_Temuan);
 
         try {
@@ -106,6 +111,11 @@ class TemuanLeaderController extends Controller
 
     public function deletePenanganan(string $Id_Temuan)
     {
+        $current_user = User::find(session('Id_User'));
+        if (!$current_user || !in_array($current_user->Username_User, ['saiful', 'mulyono'])) {
+            return redirect()->back()->with('error', 'Unauthorized to delete Penanganan.');
+        }
+
         $temuan = Temuan::findOrFail($Id_Temuan);
 
         try {

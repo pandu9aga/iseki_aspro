@@ -37,15 +37,20 @@
                         @else
                             <span class="text-xs text-muted">-</span>
                         @endif
-                        <form action="{{ route('leader-temuan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
-                            method="POST" class="d-inline"
-                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus temuan ini? Semua file terkait akan ikut terhapus.');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger mb-0" title="Hapus Temuan">
-                                <i class="material-symbols-rounded text-sm">delete</i>
-                            </button>
-                        </form>
+                        @php
+                            $current_user = \App\Models\User::find(session('Id_User'));
+                        @endphp
+                        @if($current_user && in_array($current_user->Username_User, ['saiful', 'mulyono']))
+                            <form action="{{ route('leader-temuan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
+                                method="POST" class="d-inline"
+                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus temuan ini? Semua file terkait akan ikut terhapus.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger mb-0" title="Hapus Temuan">
+                                    <i class="material-symbols-rounded text-sm">delete</i>
+                                </button>
+                            </form>
+                        @endif
                     </td>
                     <td class="align-middle text-center">
                         @if($current_user && in_array($current_user->Username_User, ['saiful', 'mulyono']))

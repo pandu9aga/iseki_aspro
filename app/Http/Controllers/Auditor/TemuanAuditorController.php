@@ -387,62 +387,7 @@ class TemuanAuditorController extends Controller
         }
     }
 
-    /**
-     * Delete a temuan and all associated files.
-     */
-    public function deleteTemuan(string $Id_Temuan)
-    {
-        $temuan = Temuan::findOrFail($Id_Temuan);
 
-        try {
-            $this->deleteTemuanFiles($temuan);
-            $temuan->delete();
-
-            return redirect()->route('auditor-report.temuan_index')->with('success', 'Temuan berhasil dihapus beserta semua data terkait.');
-        } catch (\Exception $e) {
-            Log::error('Error deleting temuan: '.$e->getMessage(), ['exception' => $e]);
-
-            return redirect()->route('auditor-report.temuan_index')->with('error', 'Gagal menghapus Temuan. Silakan periksa log.');
-        }
-    }
-
-    /**
-     * Delete a penanganan only (reset to waiting for penanganan).
-     */
-    public function deletePenanganan(string $Id_Temuan)
-    {
-        $temuan = Temuan::findOrFail($Id_Temuan);
-
-        try {
-            $objectdata = new JsonHelper($temuan->Object_Temuan);
-            $filePath = $objectdata->get('File_Path_Penanganan', '');
-
-            if ($filePath) {
-                $this->deleteFile($filePath);
-            }
-
-            $objectdata->Is_Submit_Penanganan = false;
-            $objectdata->UploudFoto_Time_Penanganan = '';
-            $objectdata->File_Path_Penanganan = '';
-            $objectdata->Name_User_Penanganan = '';
-            $objectdata->Validation_Notes = '';
-            $objectdata->Validation_Time = '';
-            $objectdata->Comments_Penanganan = [];
-            $objectdata->Is_Rejected = false;
-            $objectdata->Rejection_Notes = '';
-            $objectdata->Rejection_Time = '';
-
-            $temuan->Object_Temuan = $objectdata;
-            $temuan->Time_Penanganan = null;
-            $temuan->Status_Temuan = 0;
-            $temuan->save();
-
-            return redirect()->back()->with('success', 'Penanganan berhasil dihapus. Status kembali ke Menunggu Penanganan.');
-        } catch (\Exception $e) {
-            Log::error('Error deleting penanganan: '.$e->getMessage(), ['exception' => $e]);
-            return redirect()->back()->with('error', 'Gagal menghapus Penanganan. Silakan periksa log.');
-        }
-    }
 
     // ============================================
     // File Helper Methods
