@@ -37,6 +37,29 @@ class TemuanLeaderController extends Controller
 
         $temuans = $query->orderBy('Time_Temuan', 'desc')->get();
 
+        // Status Filter
+        if ($request->has('status')) {
+            $statusFilter = $request->input('status');
+            session(['last_temuan_status' => $statusFilter]);
+        } else {
+            $statusFilter = session('last_temuan_status') ?? 'all';
+        }
+
+        if ($statusFilter !== 'all') {
+            $temuans = $temuans->filter(function($temuan) use ($statusFilter) {
+                $object = new JsonHelper($temuan->Object_Temuan);
+                
+                if ($statusFilter === 'selesai') {
+                    return $temuan->Status_Temuan;
+                } elseif ($statusFilter === 'ditolak') {
+                    return $object->get('Is_Rejected');
+                } elseif ($statusFilter === 'belum_divalidasi') {
+                    return !$temuan->Status_Temuan && !$object->get('Is_Rejected');
+                }
+                return true;
+            });
+        }
+
         // Group temuans by Tipe_Temuan
         $tipeTemuanCategories = [
             'Revisi prosedur' => [],
@@ -64,6 +87,7 @@ class TemuanLeaderController extends Controller
             'temuans' => $temuans,
             'tipeTemuanCategories' => $tipeTemuanCategories,
             'month' => $month,
+            'statusFilter' => $statusFilter,
         ]);
     }
 

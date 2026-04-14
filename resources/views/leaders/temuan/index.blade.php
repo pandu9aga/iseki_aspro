@@ -423,12 +423,24 @@
                                             <input type="month" class="form-control" name="month" id="monthInput"
                                                 value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}">
                                         </div>
+                                        <div class="col-md-4 col-lg-3">
+                                            <label for="statusInput"
+                                                class="form-label text-xs text-uppercase font-weight-bolder mb-2">
+                                                <i class="material-symbols-rounded text-xs">filter_list</i> Filter Status
+                                            </label>
+                                            <select class="form-select border px-2" name="status" id="statusInput">
+                                                <option value="all" {{ ($statusFilter ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status</option>
+                                                <option value="belum_divalidasi" {{ ($statusFilter ?? '') == 'belum_divalidasi' ? 'selected' : '' }}>Belum Divalidasi</option>
+                                                <option value="ditolak" {{ ($statusFilter ?? '') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                                <option value="selesai" {{ ($statusFilter ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                            </select>
+                                        </div>
                                         <div class="col-md-2">
                                             <button class="btn btn-primary w-100 mb-0" type="submit">
                                                 <i class="material-symbols-rounded text-sm">filter_alt</i> Apply
                                             </button>
                                         </div>
-                                        <div class="col-md-6 col-lg-7 mt-3 mt-md-0">
+                                        <div class="col-md-12 col-lg-4 mt-3 mt-lg-0">
                                             <div class="alert alert-info mb-0 py-2" role="alert">
                                                 <small class="text-white d-flex align-items-center">
                                                     <i class="material-symbols-rounded text-sm me-1">info</i>
