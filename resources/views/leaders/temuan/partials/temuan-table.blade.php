@@ -98,11 +98,11 @@
                             </span>
                         @elseif($object->Is_Submit_Penanganan)
                             <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">
-                                <i class="material-symbols-rounded text-xxs me-1">schedule</i>Wait
+                                <i class="material-symbols-rounded text-xxs me-1">schedule</i>Penanganan
                             </span>
                         @else
                             <span class="badge badge-sm bg-gradient-warning" style="font-size: 0.65rem;">
-                                <i class="material-symbols-rounded text-xxs me-1">pending</i>Pending
+                                <i class="material-symbols-rounded text-xxs me-1">pending</i>Validasi
                             </span>
                         @endif
                     </td>
