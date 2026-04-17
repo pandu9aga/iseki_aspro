@@ -3,131 +3,124 @@
         <thead>
             <tr>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">No</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pe-2">Action
-                </th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tipe Temuan
-                </th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor -
-                    Area</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Prosedur
-                </th>
-                <th class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-3">Item
-                    Prosedur</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tipe Temuan</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor - Area</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Prosedur</th>
+                <th class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-3">Item Prosedur</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Temuan</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Penanganan</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Member</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Auditor</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Temuan
-                </th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl
-                    Penanganan</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($temuans as $index => $temuan)
+                @php
+                    $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
+                    $current_user = \App\Models\User::find(session('Id_User'));
+                @endphp
                 <tr class="row-data">
                     <td class="align-middle text-center ps-2">
-                        <span class="text-secondary text-xs font-weight-bold">{{ $index + 1 }}</span>
+                        <span class="text-secondary text-xxs font-weight-bold">{{ $index + 1 }}</span>
                     </td>
-                    <td class="align-middle text-center pe-2">
-                        @if($temuan->ListReport)
-                            <a href="{{ route('leader-temuan.show', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
-                                class="btn btn-sm btn-info mb-0" title="Lihat Detail">
-                                <i class="material-symbols-rounded text-sm">visibility</i>
-                            </a>
-                        @else
-                            <span class="text-xs text-muted">-</span>
-                        @endif
-                        @php
-                            $current_user = \App\Models\User::find(session('Id_User'));
-                        @endphp
-                        @if($current_user && in_array($current_user->Username_User, ['saiful', 'mulyono']))
-                            <form action="{{ route('leader-temuan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
-                                method="POST" class="d-inline"
-                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus temuan ini? Semua file terkait akan ikut terhapus.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger mb-0" title="Hapus Temuan">
-                                    <i class="material-symbols-rounded text-sm">delete</i>
-                                </button>
-                            </form>
-                        @endif
+                    <td class="align-middle text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            @if($temuan->ListReport)
+                                <a href="{{ route('leader-temuan.show', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
+                                    class="text-info" title="Lihat Detail">
+                                    <i class="material-symbols-rounded text-sm">visibility</i>
+                                </a>
+                            @else
+                                <span class="text-xxs text-muted me-1">-</span>
+                            @endif
+                            
+                            @if($current_user && in_array($current_user->Username_User, ['saiful', 'mulyono']))
+                                <form action="{{ route('leader-temuan.delete', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
+                                    method="POST" class="d-inline"
+                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus temuan ini? Semua file terkait akan ikut terhapus.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-danger btn bg-transparent mt-3" title="Hapus Temuan">
+                                        <i class="material-symbols-rounded text-sm">delete</i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </td>
                     <td class="align-middle text-center">
                         @if($current_user && in_array($current_user->Username_User, ['saiful', 'mulyono']))
                             <button class="btn btn-sm btn-link p-0 m-0"
                                 onclick="openTipeTemuanModal('{{ $temuan->Id_Temuan }}', '{{ $temuan->Tipe_Temuan }}')">
                                 @if($temuan->Tipe_Temuan)
-                                    <span class="badge badge-sm bg-gradient-info">
+                                    <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">
                                         {{ $temuan->Tipe_Temuan }}
-                                        <i class="material-symbols-rounded text-xs ms-1">edit</i>
+                                        <i class="material-symbols-rounded text-xxs ms-1">edit</i>
                                     </span>
                                 @else
-                                    <span class="badge badge-sm bg-gradient-secondary">
-                                        Belum ditentukan
-                                        <i class="material-symbols-rounded text-xs ms-1">edit</i>
+                                    <span class="badge badge-sm bg-gradient-secondary" style="font-size: 0.65rem;">
+                                        Set
+                                        <i class="material-symbols-rounded text-xxs ms-1">edit</i>
                                     </span>
                                 @endif
                             </button>
                         @else
                             @if($temuan->Tipe_Temuan)
-                                <span class="badge badge-sm bg-gradient-info">{{ $temuan->Tipe_Temuan }}</span>
+                                <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">{{ $temuan->Tipe_Temuan }}</span>
                             @else
-                                <span class="badge badge-sm bg-gradient-secondary">-</span>
+                                <span class="badge badge-sm bg-gradient-secondary" style="font-size: 0.65rem;">-</span>
                             @endif
                         @endif
                     </td>
                     <td class="align-middle text-center">
                         <div class="d-flex flex-column align-items-center">
-                            <span
-                                class="text-xs font-weight-bold">{{ $temuan->ListReport ? $temuan->ListReport->Name_Tractor : '-' }}</span>
-                            <span
-                                class="text-xxs text-secondary">{{ $temuan->ListReport ? $temuan->ListReport->Name_Area : '' }}</span>
+                            <span class="text-xxs font-weight-bold">{{ $temuan->ListReport ? $temuan->ListReport->Name_Tractor : '-' }}</span>
+                            <span class="text-xxs text-secondary">{{ $temuan->ListReport ? $temuan->ListReport->Name_Area : '' }}</span>
                         </div>
                     </td>
                     <td class="align-middle text-center">
-                        <span class="text-xs">{{ $temuan->ListReport->Name_Procedure ?? '-' }}</span>
+                        <span class="text-sm">{{ $temuan->ListReport->Name_Procedure ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-left ps-3">
-                        <span class="text-xs">{{ $temuan->ListReport->Item_Procedure ?? '-' }}</span>
-                    </td>
-                    <td class="align-middle text-center">
-                        <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
-                    </td>
-                    <td class="align-middle text-center">
-                        <span class="text-xs">{{ $temuan->User->Name_User ?? '-' }}</span>
-                    </td>
-                    <td class="align-middle text-center">
-                        <span
-                            class="text-xs">{{ $temuan->Time_Temuan ? \Carbon\Carbon::parse($temuan->Time_Temuan)->format('d/m/Y') : '-' }}</span>
-                    </td>
-                    <td class="align-middle text-center">
-                        @php
-                            $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
-                        @endphp
-                        @if($temuan->Time_Penanganan)
-                            <span class="text-xs">{{ \Carbon\Carbon::parse($temuan->Time_Penanganan)->format('d/m/Y') }}</span>
-                        @else
-                            <span class="text-xs text-secondary">-</span>
-                        @endif
+                        <span class="text-xs" title="{{ $temuan->ListReport->Item_Procedure ?? '-' }}">
+                            {{ Str::limit($temuan->ListReport->Item_Procedure ?? '-', 20) }}
+                        </span>
                     </td>
                     <td class="align-middle text-center">
                         @if($temuan->Status_Temuan)
-                            <span class="badge badge-sm bg-gradient-success">
-                                <i class="material-symbols-rounded text-xs me-1">check_circle</i>Selesai
+                            <span class="badge badge-sm bg-gradient-success" style="font-size: 0.65rem;">
+                                <i class="material-symbols-rounded text-xxs me-1">check_circle</i>Selesai
                             </span>
                         @elseif($object->get('Is_Rejected'))
-                            <span class="badge badge-sm bg-gradient-danger">
-                                <i class="material-symbols-rounded text-xs me-1">cancel</i>Ditolak
+                            <span class="badge badge-sm bg-gradient-danger" style="font-size: 0.65rem;">
+                                <i class="material-symbols-rounded text-xxs me-1">cancel</i>Ditolak
                             </span>
                         @elseif($object->Is_Submit_Penanganan)
-                            <span class="badge badge-sm bg-gradient-info">
-                                <i class="material-symbols-rounded text-xs me-1">schedule</i>Menunggu Validasi
+                            <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">
+                                <i class="material-symbols-rounded text-xxs me-1">schedule</i>Wait
                             </span>
                         @else
-                            <span class="badge badge-sm bg-gradient-warning">
-                                <i class="material-symbols-rounded text-xs me-1">pending</i>Menunggu Penanganan
+                            <span class="badge badge-sm bg-gradient-warning" style="font-size: 0.65rem;">
+                                <i class="material-symbols-rounded text-xxs me-1">pending</i>Pending
                             </span>
                         @endif
+                    </td>
+                    <td class="align-middle text-center">
+                        <span class="text-sm">{{ $temuan->Time_Temuan ? \Carbon\Carbon::parse($temuan->Time_Temuan)->format('d/m/Y') : '-' }}</span>
+                    </td>
+                    <td class="align-middle text-center">
+                        @if($temuan->Time_Penanganan)
+                            <span class="text-sm">{{ \Carbon\Carbon::parse($temuan->Time_Penanganan)->format('d/m/Y') }}</span>
+                        @else
+                            <span class="text-sm text-secondary">-</span>
+                        @endif
+                    </td>
+                    <td class="align-middle text-center">
+                        <span class="text-xxs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
+                    </td>
+                    <td class="align-middle text-center">
+                        <span class="text-xxs text-secondary font-weight-bold">{{ $temuan->User->Name_User ?? '-' }}</span>
                     </td>
                 </tr>
             @empty
