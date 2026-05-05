@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auditor\BaseController;
+use App\Http\Controllers\Auditor\ProcedureAuditorController;
 use App\Http\Controllers\Auditor\ProfileAuditorController;
 use App\Http\Controllers\Auditor\ReportAuditorController;
 use App\Http\Controllers\Auditor\TemuanAuditorController;
@@ -188,5 +189,11 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
         Route::get('statistics/monthly', [TemuanAuditorController::class, 'getMonthlyStatistics'])->name('auditor-temuan.statistics.monthly');
         Route::get('statistics/missing', [TemuanAuditorController::class, 'getMissingStatistics'])->name('auditor-temuan.statistics.missing');
         Route::get('missing', [TemuanAuditorController::class, 'missingTemuan'])->name('auditor-temuan.missing');
+    });
+
+    Route::prefix('procedure_auditor')->group(function () {
+        Route::get('/', [ProcedureAuditorController::class, 'index'])->name('procedure_auditor');
+        Route::get('/area/{Name_Tractor}', [ProcedureAuditorController::class, 'index_area'])->name('procedure_auditor.area.index');
+        Route::get('/area/procedure/{Name_Tractor}/{Name_Area}', [ProcedureAuditorController::class, 'index_procedure'])->name('procedure_auditor.procedure.index');
     });
 });

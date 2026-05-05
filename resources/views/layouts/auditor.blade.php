@@ -79,6 +79,13 @@
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'procedure' ? 'text-primary' : '' }}"
+                                        href="{{ route('procedure_auditor') }}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">format_list_numbered</i>
+                                        Procedure
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown dropdown-hover mx-2">
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'temuan' ? 'text-primary' : '' }}"
                                         href="{{route('auditor-report.temuan_index')}}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">report_problem</i>
@@ -86,8 +93,8 @@
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown dropdown-hover mx-2">
-                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'profile' ? 'text-primary' : '' }}""
-                                        href=" {{ route('profile_auditor') }}">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'profile' ? 'text-primary' : '' }}"
+                                        href="{{ route('profile_auditor') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">account_circle</i>
                                         Profile
                                     </a>
@@ -130,6 +137,11 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('report_auditor') }}">
                                     Training
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('procedure_auditor') }}">
+                                    Procedure
                                 </a>
                             </li>
                             <li class="nav-item">
