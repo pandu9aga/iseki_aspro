@@ -46,8 +46,8 @@
       style="background-image: url('{{ asset('assets/img/bg2.jpg') }}');">
       <span class="mask bg-gradient-dark opacity-6"></span>
       <div class="container my-auto">
-        <div class="row">
-          <div class="col-lg-5 col-md-8 col-12 mx-auto">
+        <div class="row justify-content-center">
+          <div class="col-lg-4 col-md-8 col-12">
             <div class="card z-index-0 fadeIn3 fadeInBottom">
 
               <!-- Logo -->
@@ -76,11 +76,6 @@
                             <a id="show-admin" class="nav-link mb-0 px-0 py-1 fw-bold" data-bs-toggle="tab"
                               href="#dashboard-tabs-simple" role="tab" aria-controls="dashboard" aria-selected="false">
                               <span id="item-admin">Admin</span>
-                            </a>
-                          </li>
-                          <li class="nav-item">
-                            <a class="nav-link mb-0 px-0 py-1 fw-bold" href="{{ route('procedure_public') }}">
-                              <span>Procedure</span>
                             </a>
                           </li>
                         </ul>
@@ -145,6 +140,19 @@
               </div> <!-- end card-body -->
             </div>
           </div>
+
+          <div class="col-lg-4 col-md-8 col-12 mt-lg-0 mt-4">
+              <a href="{{ route('procedure_public') }}" class="text-decoration-none">
+                  <div class="card hover-card bg-white border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg z-index-0 fadeIn3 fadeInBottom">
+                      <i class="material-symbols-rounded text-primary" style="font-size: 120px;">format_list_numbered</i>
+                      <br>
+                      <div class="mt-3 text-center">
+                          <h3 class="text-primary fw-bold">Procedure</h3>
+                          <p class="text-secondary">View Assembling Procedures</p>
+                      </div>
+                  </div>
+              </a>
+          </div>
         </div>
       </div>
     </div>
@@ -175,6 +183,21 @@
 
     .slide-left {
       transform: translateX(-50%);
+    }
+
+    .hover-card {
+        transition: all 0.3s ease;
+    }
+
+    .hover-card:hover {
+        background: linear-gradient(195deg, #EC407A 0%, #D81B60 100%) !important;
+        transform: translateY(-10px);
+    }
+
+    .hover-card:hover i,
+    .hover-card:hover h3,
+    .hover-card:hover p {
+        color: white !important;
     }
   </style>
 
