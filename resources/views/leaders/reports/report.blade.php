@@ -17,11 +17,36 @@
 
         <section class="pt-3 pb-4" id="count-stats">
             <div class="container">
-                <!-- Tombol Back -->
-                <a class="btn btn-primary mx-3" href="javascript:void(0)" onclick="window.history.back()">
-                    <span style="padding-left: 50px; padding-right: 50px;"><b> </b> Back</span>
-                </a>
-                <br><br>
+                <!-- Tombol Back & Navigation -->
+                <div class="d-flex gap-2 mb-4 align-items-center">
+                    <a class="btn btn-primary mb-0" href="javascript:void(0)" onclick="window.history.back()">
+                        <i class="material-symbols-rounded text-sm">arrow_back</i> Back
+                    </a>
+
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        @if($prevReportId)
+                            <a href="{{ route('report.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary mb-0" title="Previous Report">
+                                <i class="material-symbols-rounded text-sm">chevron_left</i>
+                            </a>
+                        @else
+                            <button class="btn btn-outline-secondary mb-0" disabled>
+                                <i class="material-symbols-rounded text-sm">chevron_left</i>
+                            </button>
+                        @endif
+
+                        <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
+
+                        @if($nextReportId)
+                            <a href="{{ route('report.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary mb-0" title="Next Report">
+                                <i class="material-symbols-rounded text-sm">chevron_right</i>
+                            </a>
+                        @else
+                            <button class="btn btn-outline-secondary mb-0" disabled>
+                                <i class="material-symbols-rounded text-sm">chevron_right</i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
 
                 <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h4>
                 <br>

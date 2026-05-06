@@ -34,11 +34,35 @@
                     </div>
                 @endif
 
-                <!-- Tombol Back -->
-                <div class="d-flex gap-2 mb-4">
-                    <a class="btn btn-primary" href="{{ route('leader-temuan.list') }}">
+                <!-- Tombol Back & Navigation -->
+                <div class="d-flex gap-2 mb-4 align-items-center">
+                    <a class="btn btn-primary mb-0" href="{{ route('leader-temuan.list') }}">
                         <i class="material-symbols-rounded text-sm">arrow_back</i> Back to List
                     </a>
+
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        @if($prevTemuanId)
+                            <a href="{{ route('leader-temuan.show', ['Id_Temuan' => $prevTemuanId]) }}" class="btn btn-outline-primary mb-0" title="Previous Temuan">
+                                <i class="material-symbols-rounded text-sm">chevron_left</i>
+                            </a>
+                        @else
+                            <button class="btn btn-outline-secondary mb-0" disabled>
+                                <i class="material-symbols-rounded text-sm">chevron_left</i>
+                            </button>
+                        @endif
+
+                        <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ $totalTemuans }}</span>
+
+                        @if($nextTemuanId)
+                            <a href="{{ route('leader-temuan.show', ['Id_Temuan' => $nextTemuanId]) }}" class="btn btn-outline-primary mb-0" title="Next Temuan">
+                                <i class="material-symbols-rounded text-sm">chevron_right</i>
+                            </a>
+                        @else
+                            <button class="btn btn-outline-secondary mb-0" disabled>
+                                <i class="material-symbols-rounded text-sm">chevron_right</i>
+                            </button>
+                        @endif
+                    </div>
                 </div>
 
                 <!-- Page Title -->

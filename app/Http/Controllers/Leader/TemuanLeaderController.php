@@ -248,6 +248,21 @@ class TemuanLeaderController extends Controller
         $jsonData = new JsonHelper($temuan->Object_Temuan);
         $object = $jsonData;
 
+        // Get sibling temuan IDs for prev/next navigation
+        $month = session('last_temuan_month') ?? Carbon::now()->format('Y-m');
+        [$year, $monthNum] = explode('-', $month);
+
+        $siblingTemuans = Temuan::whereNotNull('Time_Temuan')
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->orderBy('Time_Temuan', 'desc')
+            ->pluck('Id_Temuan')
+            ->toArray();
+
+        $currentPos = array_search($Id_Temuan, $siblingTemuans);
+        $prevTemuanId = ($currentPos !== false && $currentPos > 0) ? $siblingTemuans[$currentPos - 1] : null;
+        $nextTemuanId = ($currentPos !== false && $currentPos < count($siblingTemuans) - 1) ? $siblingTemuans[$currentPos + 1] : null;
+
         return view('leaders.temuan.temuan_show', [
             'page' => $page,
             'temuan' => $temuan,
@@ -255,6 +270,10 @@ class TemuanLeaderController extends Controller
             'pdfPath' => $pdfPath,
             'object' => $object,
             'current_user' => $current_user,
+            'prevTemuanId' => $prevTemuanId,
+            'nextTemuanId' => $nextTemuanId,
+            'currentPos' => $currentPos !== false ? $currentPos + 1 : 0,
+            'totalTemuans' => count($siblingTemuans),
         ]);
     }
 

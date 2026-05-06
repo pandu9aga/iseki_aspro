@@ -96,7 +96,22 @@ class ReportAuditorController extends Controller
         $fileName = $listReport->Name_Procedure.'.pdf';
         $pdfPath = $fullPath.'/'.$fileName;
 
-        return view('auditors.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
+        // Get sibling list reports for prev/next navigation
+        $siblingReports = List_Report::where('Id_Report', $listReport->Id_Report)
+            ->where('Name_Tractor', $listReport->Name_Tractor)
+            ->orderBy('Name_Procedure')
+            ->pluck('Id_List_Report')
+            ->toArray();
+
+        $currentPos = array_search($Id_List_Report, $siblingReports);
+        $prevReportId = ($currentPos !== false && $currentPos > 0) ? $siblingReports[$currentPos - 1] : null;
+        $nextReportId = ($currentPos !== false && $currentPos < count($siblingReports) - 1) ? $siblingReports[$currentPos + 1] : null;
+
+        return view('auditors.reports.report', compact(
+            'page', 'listReport', 'pdfPath', 'user',
+            'prevReportId', 'nextReportId', 
+            'currentPos', 'siblingReports'
+        ));
     }
 
     public function submit_report(Request $request, $Id_List_Report)
