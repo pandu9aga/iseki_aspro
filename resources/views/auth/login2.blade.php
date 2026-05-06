@@ -21,7 +21,7 @@
   <link rel="apple-touch-icon" sizes="76x76" href="{{asset('assets/img/apple-icon.png')}}">
   <link rel="icon" type="image/png" href="{{asset('assets/img/favicon.png')}}">
   <title>
-    Iseki Aspro - Assembling Procedure
+    Iseki Procedure
   </title>
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="{{asset('assets/css/style.css')}}" />
@@ -53,8 +53,8 @@
               <!-- Logo -->
               <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 text-center">
                 <div class="bg-gradient-primary shadow-primary border-radius-lg py-3 pe-1">
-                  <h3 class="text-white">Iseki Aspro</h3>
-                  <h5 class="text-white" style="margin-top: -10px;">Assembling Procedure</h5>
+                  <h3 class="text-white">Iseki</h3>
+                  <h5 class="text-white" style="margin-top: -10px;">Procedure</h5>
                 </div>
               </div>
 
@@ -156,7 +156,7 @@
       <span class="text-white text-sm">
         ©
         <script>document.write(new Date().getFullYear())</script>,
-        PT. Iseki Indonesia - Assembling Procedure
+        PT. Iseki Indonesia - Procedure
       </span>
     </div>
   </footer>

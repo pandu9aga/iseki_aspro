@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets/img/apple-icon.png') }}">
     <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon.png') }}">
     <title>
-        Iseki Aspro - Assembling Procedure
+        Iseki Procedure
     </title>
     <!--     Fonts and icons     -->
     <link rel="stylesheet" type="text/css" href="{{asset('assets/css/style.css')}}" />
@@ -25,7 +25,7 @@
 
     <!-- Dynamic Favicon -->
     <script src="/iseki_pro_app/js/dynamic-favicon.js"></script>
-    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Aspro"); });</script>
+    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Procedure"); });</script>
 </head>
 
 <body class="index-page bg-gray-200">
@@ -37,8 +37,8 @@
                     class="navbar navbar-expand-lg  blur border-radius-xl top-0 z-index-fixed shadow position-absolute my-3 p-2 start-0 end-0 mx-4">
                     <div class="container-fluid px-0">
                         <a class="navbar-brand font-weight-bolder ms-sm-3 text-sm" href="{{ route('login') }}"
-                            rel="tooltip" title="Iseki Aspro" data-placement="bottom">
-                            <span class="text-primary">Iseki Aspro</span>
+                            rel="tooltip" title="Iseki Procedure" data-placement="bottom">
+                            <span class="text-primary">Iseki Procedure</span>
                         </a>
                         <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navigation" aria-controls="navigation" aria-expanded="false"
@@ -87,8 +87,8 @@
             <div class=" row">
                 <div class="col-md-3 mb-4 ms-auto">
                     <div>
-                        <h4 class="font-weight-bolder text-primary mb-0">Iseki Aspro</h4>
-                        <h5 class="mb-4">Assembling Procedure</h5>
+                        <h4 class="font-weight-bolder text-primary mb-0">Iseki</h4>
+                        <h5 class="mb-4">Procedure</h5>
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-6 col-6 mb-4">
@@ -116,7 +116,7 @@
                             <script>
                                 document.write(new Date().getFullYear())
                             </script>,
-                            <span class="text-primary">PT. Iseki Indonesia</span> - Assembling Procedure
+                            <span class="text-primary">PT. Iseki Indonesia</span> - Procedure
                         </p>
                     </div>
                 </div>
