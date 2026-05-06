@@ -43,7 +43,7 @@
 
     <!-- Dynamic Favicon -->
     <script src="/iseki_pro_app/js/dynamic-favicon.js"></script>
-    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Aspro"); });</script>
+    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Procedure"); });</script>
 </head>
 
 <body class="index-page bg-gray-200">
