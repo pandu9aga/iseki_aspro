@@ -36,6 +36,16 @@ Route::get('/logout', [MainController::class, 'logout'])->name('logout');
 Route::get('/logout_member', [MainController::class, 'logout_member'])->name('logout.member');
 
 // =====================
+// Public Procedure Routes
+// =====================
+use App\Http\Controllers\ProcedurePublicController;
+Route::prefix('procedure_public')->group(function () {
+    Route::get('/', [ProcedurePublicController::class, 'index'])->name('procedure_public');
+    Route::get('/area/{Name_Tractor}', [ProcedurePublicController::class, 'index_area'])->name('procedure_public.area.index');
+    Route::get('/area/procedure/{Name_Tractor}/{Name_Area}', [ProcedurePublicController::class, 'index_procedure'])->name('procedure_public.procedure.index');
+});
+
+// =====================
 // Leader Routes
 // =====================
 Route::middleware(LeaderMiddleware::class)->group(function () {

@@ -78,6 +78,11 @@
                               <span id="item-admin">Admin</span>
                             </a>
                           </li>
+                          <li class="nav-item">
+                            <a class="nav-link mb-0 px-0 py-1 fw-bold" href="{{ route('procedure_public') }}">
+                              <span>Procedure</span>
+                            </a>
+                          </li>
                         </ul>
                       </div>
                     </div>
