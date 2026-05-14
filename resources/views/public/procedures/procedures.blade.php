@@ -83,8 +83,17 @@
                 <h5 class="modal-title text-white" id="previewModalLabel">Preview Procedure <span id="title"></span></h5>
                 <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-0">
                 <iframe id="pdf-frame" src="" width="100%" height="600px" style="border:none;"></iframe>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" id="prevPdfBtn" onclick="navigatePdf(-1)">
+                    <i class="material-symbols-rounded text-sm align-middle">arrow_back</i> Previous
+                </button>
+                <span class="text-sm text-secondary" id="pdfCounter"></span>
+                <button type="button" class="btn btn-outline-primary" id="nextPdfBtn" onclick="navigatePdf(1)">
+                    Next <i class="material-symbols-rounded text-sm align-middle">arrow_forward</i>
+                </button>
             </div>
         </div>
     </div>
@@ -102,12 +111,44 @@
 new DataTable('#example');
 </script>
 <script>
+  // Build PDF list from table data
+  const pdfList = [
+    @foreach($procedures as $p)
+      {
+        url: '{{ asset('storage/procedures/' . $p->Name_Tractor . '/' . $p->Name_Area . '/' . $p->Name_Procedure . '.pdf') }}?t={{ time() }}',
+        title: '{{ $p->Name_Procedure }}'
+      },
+    @endforeach
+  ];
+  let currentPdfIndex = 0;
+
   function previewPdf(fileUrl, title) {
-    document.getElementById('pdf-frame').src = fileUrl;
-    document.getElementById('title').textContent = '( ' + title + ' )';
+    // Find the index of the clicked PDF
+    const idx = pdfList.findIndex(p => p.title === title);
+    if (idx !== -1) currentPdfIndex = idx;
+
+    loadPdfAtIndex(currentPdfIndex);
 
     const modal = new bootstrap.Modal(document.getElementById('previewModal'));
     modal.show();
+  }
+
+  function loadPdfAtIndex(index) {
+    const item = pdfList[index];
+    document.getElementById('pdf-frame').src = item.url;
+    document.getElementById('title').textContent = '( ' + item.title + ' )';
+    document.getElementById('pdfCounter').textContent = (index + 1) + ' / ' + pdfList.length;
+
+    document.getElementById('prevPdfBtn').disabled = (index <= 0);
+    document.getElementById('nextPdfBtn').disabled = (index >= pdfList.length - 1);
+  }
+
+  function navigatePdf(direction) {
+    const newIndex = currentPdfIndex + direction;
+    if (newIndex >= 0 && newIndex < pdfList.length) {
+      currentPdfIndex = newIndex;
+      loadPdfAtIndex(currentPdfIndex);
+    }
   }
 </script>
 @endsection

@@ -62,9 +62,10 @@ class ReportMemberController extends Controller
             ->pluck('Id_List_Report')
             ->toArray();
 
-        $currentPos = array_search($Id_List_Report, $siblingReports);
-        $prevReportId = ($currentPos !== false && $currentPos > 0) ? $siblingReports[$currentPos - 1] : null;
-        $nextReportId = ($currentPos !== false && $currentPos < count($siblingReports) - 1) ? $siblingReports[$currentPos + 1] : null;
+        $currentIndex = array_search($Id_List_Report, $siblingReports);
+        $prevReportId = ($currentIndex !== false && $currentIndex > 0) ? $siblingReports[$currentIndex - 1] : null;
+        $nextReportId = ($currentIndex !== false && $currentIndex < count($siblingReports) - 1) ? $siblingReports[$currentIndex + 1] : null;
+        $currentPos = $currentIndex !== false ? $currentIndex + 1 : 0;
 
         return view('members.reports.report', compact(
             'page', 'listReport', 'pdfPath', 'member',
