@@ -55,9 +55,9 @@ class ReportMemberController extends Controller
         $fileName = $listReport->Name_Procedure.'.pdf';
         $pdfPath = $fullPath.'/'.$fileName;
 
-        // Get sibling list reports for prev/next navigation
+        // Get sibling list reports for prev/next navigation (all procedures in the report)
         $siblingReports = List_Report::where('Id_Report', $listReport->Id_Report)
-            ->where('Name_Tractor', $listReport->Name_Tractor)
+            ->orderBy('Name_Tractor')
             ->orderBy('Name_Procedure')
             ->pluck('Id_List_Report')
             ->toArray();

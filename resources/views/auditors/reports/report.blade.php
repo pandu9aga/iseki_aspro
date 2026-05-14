@@ -116,7 +116,32 @@
                     <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                 </div>
 
-                <br><br>
+                <!-- PDF Navigation Buttons -->
+                <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+                    @if($prevReportId)
+                        <a href="{{ route('report_auditor.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary">
+                            <i class="material-symbols-rounded text-sm align-middle">arrow_back</i> Previous
+                        </a>
+                    @else
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="material-symbols-rounded text-sm align-middle">arrow_back</i> Previous
+                        </button>
+                    @endif
+
+                    <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
+
+                    @if($nextReportId)
+                        <a href="{{ route('report_auditor.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary">
+                            Next <i class="material-symbols-rounded text-sm align-middle">arrow_forward</i>
+                        </a>
+                    @else
+                        <button class="btn btn-outline-secondary" disabled>
+                            Next <i class="material-symbols-rounded text-sm align-middle">arrow_forward</i>
+                        </button>
+                    @endif
+                </div>
+
+                <br>
                 @if (is_null($listReport->Time_Approved_Auditor))
                     <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
                     <div class="my-3">
