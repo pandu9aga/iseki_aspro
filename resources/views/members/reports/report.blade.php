@@ -560,7 +560,7 @@
             formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
             formData.append('timestamp', now);
 
-            fetch(`{{ route('report.detail.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
+            fetch(`{{ route('report_list_member.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 body: formData
