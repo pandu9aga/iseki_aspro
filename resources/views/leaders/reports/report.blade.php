@@ -48,7 +48,7 @@
                     </div>
                 </div>
 
-                <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h4>
+                <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->display_name }}</span></h4>
                 <br>
 
                 {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
@@ -572,7 +572,7 @@
             });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
+            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
             link.click();
         }
 

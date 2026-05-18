@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
+                    <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->display_name }}</span>
                     </h4>
 
                     {{-- @if(is_null($listReport->Time_Approved_Auditor)) --}}
@@ -108,6 +108,11 @@
                     </div>
                     <br>
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
+                    
+                    <form action="{{ route('report_auditor.detail.duplicate', $listReport->Id_List_Report) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-success mt-3 ms-2" onclick="return confirm('Apakah Anda yakin ingin menduplikat training member ini?')">Duplicate Training</button>
+                    </form>
                 @endif
 
                 <div id="pdf-container"
@@ -143,7 +148,7 @@
 
                 <br>
                 @if (is_null($listReport->Time_Approved_Auditor))
-                    <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
+                    <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
                     <div class="my-3">
                         <label class="form-label d-block">Upload Photos</label>
                         <div class="d-flex gap-2">
@@ -594,7 +599,7 @@
             const blob = new Blob([finalBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
+            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
             link.click();
         }
     </script>

@@ -102,7 +102,7 @@
                                     <td class="align-middle text-center">
                                         <p class="mb-0">
                                             <span class="text-xs text-primary">
-                                                {{ $l->Name_Procedure }}
+                                                {{ $l->display_name }}
                                             </span>
                                         </p>
                                     </td>
@@ -148,7 +148,7 @@
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-link text-danger p-0 mx-1"
                                                     title="Delete"
-                                                    onclick="return confirm('Hapus prosedur {{ addslashes($l->Name_Procedure) }} dari laporan ini?')">
+                                                    onclick="return confirm('Hapus prosedur {{ addslashes($l->display_name) }} dari laporan ini?')">
                                                     <i class="material-symbols-rounded">delete</i>
                                                 </button>
                                             </form>
@@ -160,7 +160,7 @@
                                                     @method('PATCH')
                                                     <button type="submit" class="btn btn-link text-warning p-0 mx-1"
                                                         title="Reset Approval"
-                                                        onclick="return confirm('Reset approval untuk prosedur {{ addslashes($l->Name_Procedure) }}?')">
+                                                        onclick="return confirm('Reset approval untuk prosedur {{ addslashes($l->display_name) }}?')">
                                                         <i class="material-symbols-rounded">restart_alt</i>
                                                     </button>
                                                 </form>

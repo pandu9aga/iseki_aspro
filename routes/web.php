@@ -184,6 +184,7 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
         Route::get('/list/detail/{Id_Report}/{Name_Tractor}', [ReportAuditorController::class, 'list_report_detail'])->name('list_report_detail_auditor');
         Route::get('/report/{Id_List_Report}', [ReportAuditorController::class, 'report'])->name('report_auditor.detail');
         Route::post('/submit/{Id_List_Report}', [ReportAuditorController::class, 'submit_report'])->name('report_auditor.detail.submit');
+        Route::post('/duplicate/{Id_List_Report}', [ReportAuditorController::class, 'duplicate_report'])->name('report_auditor.detail.duplicate');
     });
 
     Route::prefix('temuan_auditor')->group(function () {

@@ -79,7 +79,7 @@
                             <td class="align-middle text-center">
                                 <p class="mb-0">
                                     <span class="text-xs">
-                                        {{ $l->Name_Procedure }}
+                                        {{ $l->display_name }}
                                     </span>
                                 </p>
                             </td>

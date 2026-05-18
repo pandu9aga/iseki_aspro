@@ -48,7 +48,7 @@
                     </div>
                 </div>
 
-                <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h4>
+                <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->display_name }}</span></h4>
                 <br>
 
                 {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
@@ -126,7 +126,7 @@
 
                 <br>
                 @if (is_null($listReport->Time_List_Report))
-                    <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
+                    <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
                     <div class="my-3">
                         <label class="form-label d-block">Upload Photos</label>
                         <div class="d-flex gap-2">
@@ -493,7 +493,7 @@
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->Name_Procedure }}.pdf';
+            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
             link.click();
         }
 
