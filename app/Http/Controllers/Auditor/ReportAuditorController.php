@@ -203,6 +203,9 @@ class ReportAuditorController extends Controller
             Storage::disk('public')->copy($originalBlankPdf, $destPdf);
         }
 
-        return redirect()->route('list_report_auditor', ['Id_Report' => $listReport->Id_Report])->with('success', 'Training member berhasil diduplikat.');
+        return redirect()->route('list_report_detail_auditor', [
+            'Id_Report' => $listReport->Id_Report,
+            'Name_Tractor' => $listReport->Name_Tractor,
+        ])->with('success', 'Training member berhasil diduplikat.');
     }
 }

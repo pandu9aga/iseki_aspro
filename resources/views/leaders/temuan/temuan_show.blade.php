@@ -71,7 +71,7 @@
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
                             <h4 class="mb-0">Penanganan Temuan: <span
-                                    class="text-primary">{{ $temuan->ListReport->Name_Procedure }}</span></h4>
+                                    class="text-primary">{{ $temuan->ListReport->display_name }}</span></h4>
                         </div>
                     </div>
                 </div>
@@ -212,7 +212,7 @@
                     </div>
                     <div class="card-body">
                         <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
-                            download="Temuan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                            download="Temuan_{{ $temuan->ListReport->display_name }}_{{ $temuan->Id_Temuan }}.pdf"
                             class="btn btn-success mb-3">
                             <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                         </a>
@@ -298,7 +298,7 @@
 
                             <label class="form-label text-sm font-weight-bold">
                                 <i class="material-symbols-rounded text-sm align-middle me-1">photo_camera</i>
-                                Upload Foto Penanganan: <span class="text-primary">{{ $listReport->Name_Procedure }}</span>
+                                Upload Foto Penanganan: <span class="text-primary">{{ $listReport->display_name }}</span>
                             </label>
                             <div class="mb-3">
                                 <div class="d-flex gap-2">
@@ -399,7 +399,7 @@
                             @endif
 
                             <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}"
-                                download="Penanganan_{{ $listReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                                download="Penanganan_{{ $listReport->display_name }}_{{ $temuan->Id_Temuan }}.pdf"
                                 class="btn btn-success mb-3">
                                 <i class="material-symbols-rounded text-sm">download</i> Download PDF Penanganan
                             </a>

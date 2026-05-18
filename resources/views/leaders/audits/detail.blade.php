@@ -57,7 +57,7 @@
                                             <p class="text-sm font-weight-normal mb-0">{{ $audit->Name_Tractor }}</p>
                                         </td>
                                         <td>
-                                            <span class="badge badge-sm bg-gradient-info">{{ $audit->Name_Procedure }}</span>
+                                            <span class="badge badge-sm bg-gradient-info">{{ $audit->display_name }}</span>
                                             <p class="text-xs text-secondary mb-0">{{ $audit->Item_Procedure }}</p>
                                         </td>
                                         <td>

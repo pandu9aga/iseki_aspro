@@ -75,7 +75,7 @@
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
                             <h4 class="mb-0">Detail Temuan: <span
-                                    class="text-primary">{{ $temuan->ListReport->Name_Procedure }}</span></h4>
+                                    class="text-primary">{{ $temuan->ListReport->display_name }}</span></h4>
                         </div>
                     </div>
                 </div>
@@ -128,7 +128,7 @@
                     </div>
                     <div class="card-body">
                         <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
-                            download="Temuan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                            download="Temuan_{{ $temuan->ListReport->display_name }}_{{ $temuan->Id_Temuan }}.pdf"
                             class="btn btn-success mb-3">
                             <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                         </a>
@@ -266,7 +266,7 @@
                             @endif
 
                             <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}"
-                                download="Penanganan_{{ $temuan->ListReport->Name_Procedure }}_{{ $temuan->Id_Temuan }}.pdf"
+                                download="Penanganan_{{ $temuan->ListReport->display_name }}_{{ $temuan->Id_Temuan }}.pdf"
                                 class="btn btn-success mb-3">
                                 <i class="material-symbols-rounded text-sm">download</i> Download PDF Penanganan
                             </a>

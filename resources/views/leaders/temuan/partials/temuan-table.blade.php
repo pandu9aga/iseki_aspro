@@ -80,7 +80,7 @@
                         </div>
                     </td>
                     <td class="align-middle text-center">
-                        <span class="text-sm">{{ $temuan->ListReport->Name_Procedure ?? '-' }}</span>
+                        <span class="text-sm">{{ $temuan->ListReport->display_name ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-left ps-3">
                         <span class="text-xs" title="{{ $temuan->ListReport->Item_Procedure ?? '-' }}">
