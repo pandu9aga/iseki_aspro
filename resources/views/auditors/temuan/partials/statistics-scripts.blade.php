@@ -170,35 +170,63 @@
         }
     }
 
+    // Filter by missing type
+    function filterMissing(type, el) {
+        const month = document.getElementById('monthPicker').value;
+        const form = document.getElementById('monthFilterForm');
+        const activeType = '{{ $missingType ?? '' }}';
+
+        document.getElementById('monthInput').value = month;
+
+        let missingInput = document.getElementById('missingTypeInput');
+        if (!missingInput) {
+            missingInput = document.createElement('input');
+            missingInput.type = 'hidden';
+            missingInput.name = 'missing_type';
+            missingInput.id = 'missingTypeInput';
+            form.appendChild(missingInput);
+        }
+        // Toggle off if clicking the same active filter
+        missingInput.value = (activeType === type) ? '' : type;
+
+        document.querySelectorAll('.missing-stat-item').forEach(el => el.classList.remove('active-filter'));
+        if (missingInput.value && el) el.classList.add('active-filter');
+
+        form.submit();
+    }
+
     // Load missing statistics
     async function loadMissingStatistics() {
         const container = document.getElementById('missingStatsContainer');
+        const month = document.getElementById('monthPicker').value;
 
         try {
-            const response = await fetch(`{{ route('auditor-temuan.statistics.missing') }}`);
+            const response = await fetch(`{{ route('auditor-temuan.statistics.missing') }}?month=${month}`);
             const data = await response.json();
+
+            const activeType = '{{ $missingType ?? '' }}';
 
             container.innerHTML = `
             <div class="row g-3">
                 <div class="col-md-4">
-                    <div class="missing-stat-item text-center">
+                    <div class="missing-stat-item text-center ${activeType === 'uncategorized' ? 'active-filter' : ''}" data-missing-type="uncategorized" onclick="filterMissing('uncategorized', this)">
                         <i class="material-symbols-rounded text-3xl text-warning mb-2">folder_off</i>
-                        <div class="stat-number text-warning">${data.uncategorized_3days}</div>
-                        <div class="stat-label">Belum Dikategorikan (>3 Hari)</div>
+                        <div class="stat-number text-warning">${data.uncategorized}</div>
+                        <div class="stat-label">Belum Dikategorikan (>1 Hari)</div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="missing-stat-item text-center">
+                    <div class="missing-stat-item text-center ${activeType === 'no_penanganan' ? 'active-filter' : ''}" data-missing-type="no_penanganan" onclick="filterMissing('no_penanganan', this)">
                         <i class="material-symbols-rounded text-3xl text-danger mb-2">build_circle</i>
-                        <div class="stat-number text-danger">${data.no_penanganan_15days}</div>
-                        <div class="stat-label">Belum Ada Penanganan (>15 Hari)</div>
+                        <div class="stat-number text-danger">${data.no_penanganan}</div>
+                        <div class="stat-label">Belum Ada Penanganan (>1 Hari)</div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="missing-stat-item text-center">
-                        <i class="material-symbols-rounded text-3xl text-dark mb-2">priority_high</i>
-                        <div class="stat-number text-dark">${data.total_missing}</div>
-                        <div class="stat-label">Total Missing</div>
+                    <div class="missing-stat-item text-center ${activeType === 'no_validasi' ? 'active-filter' : ''}" data-missing-type="no_validasi" onclick="filterMissing('no_validasi', this)">
+                        <i class="material-symbols-rounded text-3xl text-dark mb-2">verified</i>
+                        <div class="stat-number text-dark">${data.no_validasi}</div>
+                        <div class="stat-label">Belum Di Validasi (>1 Hari)</div>
                     </div>
                 </div>
             </div>

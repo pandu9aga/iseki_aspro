@@ -69,10 +69,19 @@
         border-radius: 0.5rem;
         background: #fff3cd;
         border: 1px solid #ffc107;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
 
     .missing-stat-item:hover {
-        background: #fff3cd;
+        background: #ffeaa7;
         border-color: #ff9800;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .missing-stat-item.active-filter {
+        background: #ffc107;
+        border-color: #e65100;
     }
 </style>

@@ -37,9 +37,35 @@
                     </a>
                 </div>
 
-                <!-- Summary Card -->
+                <!-- Month Filter -->
                 <div class="row mb-4">
-                    <div class="col-md-6">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <form method="GET" action="{{ route('auditor-temuan.missing') }}" id="monthFilterForm">
+                                    <div class="row align-items-end">
+                                        <div class="col-md-4 col-lg-3">
+                                            <label for="monthInput" class="form-label text-xs text-uppercase font-weight-bolder mb-2">
+                                                <i class="material-symbols-rounded text-xs">calendar_month</i> Filter Bulan
+                                            </label>
+                                            <input type="month" class="form-control" name="month" id="monthInput"
+                                                value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-primary w-100 mb-0" type="submit">
+                                                <i class="material-symbols-rounded text-sm">filter_alt</i> Apply
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
                         <div class="card border-warning">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
@@ -48,7 +74,7 @@
                                     </div>
                                     <div>
                                         <h6 class="mb-0">Belum Dikategorikan</h6>
-                                        <p class="text-sm text-muted mb-0">Lebih dari 3 hari</p>
+                                        <p class="text-sm text-muted mb-0">Lebih dari 1 hari</p>
                                     </div>
                                     <div class="ms-auto">
                                         <span class="badge bg-gradient-warning" style="font-size: 1.5rem; padding: 0.5rem 1rem;">
@@ -59,7 +85,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="card border-danger">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
@@ -68,11 +94,31 @@
                                     </div>
                                     <div>
                                         <h6 class="mb-0">Belum Ada Penanganan</h6>
-                                        <p class="text-sm text-muted mb-0">Lebih dari 15 hari</p>
+                                        <p class="text-sm text-muted mb-0">Lebih dari 1 hari</p>
                                     </div>
                                     <div class="ms-auto">
                                         <span class="badge bg-gradient-danger" style="font-size: 1.5rem; padding: 0.5rem 1rem;">
                                             {{ $noPenangananTemuans->count() }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-dark">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon icon-shape bg-gradient-dark text-white rounded-circle me-3">
+                                        <i class="material-symbols-rounded">verified</i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Belum Di Validasi</h6>
+                                        <p class="text-sm text-muted mb-0">Lebih dari 1 hari</p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="badge bg-gradient-dark" style="font-size: 1.5rem; padding: 0.5rem 1rem;">
+                                            {{ $noValidasiTemuans->count() }}
                                         </span>
                                     </div>
                                 </div>
@@ -92,7 +138,7 @@
                         <div class="card-header pb-0 bg-gradient-warning">
                             <div class="d-flex align-items-center">
                                 <i class="material-symbols-rounded text-white me-2">folder_off</i>
-                                <h6 class="mb-0 text-white">Temuan Belum Dikategorikan (Lebih dari 3 Hari)</h6>
+                                <h6 class="mb-0 text-white">Temuan Belum Dikategorikan (Lebih dari 1 Hari)</h6>
                                 <span class="badge bg-white text-warning ms-2">{{ $uncategorizedTemuans->count() }}</span>
                             </div>
                         </div>
@@ -116,7 +162,7 @@
                                                 $daysOverdue = floor(
                                                     Carbon::parse($temuan->Time_Temuan)->floatDiffInDays(Carbon::now())
                                                 );
-                                                $urgencyClass = $daysOverdue > 3 ? 'danger' : 'warning';
+                                                $urgencyClass = $daysOverdue > 1 ? 'danger' : 'warning';
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
@@ -160,7 +206,7 @@
                         <div class="card-header pb-0 bg-gradient-danger">
                             <div class="d-flex align-items-center">
                                 <i class="material-symbols-rounded text-white me-2">build_circle</i>
-                                <h6 class="mb-0 text-white">Temuan Belum Ada Penanganan (Lebih dari 15 Hari)</h6>
+                                <h6 class="mb-0 text-white">Temuan Belum Ada Penanganan (Lebih dari 1 Hari)</h6>
                                 <span class="badge bg-white text-danger ms-2">{{ $noPenangananTemuans->count() }}</span>
                             </div>
                         </div>
@@ -185,7 +231,7 @@
                                                 $daysOverdue = floor(
                                                     Carbon::parse($temuan->Time_Temuan)->floatDiffInDays(Carbon::now())
                                                 );
-                                                $urgencyClass = $daysOverdue > 15 ? 'danger' : 'warning';
+                                                $urgencyClass = $daysOverdue > 1 ? 'danger' : 'warning';
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
@@ -197,6 +243,38 @@
                                                     @else
                                                         <span class="badge badge-sm bg-gradient-secondary">-</span>
                                                     @endif
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ Carbon::parse($temuan->Time_Temuan)->format('d/m/Y H:i') }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="badge badge-sm bg-gradient-{{ $urgencyClass }}">
+                                                        {{ $daysOverdue }} hari
+                                                    </span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Tractor }} - {{ $temuan->ListReport->Name_Area }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
+                                                       class="btn btn-sm btn-danger mb-0" title="Tindak Lanjut Sekarang">
+                                                        <i class="material-symbols-rounded text-sm">build</i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <span class="text-xs">{{ Carbon::parse($temuan->Time_Temuan)->format('d/m/Y H:i') }}</span>
@@ -230,8 +308,84 @@
                     </div>
                 @endif
 
+                <!-- No Validasi Temuans Section -->
+                @if($noValidasiTemuans->count() > 0)
+                    <div class="card mb-4">
+                        <div class="card-header pb-0 bg-gradient-dark">
+                            <div class="d-flex align-items-center">
+                                <i class="material-symbols-rounded text-white me-2">verified</i>
+                                <h6 class="mb-0 text-white">Temuan Belum Di Validasi (Lebih dari 1 Hari)</h6>
+                                <span class="badge bg-white text-dark ms-2">{{ $noValidasiTemuans->count() }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body px-0 pb-2">
+                            <div class="table-responsive p-0">
+                                <table class="table align-items-center mb-0" id="noValidasiTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tipe Temuan</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Penanganan</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Hari Tertunda</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor - Area</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Prosedur</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Member</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($noValidasiTemuans as $index => $temuan)
+                                            @php
+                                                $daysOverdue = floor(
+                                                    Carbon::parse($temuan->Time_Penanganan)->floatDiffInDays(Carbon::now())
+                                                );
+                                                $urgencyClass = $daysOverdue > 1 ? 'danger' : 'warning';
+                                            @endphp
+                                            <tr class="row-data">
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    @if($temuan->Tipe_Temuan)
+                                                        <span class="badge badge-sm bg-gradient-info">{{ $temuan->Tipe_Temuan }}</span>
+                                                    @else
+                                                        <span class="badge badge-sm bg-gradient-secondary">-</span>
+                                                    @endif
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ Carbon::parse($temuan->Time_Penanganan)->format('d/m/Y H:i') }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="badge badge-sm bg-gradient-{{ $urgencyClass }}">
+                                                        {{ $daysOverdue }} hari
+                                                    </span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Tractor }} - {{ $temuan->ListReport->Name_Area }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
+                                                       class="btn btn-sm btn-dark mb-0" title="Validasi Sekarang">
+                                                        <i class="material-symbols-rounded text-sm">verified</i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- No Missing Temuans -->
-                @if($uncategorizedTemuans->count() === 0 && $noPenangananTemuans->count() === 0)
+                @if($uncategorizedTemuans->count() === 0 && $noPenangananTemuans->count() === 0 && $noValidasiTemuans->count() === 0)
                     <div class="card">
                         <div class="card-body text-center py-5">
                             <i class="material-symbols-rounded text-5xl text-success mb-3">check_circle</i>
@@ -279,14 +433,21 @@
         $(document).ready(function() {
             @if($uncategorizedTemuans->count() > 0)
                 $('#uncategorizedTable').DataTable({
-                    order: [[2, 'desc']], // Sort by days overdue
+                    order: [[2, 'desc']],
                     pageLength: 25
                 });
             @endif
 
             @if($noPenangananTemuans->count() > 0)
                 $('#noPenangananTable').DataTable({
-                    order: [[3, 'desc']], // Sort by days overdue
+                    order: [[3, 'desc']],
+                    pageLength: 25
+                });
+            @endif
+
+            @if($noValidasiTemuans->count() > 0)
+                $('#noValidasiTable').DataTable({
+                    order: [[3, 'desc']],
                     pageLength: 25
                 });
             @endif

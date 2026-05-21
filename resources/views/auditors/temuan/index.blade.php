@@ -73,36 +73,6 @@
                     </div>
                 </div>
 
-                <!-- Missing Temuan Card -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card shadow-sm border-warning">
-                            <div class="card-header pb-0 bg-gradient-warning">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 text-white">
-                                        <i class="material-symbols-rounded text-sm align-middle me-1">warning</i>
-                                        Missing Temuan - Perlu Perhatian
-                                    </h6>
-                                    <a href="{{ route('auditor-temuan.missing') }}" class="btn btn-sm btn-white">
-                                        <i class="material-symbols-rounded text-sm">arrow_forward</i> Lihat Detail
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-body" id="missingStatsContainer">
-                                <div class="text-center py-4">
-                                    <div class="spinner-border text-warning" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Statistics Styles and Scripts -->
-                @include('auditors.temuan.partials.statistics-styles')
-                @include('auditors.temuan.partials.statistics-scripts')
-
                 <!-- Month Filter -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -150,6 +120,36 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Missing Temuan Card -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-warning">
+                            <div class="card-header pb-0 bg-gradient-warning">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 text-white">
+                                        <i class="material-symbols-rounded text-sm align-middle me-1">warning</i>
+                                        Missing Temuan - Perlu Perhatian
+                                    </h6>
+                                    <a href="{{ route('auditor-temuan.missing') }}?month={{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}" class="btn btn-sm btn-white">
+                                        <i class="material-symbols-rounded text-sm">arrow_forward</i> Lihat Detail
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body" id="missingStatsContainer">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-warning" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Styles and Scripts -->
+                @include('auditors.temuan.partials.statistics-styles')
+                @include('auditors.temuan.partials.statistics-scripts')
 
                 @php
                     use Carbon\Carbon;

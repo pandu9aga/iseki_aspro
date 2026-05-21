@@ -273,6 +273,32 @@ class TemuanAuditorController extends Controller
             });
         }
 
+        // Missing filter
+        if ($request->has('missing_type')) {
+            $missingType = $request->input('missing_type');
+            session(['last_temuan_missing' => $missingType]);
+        } else {
+            $missingType = session('last_temuan_missing') ?? null;
+        }
+
+        if ($missingType) {
+            $temuans = $temuans->filter(function($temuan) use ($missingType) {
+                $object = new JsonHelper($temuan->Object_Temuan);
+
+                if ($missingType === 'uncategorized') {
+                    return empty($temuan->Tipe_Temuan);
+                } elseif ($missingType === 'no_penanganan') {
+                    return is_null($temuan->Time_Penanganan) &&
+                           $temuan->Tipe_Temuan !== 'Tidak perlu penanganan';
+                } elseif ($missingType === 'no_validasi') {
+                    return !is_null($temuan->Time_Penanganan) &&
+                           !$temuan->Status_Temuan &&
+                           !$object->get('Is_Rejected');
+                }
+                return true;
+            });
+        }
+
         // Group temuans by Tipe_Temuan
         $tipeTemuanCategories = [
             'Revisi prosedur' => [],
@@ -301,6 +327,7 @@ class TemuanAuditorController extends Controller
             'tipeTemuanCategories' => $tipeTemuanCategories,
             'month' => $month,
             'statusFilter' => $statusFilter,
+            'missingType' => $missingType,
         ]);
     }
 
@@ -580,21 +607,25 @@ class TemuanAuditorController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getMissingStatistics()
+    public function getMissingStatistics(Request $request)
     {
         $Id_User = session('Id_User');
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        [$year, $monthNum] = explode('-', $month);
 
-        // Temuan yang sudah 3 hari belum dikategorikan
+        // Belum dikategorikan (> 1 hari)
         $uncategorized = Temuan::where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(3))
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
             ->count();
 
-        // Temuan yang sudah 15 hari belum ada penanganan (kecuali "Tidak perlu penanganan")
+        // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan")
         $noPenanganan = Temuan::where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
@@ -602,13 +633,27 @@ class TemuanAuditorController extends Controller
                 $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
                     ->orWhereNull('Tipe_Temuan');
             })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
+            ->count();
+
+        // Belum di validasi (> 1 hari sejak Time_Penanganan)
+        $noValidasi = Temuan::where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereNotNull('Time_Penanganan')
+            ->where('Status_Temuan', 0)
+            ->whereYear('Time_Penanganan', $year)
+            ->whereMonth('Time_Penanganan', $monthNum)
+            ->where('Time_Penanganan', '<=', Carbon::now()->subDay())
             ->count();
 
         $statistics = [
-            'uncategorized_3days' => $uncategorized,
-            'no_penanganan_15days' => $noPenanganan,
-            'total_missing' => $uncategorized + $noPenanganan,
+            'uncategorized' => $uncategorized,
+            'no_penanganan' => $noPenanganan,
+            'no_validasi' => $noValidasi,
+            'total_missing' => $uncategorized + $noPenanganan + $noValidasi,
+            'month' => $month,
         ];
 
         return response()->json($statistics);
@@ -619,12 +664,15 @@ class TemuanAuditorController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function missingTemuan()
+    public function missingTemuan(Request $request)
     {
         $page = 'temuan';
         $Id_User = session('Id_User');
 
-        // Temuan yang sudah 3 hari belum dikategorikan
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        [$year, $monthNum] = explode('-', $month);
+
+        // Belum dikategorikan (> 1 hari)
         $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
@@ -632,11 +680,13 @@ class TemuanAuditorController extends Controller
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(3))
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
             ->orderBy('Time_Temuan', 'asc')
             ->get();
 
-        // Temuan yang sudah 15 hari belum ada penanganan (kecuali "Tidak perlu penanganan")
+        // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan")
         $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
@@ -645,14 +695,30 @@ class TemuanAuditorController extends Controller
                 $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
                     ->orWhereNull('Tipe_Temuan');
             })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
             ->orderBy('Time_Temuan', 'asc')
+            ->get();
+
+        // Belum di validasi (> 1 hari sejak Time_Penanganan)
+        $noValidasiTemuans = Temuan::with(['ListReport.report.member', 'User'])
+            ->where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereNotNull('Time_Penanganan')
+            ->where('Status_Temuan', 0)
+            ->whereYear('Time_Penanganan', $year)
+            ->whereMonth('Time_Penanganan', $monthNum)
+            ->where('Time_Penanganan', '<=', Carbon::now()->subDay())
+            ->orderBy('Time_Penanganan', 'asc')
             ->get();
 
         return view('auditors.temuan.missing', [
             'page' => $page,
             'uncategorizedTemuans' => $uncategorizedTemuans,
             'noPenangananTemuans' => $noPenangananTemuans,
+            'noValidasiTemuans' => $noValidasiTemuans,
+            'month' => $month,
         ]);
     }
 }
