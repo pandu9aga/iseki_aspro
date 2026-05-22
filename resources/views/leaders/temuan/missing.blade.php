@@ -167,7 +167,7 @@
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                                    <span class="text-xs font-weight-bold">{{ count($uncategorizedTemuans) - $index }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <span class="text-xs">{{ Carbon::parse($temuan->Time_Temuan)->format('d/m/Y H:i') }}</span>
@@ -239,7 +239,7 @@
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                                    <span class="text-xs font-weight-bold">{{ count($noPenangananTemuans) - $index }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     @if($temuan->Tipe_Temuan)
@@ -315,7 +315,7 @@
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                                    <span class="text-xs font-weight-bold">{{ count($noValidasiTemuans) - $index }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     @if($temuan->Tipe_Temuan)
@@ -405,22 +405,22 @@
         $(document).ready(function() {
             @if($uncategorizedTemuans->count() > 0)
                 $('#uncategorizedTable').DataTable({
-                    order: [[2, 'desc']],
-                    pageLength: 25
+                    order: [],
+                    pageLength: 100
                 });
             @endif
 
             @if($noPenangananTemuans->count() > 0)
                 $('#noPenangananTable').DataTable({
-                    order: [[3, 'desc']],
-                    pageLength: 25
+                    order: [],
+                    pageLength: 100
                 });
             @endif
 
             @if($noValidasiTemuans->count() > 0)
                 $('#noValidasiTable').DataTable({
-                    order: [[3, 'desc']],
-                    pageLength: 25
+                    order: [],
+                    pageLength: 100
                 });
             @endif
         });

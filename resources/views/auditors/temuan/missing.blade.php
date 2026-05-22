@@ -166,7 +166,7 @@
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                                    <span class="text-xs font-weight-bold">{{ count($uncategorizedTemuans) - $index }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <span class="text-xs">{{ Carbon::parse($temuan->Time_Temuan)->format('d/m/Y H:i') }}</span>
@@ -235,7 +235,7 @@
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                                    <span class="text-xs font-weight-bold">{{ count($noPenangananTemuans) - $index }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     @if($temuan->Tipe_Temuan)
@@ -265,38 +265,6 @@
                                                     <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
                                                        class="btn btn-sm btn-danger mb-0" title="Tindak Lanjut Sekarang">
                                                         <i class="material-symbols-rounded text-sm">build</i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-                                                </td>
-                                                <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ Carbon::parse($temuan->Time_Temuan)->format('d/m/Y H:i') }}</span>
-                                                </td>
-                                                <td class="align-middle text-center">
-                                                    <span class="badge badge-sm bg-gradient-{{ $urgencyClass }}">
-                                                        {{ $daysOverdue }} hari
-                                                    </span>
-                                                </td>
-                                                <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Tractor }} - {{ $temuan->ListReport->Name_Area }}</span>
-                                                </td>
-                                                <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
-                                                </td>
-                                                <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
-                                                </td>
-                                                <td class="align-middle text-center">
-                                                    <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
-                                                       class="btn btn-sm btn-danger mb-0" title="Lihat Detail">
-                                                        <i class="material-symbols-rounded text-sm">visibility</i>
                                                     </a>
                                                 </td>
                                             </tr>
@@ -343,7 +311,7 @@
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                                    <span class="text-xs font-weight-bold">{{ count($noValidasiTemuans) - $index }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     @if($temuan->Tipe_Temuan)
@@ -433,22 +401,22 @@
         $(document).ready(function() {
             @if($uncategorizedTemuans->count() > 0)
                 $('#uncategorizedTable').DataTable({
-                    order: [[2, 'desc']],
-                    pageLength: 25
+                    order: [],
+                    pageLength: 100
                 });
             @endif
 
             @if($noPenangananTemuans->count() > 0)
                 $('#noPenangananTable').DataTable({
-                    order: [[3, 'desc']],
-                    pageLength: 25
+                    order: [],
+                    pageLength: 100
                 });
             @endif
 
             @if($noValidasiTemuans->count() > 0)
                 $('#noValidasiTable').DataTable({
-                    order: [[3, 'desc']],
-                    pageLength: 25
+                    order: [],
+                    pageLength: 100
                 });
             @endif
         });

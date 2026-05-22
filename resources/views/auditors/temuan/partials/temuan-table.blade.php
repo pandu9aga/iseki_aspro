@@ -22,7 +22,7 @@
                 @endphp
                 <tr class="row-data">
                     <td class="align-middle text-center ps-2">
-                        <span class="text-secondary text-xxs font-weight-bold">{{ $index + 1 }}</span>
+                        <span class="text-secondary text-xxs font-weight-bold">{{ count($temuans) - $index }}</span>
                     </td>
                     <td class="align-middle text-center">
                         @if($temuan->ListReport)
@@ -56,7 +56,11 @@
                         </span>
                     </td>
                     <td class="align-middle text-center">
-                        @if($temuan->Status_Temuan)
+                        @if($temuan->Tipe_Temuan === 'Tidak perlu penanganan')
+                            <span class="badge badge-sm bg-gradient-success" style="font-size: 0.65rem;">
+                                <i class="material-symbols-rounded text-xxs me-1">check_circle</i>Selesai
+                            </span>
+                        @elseif($temuan->Status_Temuan)
                             <span class="badge badge-sm bg-gradient-success" style="font-size: 0.65rem;">
                                 <i class="material-symbols-rounded text-xxs me-1">check_circle</i>Selesai
                             </span>

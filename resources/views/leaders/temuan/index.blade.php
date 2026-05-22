@@ -55,7 +55,7 @@
                                     </h6>
                                     <div class="d-flex align-items-center gap-2">
                                         <input type="month" class="form-control form-control-sm" id="monthPicker"
-                                            value="{{ \Carbon\Carbon::now()->format('Y-m') }}" style="width: 150px;">
+                                            value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}" style="width: 150px;">
                                         <button class="btn btn-sm btn-primary" onclick="loadMonthlyStatistics()">
                                             <i class="material-symbols-rounded text-sm">refresh</i>
                                         </button>
@@ -635,9 +635,8 @@
 
                 if (rowCount > 0 && hasData) {
                     table.DataTable({
-                        pageLength: 25,
-                        order: [[1, 'desc']],
-                        // Hindari error saat tidak ada data
+                        pageLength: 100,
+                        order: [],
                         language: {
                             emptyTable: "Tidak ada temuan pada tanggal ini."
                         }
