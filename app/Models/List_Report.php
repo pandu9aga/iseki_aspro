@@ -35,9 +35,4 @@ class List_Report extends Model
     {
         return $this->hasMany(Temuan::class, 'Id_List_Report', 'Id_List_Report');
     }
-
-    public function getDisplayNameAttribute()
-    {
-        return preg_replace('/ - Retrain \d+$/', '', $this->Name_Procedure);
-    }
 }

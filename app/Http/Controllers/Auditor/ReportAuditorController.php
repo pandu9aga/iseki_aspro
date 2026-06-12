@@ -96,23 +96,7 @@ class ReportAuditorController extends Controller
         $fileName = $listReport->Name_Procedure.'.pdf';
         $pdfPath = $fullPath.'/'.$fileName;
 
-        // Get sibling list reports for prev/next navigation
-        $siblingReports = List_Report::where('Id_Report', $listReport->Id_Report)
-            ->where('Name_Tractor', $listReport->Name_Tractor)
-            ->orderBy('Name_Procedure')
-            ->pluck('Id_List_Report')
-            ->toArray();
-
-        $currentIndex = array_search($Id_List_Report, $siblingReports);
-        $prevReportId = ($currentIndex !== false && $currentIndex > 0) ? $siblingReports[$currentIndex - 1] : null;
-        $nextReportId = ($currentIndex !== false && $currentIndex < count($siblingReports) - 1) ? $siblingReports[$currentIndex + 1] : null;
-        $currentPos = $currentIndex !== false ? $currentIndex + 1 : 0;
-
-        return view('auditors.reports.report', compact(
-            'page', 'listReport', 'pdfPath', 'user',
-            'prevReportId', 'nextReportId',
-            'currentPos', 'siblingReports'
-        ));
+        return view('auditors.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
     }
 
     public function submit_report(Request $request, $Id_List_Report)
@@ -167,45 +151,5 @@ class ReportAuditorController extends Controller
         $listReport->delete();
 
         return redirect()->back()->with('success', 'Prosedur berhasil dihapus dari laporan.');
-    }
-
-    public function duplicate_report($Id_List_Report)
-    {
-        $listReport = List_Report::with(['report'])->findOrFail($Id_List_Report);
-
-        // Find a unique name
-        $baseName = preg_replace('/ - Retrain \d+$/', '', $listReport->Name_Procedure);
-
-        $count = List_Report::where('Id_Report', $listReport->Id_Report)
-            ->where('Name_Procedure', 'LIKE', $baseName.'%')
-            ->count();
-
-        $newName = $baseName.' - Retrain '.$count;
-
-        $newListReport = $listReport->replicate();
-        $newListReport->Name_Procedure = $newName;
-        $newListReport->Time_List_Report = null;
-        $newListReport->Time_Approved_Leader = null;
-        $newListReport->Time_Approved_Auditor = null;
-        $newListReport->Reporter_Name = null;
-        $newListReport->Leader_Name = null;
-        $newListReport->Auditor_Name = null;
-        $newListReport->save();
-
-        // Copy original blank PDF
-        $originalBlankPdf = "procedures/{$listReport->Name_Tractor}/{$listReport->Name_Area}/{$baseName}.pdf";
-        $id_member = $listReport->report->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
-        $targetFolder = "reports/{$timeReport}_{$id_member}";
-        $destPdf = "{$targetFolder}/{$newName}.pdf";
-
-        if (Storage::disk('public')->exists($originalBlankPdf)) {
-            Storage::disk('public')->copy($originalBlankPdf, $destPdf);
-        }
-
-        return redirect()->route('list_report_detail_auditor', [
-            'Id_Report' => $listReport->Id_Report,
-            'Name_Tractor' => $listReport->Name_Tractor,
-        ])->with('success', 'Training member berhasil diduplikat.');
     }
 }

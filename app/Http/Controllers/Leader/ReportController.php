@@ -59,8 +59,8 @@ class ReportController extends Controller
             }
 
             // Buat folder dasar untuk member
-            $folderName = $startReportDate . '_' . $id_member;
-            $fullPath = 'reports/' . $folderName;
+            $folderName = $startReportDate.'_'.$id_member;
+            $fullPath = 'reports/'.$folderName;
             if (! Storage::disk('public')->exists($fullPath)) {
                 Storage::disk('public')->makeDirectory($fullPath);
             }
@@ -131,7 +131,7 @@ class ReportController extends Controller
         $id_member = $report->member->Id_Member;
         $timeReport = Carbon::parse($report->Start_Report)->format('Y-m-d');
 
-        $fullPath = 'reports/' . $timeReport . '_' . $id_member;
+        $fullPath = 'reports/'.$timeReport.'_'.$id_member;
 
         if ($procedures->count() > 0) {
             $data = [];
@@ -162,9 +162,9 @@ class ReportController extends Controller
                     'Auditor_Name' => null,
                 ];
 
-                $sourcePath = 'procedures/' . $nameTractor . '/' . $nameArea . '/' . $procedure->Name_Procedure . '.pdf';
-                $targetName = $procedure->Name_Procedure . '.pdf';
-                $targetPath = $fullPath . '/' . $targetName;
+                $sourcePath = 'procedures/'.$nameTractor.'/'.$nameArea.'/'.$procedure->Name_Procedure.'.pdf';
+                $targetName = $procedure->Name_Procedure.'.pdf';
+                $targetPath = $fullPath.'/'.$targetName;
 
                 if (Storage::disk('public')->exists($sourcePath)) {
                     Storage::disk('public')->copy($sourcePath, $targetPath);
@@ -189,33 +189,12 @@ class ReportController extends Controller
         $id_member = $listReport->report->member->Id_Member;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
-        $fullPath = 'storage/reports/' . $timeReport . '_' . $id_member;
+        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
 
-        $fileName = $listReport->Name_Procedure . '.pdf';
-        $pdfPath = $fullPath . '/' . $fileName;
+        $fileName = $listReport->Name_Procedure.'.pdf';
+        $pdfPath = $fullPath.'/'.$fileName;
 
-        // Get sibling list reports for prev/next navigation
-        $siblingReports = List_Report::where('Id_Report', $listReport->Id_Report)
-            ->where('Name_Tractor', $listReport->Name_Tractor)
-            ->orderBy('Name_Procedure')
-            ->pluck('Id_List_Report')
-            ->toArray();
-
-        $currentIndex = array_search($Id_List_Report, $siblingReports);
-        $prevReportId = ($currentIndex !== false && $currentIndex > 0) ? $siblingReports[$currentIndex - 1] : null;
-        $nextReportId = ($currentIndex !== false && $currentIndex < count($siblingReports) - 1) ? $siblingReports[$currentIndex + 1] : null;
-        $currentPos = $currentIndex !== false ? $currentIndex + 1 : 0;
-
-        return view('leaders.reports.report', compact(
-            'page',
-            'listReport',
-            'pdfPath',
-            'user',
-            'prevReportId',
-            'nextReportId',
-            'currentPos',
-            'siblingReports'
-        ));
+        return view('leaders.reports.report', compact('page', 'listReport', 'pdfPath', 'user'));
     }
 
     public function submit_report(Request $request, $Id_List_Report)
@@ -229,8 +208,8 @@ class ReportController extends Controller
             $pdf = $request->file('pdf');
 
             // Path target di public/storage/reports/...
-            $path = 'storage/reports/' . $timeReport . '_' . $id_member;
-            $filename = $listReport->Name_Procedure . '.pdf';
+            $path = 'storage/reports/'.$timeReport.'_'.$id_member;
+            $filename = $listReport->Name_Procedure.'.pdf';
 
             // Pastikan direktori ada
             $fullPath = public_path($path);
@@ -289,8 +268,8 @@ class ReportController extends Controller
             }
 
             // Buat folder baru untuk bulan ini
-            $newFolder = $firstDayThisMonth->format('Y-m-d') . '_' . $idMember;
-            $newPath = 'reports/' . $newFolder;
+            $newFolder = $firstDayThisMonth->format('Y-m-d').'_'.$idMember;
+            $newPath = 'reports/'.$newFolder;
             if (! Storage::disk('public')->exists($newPath)) {
                 Storage::disk('public')->makeDirectory($newPath);
             }
@@ -381,11 +360,11 @@ class ReportController extends Controller
         if ($oldStartReport !== $request->Start_Report || $oldIdMember !== $request->Id_Member) {
             // $oldFolderName = $oldStartReport . '_' . $oldIdMember;
             // $newFolderName = $request->Start_Report . '_' . $request->Id_Member;
-            $oldFolderName = Carbon::parse($oldStartReport)->format('Y-m-d') . '_' . $oldIdMember;
-            $newFolderName = Carbon::parse($request->Start_Report)->format('Y-m-d') . '_' . $request->Id_Member;
+            $oldFolderName = Carbon::parse($oldStartReport)->format('Y-m-d').'_'.$oldIdMember;
+            $newFolderName = Carbon::parse($request->Start_Report)->format('Y-m-d').'_'.$request->Id_Member;
 
-            $oldPath = 'reports/' . $oldFolderName;
-            $newPath = 'reports/' . $newFolderName;
+            $oldPath = 'reports/'.$oldFolderName;
+            $newPath = 'reports/'.$newFolderName;
 
             // Jika folder lama ada, coba pindahkan
             if (Storage::disk('public')->exists($oldPath)) {
@@ -402,8 +381,8 @@ class ReportController extends Controller
         $report = Report::findOrFail($id);
 
         // Format tanggal ke Y-m-d agar sesuai dengan nama folder sebenarnya
-        $folderName = Carbon::parse($report->Start_Report)->format('Y-m-d') . '_' . $report->Id_Member;
-        $fullPath = 'reports/' . $folderName;
+        $folderName = Carbon::parse($report->Start_Report)->format('Y-m-d').'_'.$report->Id_Member;
+        $fullPath = 'reports/'.$folderName;
 
         if (Storage::disk('public')->exists($fullPath)) {
             Storage::disk('public')->deleteDirectory($fullPath);
@@ -440,13 +419,13 @@ class ReportController extends Controller
         $nameArea = $listReport->Name_Area;
         $procedureName = $listReport->Name_Procedure;
 
-        $sourcePath = 'procedures/' . $nameTractor . '/' . $nameArea . '/' . $procedureName . '.pdf';
+        $sourcePath = 'procedures/'.$nameTractor.'/'.$nameArea.'/'.$procedureName.'.pdf';
 
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
-        $fullPath = 'reports/' . $timeReport . '_' . $listReport->report->Id_Member;
+        $fullPath = 'reports/'.$timeReport.'_'.$listReport->report->Id_Member;
 
-        $targetPath = $fullPath . '/' . $procedureName . '.pdf';
+        $targetPath = $fullPath.'/'.$procedureName.'.pdf';
 
         // copy dan replace file dari procedures ke reports jika file target ada
         if (Storage::disk('public')->exists($sourcePath)) {
