@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TemuanAuditorController extends Controller
 {
@@ -249,6 +250,61 @@ class TemuanAuditorController extends Controller
 
         $temuans = $query->orderBy('Time_Temuan', 'desc')->get();
 
+        // Status Filter
+        if ($request->has('status')) {
+            $statusFilter = $request->input('status');
+            session(['last_temuan_status_auditor' => $statusFilter]);
+        } else {
+            $statusFilter = session('last_temuan_status_auditor') ?? 'all';
+        }
+
+        if ($statusFilter !== 'all') {
+            $temuans = $temuans->filter(function($temuan) use ($statusFilter) {
+                $object = new JsonHelper($temuan->Object_Temuan);
+                
+                if ($statusFilter === 'selesai') {
+                    return $temuan->Status_Temuan || $temuan->Tipe_Temuan === 'Tidak perlu penanganan';
+                } elseif ($statusFilter === 'ditolak') {
+                    return $object->get('Is_Rejected');
+                } elseif ($statusFilter === 'belum_divalidasi') {
+                    return !$temuan->Status_Temuan && ($object->get('Is_Rejected') === false);
+                }
+                return true;
+            })->values();
+        }
+
+        // Missing filter
+        if ($request->has('missing_type')) {
+            $missingType = $request->input('missing_type');
+            session(['last_temuan_missing' => $missingType]);
+        } else {
+            $missingType = null;
+            session(['last_temuan_missing' => null]);
+        }
+
+        if ($missingType) {
+            $temuans = $temuans->filter(function($temuan) use ($missingType) {
+                $object = new JsonHelper($temuan->Object_Temuan);
+                $oneDayAgo = Carbon::now()->subDay();
+
+                if ($missingType === 'uncategorized') {
+                    return empty($temuan->Tipe_Temuan) &&
+                           $temuan->Time_Temuan <= $oneDayAgo;
+                } elseif ($missingType === 'no_penanganan') {
+                    return is_null($temuan->Time_Penanganan) &&
+                           !empty($temuan->Tipe_Temuan) &&
+                           $temuan->Tipe_Temuan !== 'Tidak perlu penanganan' &&
+                           $temuan->Time_Temuan <= $oneDayAgo;
+                } elseif ($missingType === 'no_validasi') {
+                    return !is_null($temuan->Time_Penanganan) &&
+                           !$temuan->Status_Temuan &&
+                           !$object->get('Is_Rejected') &&
+                           $temuan->Time_Temuan <= $oneDayAgo;
+                }
+                return true;
+            })->values();
+        }
+
         // Group temuans by Tipe_Temuan
         $tipeTemuanCategories = [
             'Revisi prosedur' => [],
@@ -276,6 +332,8 @@ class TemuanAuditorController extends Controller
             'temuans' => $temuans,
             'tipeTemuanCategories' => $tipeTemuanCategories,
             'month' => $month,
+            'statusFilter' => $statusFilter,
+            'missingType' => $missingType,
         ]);
     }
 
@@ -289,10 +347,31 @@ class TemuanAuditorController extends Controller
         $fileName = $temuan->ListReport->Name_Procedure.'.pdf';
         $pdfPath = $fullPath.'/'.$fileName;
 
+        // Get sibling temuan IDs for prev/next navigation
+        $Id_User = session('Id_User');
+        $month = session('last_temuan_month') ?? Carbon::now()->format('Y-m');
+        [$year, $monthNum] = explode('-', $month);
+
+        $siblingTemuans = Temuan::where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->orderBy('Time_Temuan', 'desc')
+            ->pluck('Id_Temuan')
+            ->toArray();
+
+        $currentPos = array_search($Id_Temuan, $siblingTemuans);
+        $prevTemuanId = ($currentPos !== false && $currentPos > 0) ? $siblingTemuans[$currentPos - 1] : null;
+        $nextTemuanId = ($currentPos !== false && $currentPos < count($siblingTemuans) - 1) ? $siblingTemuans[$currentPos + 1] : null;
+
         return view('auditors.temuan.temuan_show', [
             'page' => $page,
             'temuan' => $temuan,
             'pdfPath' => $pdfPath,
+            'prevTemuanId' => $prevTemuanId,
+            'nextTemuanId' => $nextTemuanId,
+            'currentPos' => $currentPos !== false ? $currentPos + 1 : 0,
+            'totalTemuans' => count($siblingTemuans),
         ]);
     }
 
@@ -328,6 +407,124 @@ class TemuanAuditorController extends Controller
                 ->back()
                 ->with('error', 'Gagal memvalidasi temuan: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Reject a penanganan - clears penanganan data and allows re-submission.
+     */
+    public function rejectTemuan(Request $request, string $Id_Temuan)
+    {
+        $data = $request->validate([
+            'validation_notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($data, $Id_Temuan) {
+                $temuan = Temuan::findOrFail($Id_Temuan);
+                $jsonData = new JsonHelper($temuan->Object_Temuan);
+
+                // Delete the penanganan file if exists
+                $filePath = $jsonData->get('File_Path_Penanganan', '');
+                if ($filePath) {
+                    $this->deleteFile($filePath);
+                }
+
+                // Set rejection info
+                $jsonData->Is_Rejected = true;
+                $jsonData->Rejection_Notes = $data['validation_notes'] ?? '';
+                $jsonData->Rejection_Time = Carbon::now()->toDateTimeString();
+
+                // Clear penanganan data so Leader can re-submit
+                $jsonData->Is_Submit_Penanganan = false;
+                $jsonData->UploudFoto_Time_Penanganan = '';
+                $jsonData->File_Path_Penanganan = '';
+                $jsonData->Name_User_Penanganan = '';
+                $jsonData->Validation_Notes = '';
+                $jsonData->Validation_Time = '';
+                $jsonData->Comments_Penanganan = [];
+
+                $temuan->Object_Temuan = $jsonData;
+                $temuan->Time_Penanganan = null;
+                $temuan->Status_Temuan = 0;
+                $temuan->save();
+
+                return redirect()
+                    ->back()
+                    ->with('success', 'Penanganan ditolak. Leader dapat mengupdate penanganan baru.');
+            });
+        } catch (\Exception $e) {
+            Log::error('Failed to reject temuan', [
+                'Id_Temuan' => $Id_Temuan,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Gagal menolak penanganan: '.$e->getMessage());
+        }
+    }
+
+
+
+    // ============================================
+    // File Helper Methods
+    // ============================================
+
+    private function deleteTemuanFiles(Temuan $temuan): void
+    {
+        $objectdata = new JsonHelper($temuan->Object_Temuan);
+
+        $filePathTemuan = $objectdata->get('File_Path_Temuan', '');
+        if ($filePathTemuan) {
+            $this->deleteFile($filePathTemuan);
+        }
+
+        $filePathPenanganan = $objectdata->get('File_Path_Penanganan', '');
+        if ($filePathPenanganan) {
+            $this->deleteFile($filePathPenanganan);
+        }
+    }
+
+    private function deleteFile(string $filePath): void
+    {
+        $absolutePath = Str::startsWith($filePath, ['http://', 'https://'])
+            ? public_path(parse_url($filePath, PHP_URL_PATH))
+            : public_path($filePath);
+
+        if (file_exists($absolutePath) && is_file($absolutePath)) {
+            unlink($absolutePath);
+            Log::info("Deleted file: {$absolutePath}");
+
+            $parentDir = dirname($absolutePath);
+            if ($this->isDirectoryEmpty($parentDir) && $this->isSafeToDelete($parentDir)) {
+                rmdir($parentDir);
+                Log::info("Removed empty directory: {$parentDir}");
+            }
+        } else {
+            Log::warning("File not found: {$absolutePath}");
+        }
+    }
+
+    private function isDirectoryEmpty(string $dir): bool
+    {
+        return is_dir($dir) && count(scandir($dir)) === 2;
+    }
+
+    private function isSafeToDelete(string $dir): bool
+    {
+        $safeRoots = [
+            public_path('storage'),
+            storage_path('app/public'),
+        ];
+
+        foreach ($safeRoots as $root) {
+            if (Str::startsWith($dir, $root) && $dir !== $root) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -416,35 +613,54 @@ class TemuanAuditorController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getMissingStatistics()
+    public function getMissingStatistics(Request $request)
     {
         $Id_User = session('Id_User');
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        [$year, $monthNum] = explode('-', $month);
 
-        // Temuan yang sudah 3 hari belum dikategorikan
+        // Belum dikategorikan (> 1 hari)
         $uncategorized = Temuan::where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(3))
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
             ->count();
 
-        // Temuan yang sudah 15 hari belum ada penanganan (kecuali "Tidak perlu penanganan")
+        // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan" dan belum dikategorikan)
         $noPenanganan = Temuan::where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
+            ->whereNotNull('Tipe_Temuan')
+            ->where('Tipe_Temuan', '!=', '')
+            ->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
+            ->count();
+
+        // Belum di validasi (sudah ada penanganan tapi belum tervalidasi)
+        $noValidasi = Temuan::where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereNotNull('Time_Penanganan')
             ->where(function ($query) {
-                $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
-                    ->orWhereNull('Tipe_Temuan');
+                $query->where('Status_Temuan', 0)
+                    ->orWhereNull('Status_Temuan');
             })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
             ->count();
 
         $statistics = [
-            'uncategorized_3days' => $uncategorized,
-            'no_penanganan_15days' => $noPenanganan,
-            'total_missing' => $uncategorized + $noPenanganan,
+            'uncategorized' => $uncategorized,
+            'no_penanganan' => $noPenanganan,
+            'no_validasi' => $noValidasi,
+            'total_missing' => $uncategorized + $noPenanganan + $noValidasi,
+            'month' => $month,
         ];
 
         return response()->json($statistics);
@@ -455,12 +671,15 @@ class TemuanAuditorController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function missingTemuan()
+    public function missingTemuan(Request $request)
     {
         $page = 'temuan';
         $Id_User = session('Id_User');
 
-        // Temuan yang sudah 3 hari belum dikategorikan
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        [$year, $monthNum] = explode('-', $month);
+
+        // Belum dikategorikan (> 1 hari)
         $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
@@ -468,27 +687,46 @@ class TemuanAuditorController extends Controller
                 $query->whereNull('Tipe_Temuan')
                     ->orWhere('Tipe_Temuan', '');
             })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(3))
-            ->orderBy('Time_Temuan', 'asc')
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
+            ->orderBy('Time_Temuan', 'desc')
             ->get();
 
-        // Temuan yang sudah 15 hari belum ada penanganan (kecuali "Tidak perlu penanganan")
+        // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan" dan belum dikategorikan)
         $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
-            ->where(function ($query) {
-                $query->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
-                    ->orWhereNull('Tipe_Temuan');
-            })
-            ->where('Time_Temuan', '<=', Carbon::now()->subDays(15))
+            ->whereNotNull('Tipe_Temuan')
+            ->where('Tipe_Temuan', '!=', '')
+            ->where('Tipe_Temuan', '!=', 'Tidak perlu penanganan')
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->where('Time_Temuan', '<=', Carbon::now()->subDay())
             ->orderBy('Time_Temuan', 'asc')
+            ->get();
+
+        // Belum di validasi (sudah ada penanganan tapi belum tervalidasi)
+        $noValidasiTemuans = Temuan::with(['ListReport.report.member', 'User'])
+            ->where('Id_User', $Id_User)
+            ->whereNotNull('Time_Temuan')
+            ->whereNotNull('Time_Penanganan')
+            ->where(function ($query) {
+                $query->where('Status_Temuan', 0)
+                    ->orWhereNull('Status_Temuan');
+            })
+            ->whereYear('Time_Temuan', $year)
+            ->whereMonth('Time_Temuan', $monthNum)
+            ->orderBy('Time_Temuan', 'desc')
             ->get();
 
         return view('auditors.temuan.missing', [
             'page' => $page,
             'uncategorizedTemuans' => $uncategorizedTemuans,
             'noPenangananTemuans' => $noPenangananTemuans,
+            'noValidasiTemuans' => $noValidasiTemuans,
+            'month' => $month,
         ]);
     }
 }

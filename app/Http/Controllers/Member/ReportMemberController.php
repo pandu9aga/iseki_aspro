@@ -55,7 +55,23 @@ class ReportMemberController extends Controller
         $fileName = $listReport->Name_Procedure.'.pdf';
         $pdfPath = $fullPath.'/'.$fileName;
 
-        return view('members.reports.report', compact('page', 'listReport', 'pdfPath', 'member'));
+        // Get sibling list reports for prev/next navigation (all procedures in the report)
+        $siblingReports = List_Report::where('Id_Report', $listReport->Id_Report)
+            ->orderBy('Name_Tractor')
+            ->orderBy('Name_Procedure')
+            ->pluck('Id_List_Report')
+            ->toArray();
+
+        $currentIndex = array_search($Id_List_Report, $siblingReports);
+        $prevReportId = ($currentIndex !== false && $currentIndex > 0) ? $siblingReports[$currentIndex - 1] : null;
+        $nextReportId = ($currentIndex !== false && $currentIndex < count($siblingReports) - 1) ? $siblingReports[$currentIndex + 1] : null;
+        $currentPos = $currentIndex !== false ? $currentIndex + 1 : 0;
+
+        return view('members.reports.report', compact(
+            'page', 'listReport', 'pdfPath', 'member',
+            'prevReportId', 'nextReportId', 
+            'currentPos', 'siblingReports'
+        ));
     }
 
     public function submit_report(Request $request, $Id_List_Report)

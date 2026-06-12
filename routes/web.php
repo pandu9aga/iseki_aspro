@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auditor\BaseController;
+use App\Http\Controllers\Auditor\ProcedureAuditorController;
 use App\Http\Controllers\Auditor\ProfileAuditorController;
 use App\Http\Controllers\Auditor\ReportAuditorController;
 use App\Http\Controllers\Auditor\TemuanAuditorController;
@@ -33,6 +34,16 @@ Route::post('/login/auth', [MainController::class, 'login'])->name('login.auth')
 Route::post('/login/member', [MainController::class, 'login_member'])->name('login.member');
 Route::get('/logout', [MainController::class, 'logout'])->name('logout');
 Route::get('/logout_member', [MainController::class, 'logout_member'])->name('logout.member');
+
+// =====================
+// Public Procedure Routes
+// =====================
+use App\Http\Controllers\ProcedurePublicController;
+Route::prefix('procedure_public')->group(function () {
+    Route::get('/', [ProcedurePublicController::class, 'index'])->name('procedure_public');
+    Route::get('/area/{Name_Tractor}', [ProcedurePublicController::class, 'index_area'])->name('procedure_public.area.index');
+    Route::get('/area/procedure/{Name_Tractor}/{Name_Area}', [ProcedurePublicController::class, 'index_procedure'])->name('procedure_public.procedure.index');
+});
 
 // =====================
 // Leader Routes
@@ -120,6 +131,7 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
             Route::get('/show/{Id_Temuan}', [TemuanLeaderController::class, 'show'])->name('leader-temuan.show');
             Route::post('penanganan/create', [TemuanLeaderController::class, 'createPenanganan'])->name('leader-temuan.penanganan.create');
             Route::post('penanganan/submit', [TemuanLeaderController::class, 'submitPenanganan'])->name('leader-temuan.penanganan.submit');
+            Route::delete('penanganan/delete/{Id_Temuan}', [TemuanLeaderController::class, 'deletePenanganan'])->name('leader-temuan.penanganan.delete');
         });
         Route::delete('delete/{Id_Temuan}', [TemuanLeaderController::class, 'deleteTemuan'])->name('leader-temuan.delete');
         Route::post('submit-penanganan', [TemuanLeaderController::class, 'submitPenanganan'])->name('leader-temuan.submit-penanganan');
@@ -172,6 +184,7 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
         Route::get('/list/detail/{Id_Report}/{Name_Tractor}', [ReportAuditorController::class, 'list_report_detail'])->name('list_report_detail_auditor');
         Route::get('/report/{Id_List_Report}', [ReportAuditorController::class, 'report'])->name('report_auditor.detail');
         Route::post('/submit/{Id_List_Report}', [ReportAuditorController::class, 'submit_report'])->name('report_auditor.detail.submit');
+        Route::post('/duplicate/{Id_List_Report}', [ReportAuditorController::class, 'duplicate_report'])->name('report_auditor.detail.duplicate');
     });
 
     Route::prefix('temuan_auditor')->group(function () {
@@ -182,9 +195,16 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
             Route::get('/', [TemuanAuditorController::class, 'index'])->name('auditor-report.temuan_index');
             Route::get('/show/{Id_Temuan}', [TemuanAuditorController::class, 'show'])->name('auditor-report.temuan_show');
             Route::patch('validate/{Id_Temuan}', [TemuanAuditorController::class, 'validateTemuan'])->name('auditor-temuan.validate');
+            Route::patch('reject/{Id_Temuan}', [TemuanAuditorController::class, 'rejectTemuan'])->name('auditor-temuan.reject');
         });
         Route::get('statistics/monthly', [TemuanAuditorController::class, 'getMonthlyStatistics'])->name('auditor-temuan.statistics.monthly');
         Route::get('statistics/missing', [TemuanAuditorController::class, 'getMissingStatistics'])->name('auditor-temuan.statistics.missing');
         Route::get('missing', [TemuanAuditorController::class, 'missingTemuan'])->name('auditor-temuan.missing');
+    });
+
+    Route::prefix('procedure_auditor')->group(function () {
+        Route::get('/', [ProcedureAuditorController::class, 'index'])->name('procedure_auditor');
+        Route::get('/area/{Name_Tractor}', [ProcedureAuditorController::class, 'index_area'])->name('procedure_auditor.area.index');
+        Route::get('/area/procedure/{Name_Tractor}/{Name_Area}', [ProcedureAuditorController::class, 'index_procedure'])->name('procedure_auditor.procedure.index');
     });
 });
