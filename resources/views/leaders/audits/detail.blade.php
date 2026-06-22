@@ -64,7 +64,7 @@
                                             <p class="text-sm font-weight-normal mb-0">{{ $audit->Time_Approved_Auditor }}</p>
                                         </td>
                                         <td>
-                                            <a href="{{ route('report.detail', $audit->Id_List_Report) }}"
+                                            <a href="{{ route('report.detail', ['Id_List_Report' => $audit->Id_List_Report, 'context' => 'audit', 'date' => $date, 'auditorName' => $auditorName]) }}"
                                                 class="btn btn-link text-primary p-0" data-bs-toggle="tooltip" title="View PDF">
                                                 <i class="material-symbols-rounded text-lg">picture_as_pdf</i>
                                             </a>

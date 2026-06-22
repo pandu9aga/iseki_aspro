@@ -25,7 +25,7 @@
 
                     <div class="d-flex align-items-center gap-2 ms-auto">
                         @if($prevReportId)
-                            <a href="{{ route('report.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary mb-0" title="Previous Report">
+                            <a href="{{ route('report.detail', array_merge(['Id_List_Report' => $prevReportId], request()->query())) }}" class="btn btn-outline-primary mb-0" title="Previous Report">
                                 <i class="material-symbols-rounded text-sm">chevron_left</i>
                             </a>
                         @else
@@ -37,7 +37,7 @@
                         <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
 
                         @if($nextReportId)
-                            <a href="{{ route('report.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary mb-0" title="Next Report">
+                            <a href="{{ route('report.detail', array_merge(['Id_List_Report' => $nextReportId], request()->query())) }}" class="btn btn-outline-primary mb-0" title="Next Report">
                                 <i class="material-symbols-rounded text-sm">chevron_right</i>
                             </a>
                         @else
@@ -102,7 +102,7 @@
                 <!-- PDF Navigation Buttons -->
                 <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
                     @if($prevReportId)
-                        <a href="{{ route('report.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('report.detail', array_merge(['Id_List_Report' => $prevReportId], request()->query())) }}" class="btn btn-outline-primary">
                             <i class="material-symbols-rounded text-sm align-middle">arrow_back</i> Previous
                         </a>
                     @else
@@ -114,7 +114,7 @@
                     <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
 
                     @if($nextReportId)
-                        <a href="{{ route('report.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('report.detail', array_merge(['Id_List_Report' => $nextReportId], request()->query())) }}" class="btn btn-outline-primary">
                             Next <i class="material-symbols-rounded text-sm align-middle">arrow_forward</i>
                         </a>
                     @else

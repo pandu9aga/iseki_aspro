@@ -177,7 +177,7 @@ class ReportController extends Controller
         return redirect()->back()->with('success', 'Report berhasil disimpan dan PIC ditambahkan.');
     }
 
-    public function report($Id_List_Report)
+    public function report(Request $request, $Id_List_Report)
     {
         $page = 'report';
 
@@ -194,12 +194,29 @@ class ReportController extends Controller
         $fileName = $listReport->Name_Procedure . '.pdf';
         $pdfPath = $fullPath . '/' . $fileName;
 
-        // Get sibling list reports for prev/next navigation
-        $siblingReports = List_Report::where('Id_Report', $listReport->Id_Report)
-            ->where('Name_Tractor', $listReport->Name_Tractor)
-            ->orderBy('Name_Procedure')
-            ->pluck('Id_List_Report')
-            ->toArray();
+        $context = $request->query('context');
+
+        if ($context === 'audit') {
+            $date = $request->query('date');
+            $auditorName = $request->query('auditorName');
+
+            $query = List_Report::whereDate('Time_Approved_Auditor', $date);
+
+            if ($auditorName === 'Unknown Auditor') {
+                $query->whereNull('Auditor_Name');
+            } else {
+                $query->where('Auditor_Name', $auditorName);
+            }
+
+            $siblingReports = $query->orderBy('Id_List_Report')->pluck('Id_List_Report')->toArray();
+        } else {
+            // Get sibling list reports for prev/next navigation
+            $siblingReports = List_Report::where('Id_Report', $listReport->Id_Report)
+                ->where('Name_Tractor', $listReport->Name_Tractor)
+                ->orderBy('Name_Procedure')
+                ->pluck('Id_List_Report')
+                ->toArray();
+        }
 
         $currentIndex = array_search($Id_List_Report, $siblingReports);
         $prevReportId = ($currentIndex !== false && $currentIndex > 0) ? $siblingReports[$currentIndex - 1] : null;
