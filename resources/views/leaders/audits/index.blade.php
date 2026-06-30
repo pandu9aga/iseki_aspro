@@ -53,23 +53,25 @@
         <div class="container mt-5">
             <div class="row">
                 <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                         <h3 class="mb-0">Auditor Monthly Stats</h3>
-                        <div class="d-flex gap-2">
-                            <select class="form-select" id="monthPicker" style="width: auto;">
-                                @foreach(range(1, 12) as $m)
-                                    <option value="{{ sprintf('%02d', $m) }}" {{ $month == sprintf('%02d', $m) ? 'selected' : '' }}>
-                                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <select class="form-select" id="yearPicker" style="width: auto;">
-                                @foreach(range(date('Y')-2, date('Y')+1) as $y)
-                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                @endforeach
-                            </select>
-                            <button class="btn btn-primary mb-0" id="filterBtn">Filter</button>
-                            <button class="btn btn-success mb-0" id="exportBtn">Export Excel</button>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <div class="d-flex align-items-center gap-1">
+                                <button class="btn btn-outline-primary px-2 mb-0 d-flex align-items-center justify-content-center" onclick="changeMonth(-1)" title="Bulan Sebelumnya" style="height: 38px;">
+                                    <i class="material-symbols-rounded text-sm">chevron_left</i>
+                                </button>
+                                <input type="month" class="form-control text-center px-2" id="monthPicker"
+                                    value="{{ $year }}-{{ sprintf('%02d', $month) }}" style="width: 150px; height: 38px;">
+                                <button class="btn btn-outline-primary px-2 mb-0 d-flex align-items-center justify-content-center" onclick="changeMonth(1)" title="Bulan Selanjutnya" style="height: 38px;">
+                                    <i class="material-symbols-rounded text-sm">chevron_right</i>
+                                </button>
+                            </div>
+                            <button class="btn btn-primary mb-0 d-flex align-items-center justify-content-center" id="filterBtn" style="height: 38px;">
+                                <i class="material-symbols-rounded text-sm me-1">filter_alt</i> Filter
+                            </button>
+                            <button class="btn btn-success mb-0 d-flex align-items-center justify-content-center" id="exportBtn" style="height: 38px;">
+                                <i class="material-symbols-rounded text-sm me-1">download</i> Export Excel
+                            </button>
                         </div>
                     </div>
 
@@ -139,17 +141,31 @@
         }
     }
 
+    function changeMonth(offset) {
+        const monthInput = document.getElementById('monthPicker');
+        let [year, month] = monthInput.value.split('-');
+        let date = new Date(year, parseInt(month) - 1 + offset, 1);
+        
+        let newYear = date.getFullYear();
+        let newMonth = String(date.getMonth() + 1).padStart(2, '0');
+        
+        monthInput.value = `${newYear}-${newMonth}`;
+        document.getElementById('filterBtn').click();
+    }
+
     document.getElementById('filterBtn').addEventListener('click', function() {
-        const month = document.getElementById('monthPicker').value;
-        const year = document.getElementById('yearPicker').value;
+        const monthInput = document.getElementById('monthPicker').value;
+        if (!monthInput) return;
+        const [year, month] = monthInput.split('-');
         let url = "{{ route('audit.monthly', ['year' => ':year', 'month' => ':month']) }}";
         url = url.replace(':year', year).replace(':month', month);
         window.location.href = url;
     });
 
     document.getElementById('exportBtn').addEventListener('click', function() {
-        const month = document.getElementById('monthPicker').value;
-        const year = document.getElementById('yearPicker').value;
+        const monthInput = document.getElementById('monthPicker').value;
+        if (!monthInput) return;
+        const [year, month] = monthInput.split('-');
         let url = "{{ route('audit.export', ['year' => ':year', 'month' => ':month']) }}";
         url = url.replace(':year', year).replace(':month', month);
         window.location.href = url;

@@ -53,10 +53,18 @@
                                         <i class="material-symbols-rounded text-sm align-middle me-1">analytics</i>
                                         Statistik Temuan Bulanan
                                     </h6>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <input type="month" class="form-control form-control-sm" id="monthPicker"
-                                            value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}" style="width: 150px;">
-                                        <button class="btn btn-sm btn-primary" onclick="loadMonthlyStatistics()">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <button class="btn btn-sm btn-outline-primary px-2 mb-0" onclick="changeStatMonth(-1)" title="Bulan Sebelumnya">
+                                                <i class="material-symbols-rounded text-sm">chevron_left</i>
+                                            </button>
+                                            <input type="month" class="form-control form-control-sm text-center" id="monthPicker"
+                                                value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}" style="width: 140px; min-height: 32px;">
+                                            <button class="btn btn-sm btn-outline-primary px-2 mb-0" onclick="changeStatMonth(1)" title="Bulan Selanjutnya">
+                                                <i class="material-symbols-rounded text-sm">chevron_right</i>
+                                            </button>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary mb-0" onclick="loadMonthlyStatistics()">
                                             <i class="material-symbols-rounded text-sm">refresh</i>
                                         </button>
                                     </div>
@@ -416,6 +424,30 @@
                                                 `;
                         }
                     }
+
+                    function changeStatMonth(offset) {
+                        const monthInput = document.getElementById('monthPicker');
+                        let [year, month] = monthInput.value.split('-');
+                        let date = new Date(year, parseInt(month) - 1 + offset, 1);
+                        
+                        let newYear = date.getFullYear();
+                        let newMonth = String(date.getMonth() + 1).padStart(2, '0');
+                        
+                        monthInput.value = `${newYear}-${newMonth}`;
+                        loadMonthlyStatistics();
+                    }
+
+                    function changeMonth(offset) {
+                        const monthInput = document.getElementById('monthInput');
+                        let [year, month] = monthInput.value.split('-');
+                        let date = new Date(year, parseInt(month) - 1 + offset, 1);
+                        
+                        let newYear = date.getFullYear();
+                        let newMonth = String(date.getMonth() + 1).padStart(2, '0');
+                        
+                        monthInput.value = `${newYear}-${newMonth}`;
+                        document.getElementById('monthFilterForm').submit();
+                    }
                 </script>
 
                 <!-- Month Filter -->
@@ -424,34 +456,42 @@
                         <div class="card shadow-sm">
                             <div class="card-body">
                                 <form method="GET" action="{{ route('leader-temuan.list') }}" id="monthFilterForm">
-                                    <div class="row align-items-end">
-                                        <div class="col-md-4 col-lg-3">
+                                    <div class="row align-items-end g-3">
+                                        <div class="col-12 col-md-5 col-lg-4">
                                             <label for="monthInput"
                                                 class="form-label text-xs text-uppercase font-weight-bolder mb-2">
                                                 <i class="material-symbols-rounded text-xs">calendar_month</i> Filter
                                                 Bulan
                                             </label>
-                                            <input type="month" class="form-control" name="month" id="monthInput"
-                                                value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <button type="button" class="btn btn-outline-primary btn-sm mb-0 px-3 d-flex align-items-center justify-content-center" onclick="changeMonth(-1)" title="Bulan Sebelumnya" style="height: 38px;">
+                                                    <i class="material-symbols-rounded">chevron_left</i>
+                                                </button>
+                                                <input type="month" class="form-control px-2 text-center" name="month" id="monthInput"
+                                                    value="{{ $month ?? \Carbon\Carbon::now()->format('Y-m') }}" style="height: 38px;">
+                                                <button type="button" class="btn btn-outline-primary btn-sm mb-0 px-3 d-flex align-items-center justify-content-center" onclick="changeMonth(1)" title="Bulan Selanjutnya" style="height: 38px;">
+                                                    <i class="material-symbols-rounded">chevron_right</i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4 col-lg-3">
+                                        <div class="col-12 col-md-4 col-lg-3">
                                             <label for="statusInput"
                                                 class="form-label text-xs text-uppercase font-weight-bolder mb-2">
                                                 <i class="material-symbols-rounded text-xs">filter_list</i> Filter Status
                                             </label>
-                                            <select class="form-select border px-2" name="status" id="statusInput">
+                                            <select class="form-select border px-2" name="status" id="statusInput" style="height: 38px;">
                                                 <option value="all" {{ ($statusFilter ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status</option>
                                                 <option value="belum_divalidasi" {{ ($statusFilter ?? '') == 'belum_divalidasi' ? 'selected' : '' }}>Belum Divalidasi</option>
                                                 <option value="ditolak" {{ ($statusFilter ?? '') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                                                 <option value="selesai" {{ ($statusFilter ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2">
-                                            <button class="btn btn-primary w-100 mb-0" type="submit">
-                                                <i class="material-symbols-rounded text-sm">filter_alt</i> Apply
+                                        <div class="col-12 col-md-3 col-lg-2">
+                                            <button class="btn btn-primary w-100 mb-0 d-flex align-items-center justify-content-center" type="submit" style="height: 38px;">
+                                                <i class="material-symbols-rounded text-sm me-1">filter_alt</i> Apply
                                             </button>
                                         </div>
-                                        <div class="col-md-12 col-lg-4 mt-3 mt-lg-0">
+                                        <div class="col-12">
                                             <div class="alert alert-info mb-0 py-2" role="alert">
                                                 <small class="text-white d-flex align-items-center">
                                                     <i class="material-symbols-rounded text-sm me-1">info</i>
