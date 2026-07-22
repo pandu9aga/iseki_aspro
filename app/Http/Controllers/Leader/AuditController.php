@@ -67,7 +67,7 @@ class AuditController extends Controller
         $page = 'audit';
         $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
 
-        $query = List_Report::with('report.member')
+        $query = List_Report::with('report')
             ->whereDate('Time_Approved_Auditor', $date);
 
         if ($auditorName === 'Unknown Auditor') {

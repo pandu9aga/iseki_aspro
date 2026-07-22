@@ -53,19 +53,15 @@ class MemberHelper
     }
 
     /**
-     * Cari member berdasarkan NIK (untuk login member).
-     *
-     * @param string|null $asOfDate Tanggal acuan untuk menentukan sumber data (format Y-m-d).
-     *                              Jika null, pakai now().
+     * Cari member berdasarkan NIK.
+     * Prioritas: RIFA (employees) dulu, fallback ke lokal (members).
+     * NIK sebagai primary key penghubung antara kedua sistem.
      */
     public static function findByNik($nik, $asOfDate = null)
     {
-        if (self::useRifa($asOfDate)) {
-            $e = Employee::where('nik', $nik)->first();
-            if (! $e) {
-                return null;
-            }
-
+        // Cari di RIFA dulu — sumber data terbaru
+        $e = Employee::where('nik', $nik)->first();
+        if ($e) {
             return (object) [
                 'Id_Member'   => $e->id,
                 'NIK_Member'  => $e->nik,
@@ -73,6 +69,7 @@ class MemberHelper
             ];
         }
 
+        // Fallback ke lokal (members) — untuk member lama yang belum di RIFA
         return Member::where('NIK_Member', $nik)->first();
     }
 

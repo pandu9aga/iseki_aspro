@@ -29,7 +29,7 @@ class AuditExport implements FromCollection, ShouldAutoSize, WithEvents, WithHea
 
     public function collection()
     {
-        return List_Report::with('report.member')
+        return List_Report::with('report')
             ->whereYear('Time_Approved_Auditor', $this->year)
             ->whereMonth('Time_Approved_Auditor', $this->month)
             ->orderBy('Auditor_Name', 'asc')

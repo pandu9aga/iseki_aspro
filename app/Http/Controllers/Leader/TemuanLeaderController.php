@@ -30,7 +30,7 @@ class TemuanLeaderController extends Controller
 
         [$year, $monthNum] = explode('-', $month);
 
-        $query = Temuan::with(['ListReport.report.member', 'User'])
+        $query = Temuan::with(['ListReport.report', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
             ->whereMonth('Time_Temuan', $monthNum);
@@ -283,7 +283,7 @@ class TemuanLeaderController extends Controller
     public function show(string $Id_Temuan)
     {
         $page = 'temuan';
-        $temuan = Temuan::with(['ListReport.report.member', 'User'])->findOrFail($Id_Temuan);
+        $temuan = Temuan::with(['ListReport.report', 'User'])->findOrFail($Id_Temuan);
         $listReport = $temuan->ListReport;
 
         $id_member = $listReport->report->member->Id_Member;
@@ -335,7 +335,7 @@ class TemuanLeaderController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $data) {
-            $temuan = Temuan::with(['ListReport.report.member', 'User'])->findOrFail($data['Id_Temuan']);
+            $temuan = Temuan::with(['ListReport.report', 'User'])->findOrFail($data['Id_Temuan']);
             $currentUser = User::find(session('Id_User'));
             $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
             $jsonData = new JsonHelper($temuan->Object_Temuan);
@@ -388,7 +388,7 @@ class TemuanLeaderController extends Controller
             'photo_pdf' => 'required|file',
         ]);
 
-        $temuan = Temuan::with(['ListReport.report.member', 'User'])->findOrFail($data['Id_Temuan']);
+        $temuan = Temuan::with(['ListReport.report', 'User'])->findOrFail($data['Id_Temuan']);
         $currentUser = User::find(session('Id_User'));
         $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
 
@@ -433,7 +433,7 @@ class TemuanLeaderController extends Controller
         $month = $request->input('month', Carbon::now()->format('Y-m'));
         [$year, $monthNum] = explode('-', $month);
 
-        $temuans = Temuan::with(['ListReport.report.member', 'User'])
+        $temuans = Temuan::with(['ListReport.report', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
             ->whereMonth('Time_Temuan', $monthNum)
@@ -559,7 +559,7 @@ class TemuanLeaderController extends Controller
         [$year, $monthNum] = explode('-', $month);
 
         // Belum dikategorikan (> 1 hari)
-        $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'User'])
+        $uncategorizedTemuans = Temuan::with(['ListReport.report', 'User'])
             ->whereNotNull('Time_Temuan')
             ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
@@ -572,7 +572,7 @@ class TemuanLeaderController extends Controller
             ->get();
 
         // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan" dan belum dikategorikan)
-        $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'User'])
+        $noPenangananTemuans = Temuan::with(['ListReport.report', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
             ->whereNotNull('Tipe_Temuan')
@@ -585,7 +585,7 @@ class TemuanLeaderController extends Controller
             ->get();
 
         // Belum di validasi (sudah ada penanganan tapi belum tervalidasi)
-        $noValidasiTemuans = Temuan::with(['ListReport.report.member', 'User'])
+        $noValidasiTemuans = Temuan::with(['ListReport.report', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereNotNull('Time_Penanganan')
             ->where(function ($query) {
