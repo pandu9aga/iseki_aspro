@@ -759,8 +759,7 @@ class ProcedureController extends Controller
             ->get();
 
         // Ambil daftar training (Report) yang tersedia untuk assignment
-        $trainings = \App\Models\Report::with('member')
-            ->orderBy('Start_Report', 'desc')
+        $trainings = \App\Models\Report::orderBy('Start_Report', 'desc')
             ->get();
 
         return view('leaders.missing.procedures', compact('page', 'tractor', 'photoTractor', 'area', 'procedures', 'trainings'));
@@ -783,7 +782,7 @@ class ProcedureController extends Controller
         $memberIds = [];
 
         foreach ($request->Id_Report as $reportId) {
-            $report = \App\Models\Report::with('member')->findOrFail($reportId);
+            $report = \App\Models\Report::findOrFail($reportId);
 
             // Cek apakah procedure sudah ada di list report ini
             $exists = \App\Models\List_Report::where('Id_Report', $report->Id_Report)
