@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use App\Models\List_Report;
-use App\Models\Member; // Pastikan diimpor
+use App\Helpers\MemberHelper;
 use App\Models\Procedure;
 use App\Models\Report;
 use App\Models\Tractor;
@@ -29,11 +29,11 @@ class ReportController extends Controller
         $reports = Report::whereYear('Start_Report', $year)
             ->whereMonth('Start_Report', $month)
             ->orderBy('Start_Report')
-            ->with('member') // Pastikan relasi 'member' didefinisikan di model Report
             ->get();
 
-        $members = Member::all();
-        debugbar()->info($members);
+        // Tentukan sumber data member berdasarkan bulan report, bukan tanggal hari ini
+        $reportDate = Carbon::createFromDate($year, $month, 1)->format('Y-m-d');
+        $members = MemberHelper::getAllMembers($reportDate);
 
         return view('leaders.reports.reporter', compact('page', 'reports', 'members', 'year', 'month'));
     }
@@ -49,6 +49,11 @@ class ReportController extends Controller
         $startReportDate = date('Y-m-d', strtotime($request->Start_Report));
 
         foreach ($request->Id_Member as $id_member) {
+            // Validasi member ada di sumber data yang sesuai dengan tanggal report
+            if (! MemberHelper::exists($id_member, $startReportDate)) {
+                continue;
+            }
+
             // Cek apakah kombinasi Id_Member dan tanggal yang sama sudah ada
             $exists = Report::where('Id_Member', $id_member)
                 ->whereDate('Start_Report', $startReportDate)
@@ -79,20 +84,25 @@ class ReportController extends Controller
     {
         $page = 'report';
 
-        $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
+        $report = Report::where('Id_Report', $Id_Report)->first();
         $tractors = Tractor::select('Name_Tractor', 'Photo_Tractor')
             ->distinct()
             ->orderBy('Name_Tractor')
             ->get();
 
+        // Hitung jumlah prosedur per tractor dalam 1 query (hindari N+1)
+        $counts = List_Report::where('Id_Report', $Id_Report)
+            ->groupBy('Name_Tractor')
+            ->selectRaw('Name_Tractor, count(*) as count')
+            ->pluck('count', 'Name_Tractor');
+
         $tractorReports = [];
 
         foreach ($tractors as $tractor) {
-            $count = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $tractor->Name_Tractor)->count();
             $tractorReports[] = [
                 'Name_Tractor' => $tractor->Name_Tractor,
                 'Photo_Tractor' => $tractor->Photo_Tractor,
-                'Report_Count' => $count,
+                'Report_Count' => $counts->get($tractor->Name_Tractor, 0),
             ];
         }
 
@@ -103,7 +113,7 @@ class ReportController extends Controller
     {
         $page = 'report';
 
-        $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
+        $report = Report::where('Id_Report', $Id_Report)->first();
         $list_reports = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $Name_Tractor)->with('report')->orderBy('Name_Procedure')->get();
 
         $tractor = Tractor::where('Name_Tractor', $Name_Tractor)->first();
@@ -124,11 +134,17 @@ class ReportController extends Controller
             'Name_Procedure' => 'required|array',
         ]);
 
-        $report = Report::where('Id_Report', $request->Id_Report)->with('member')->first();
+        $report = Report::where('Id_Report', $request->Id_Report)->first();
+
+        if (! $report || ! $report->member) {
+            return redirect()->back()->withErrors(['error' => 'Report atau data member tidak ditemukan.']);
+        }
+
         $procedures = Procedure::whereIn('Name_Procedure', $request->Name_Procedure)->get();
 
-        $name_member = $report->member->Name_Member ?? 'Unknown';
-        $id_member = $report->member->Id_Member;
+        $member = $report->member;
+        $name_member = $member->Name_Member ?? 'Unknown';
+        $id_member = $member->Id_Member;
         $timeReport = Carbon::parse($report->Start_Report)->format('Y-m-d');
 
         $fullPath = 'reports/' . $timeReport . '_' . $id_member;
@@ -243,20 +259,19 @@ class ReportController extends Controller
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
-            $pdf = $request->file('pdf');
+            $request->validate([
+                'pdf' => 'required|file|mimes:pdf|max:20480',
+            ]);
 
-            // Path target di public/storage/reports/...
-            $path = 'storage/reports/' . $timeReport . '_' . $id_member;
+            $path = 'reports/' . $timeReport . '_' . $id_member;
             $filename = $listReport->Name_Procedure . '.pdf';
+            $targetPath = $path . '/' . $filename;
 
-            // Pastikan direktori ada
-            $fullPath = public_path($path);
-            if (! file_exists($fullPath)) {
-                mkdir($fullPath, 0755, true);
+            if (! Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->makeDirectory($path);
             }
 
-            // Pindahkan file ke public/storage/reports/...
-            $pdf->move($fullPath, $filename);
+            Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
             // Update waktu
             $listReport->Time_Approved_Leader = $request->input('timestamp');
@@ -378,7 +393,15 @@ class ReportController extends Controller
         // Validasi input
         $request->validate([
             'Start_Report' => 'required|date',
-            'Id_Member' => ['required', 'integer', 'exists:App\Models\Member,Id_Member'], // Validasi Id_Member ada di tabel members
+            'Id_Member' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) use ($request) {
+                    if (! MemberHelper::exists($value, $request->Start_Report)) {
+                        $fail('The selected member is invalid.');
+                    }
+                },
+            ],
         ]);
 
         // Temukan report berdasarkan ID
@@ -393,19 +416,19 @@ class ReportController extends Controller
         $report->Id_Member = $request->Id_Member;
         $report->save();
 
-        // Jika Start_Report atau Id_Member berubah, kita mungkin perlu memindahkan folder lama ke yang baru
-        // Jika tidak, bisa diabaikan
+        // Jika Start_Report atau Id_Member berubah, pindahkan folder lama ke yang baru
         if ($oldStartReport !== $request->Start_Report || $oldIdMember !== $request->Id_Member) {
-            // $oldFolderName = $oldStartReport . '_' . $oldIdMember;
-            // $newFolderName = $request->Start_Report . '_' . $request->Id_Member;
             $oldFolderName = Carbon::parse($oldStartReport)->format('Y-m-d') . '_' . $oldIdMember;
             $newFolderName = Carbon::parse($request->Start_Report)->format('Y-m-d') . '_' . $request->Id_Member;
 
             $oldPath = 'reports/' . $oldFolderName;
             $newPath = 'reports/' . $newFolderName;
 
-            // Jika folder lama ada, coba pindahkan
             if (Storage::disk('public')->exists($oldPath)) {
+                // Hapus target dulu jika sudah ada (misal di Windows rename gagal jika target exists)
+                if (Storage::disk('public')->exists($newPath)) {
+                    Storage::disk('public')->deleteDirectory($newPath);
+                }
                 Storage::disk('public')->move($oldPath, $newPath);
             }
         }

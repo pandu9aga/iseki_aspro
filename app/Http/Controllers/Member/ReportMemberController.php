@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\List_Report;
-use App\Models\Member;
+use App\Helpers\MemberHelper;
 use App\Models\Report;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,12 +16,12 @@ class ReportMemberController extends Controller
     {
         $page = 'report';
 
-        $Id_Member = session('Id_Member');
-        $reports = Report::where('Id_Member', $Id_Member)
+        $nik = session('NIK_Member');
+        $memberIds = MemberHelper::getLinkedIds($nik);
+        $reports = Report::whereIn('Id_Member', $memberIds)
             ->orderBy('Start_Report', 'desc')
-            ->with('member')
             ->get();
-        $member = Member::find($Id_Member);
+        $member = MemberHelper::findById(session('Id_Member'));
 
         return view('members.reports.index', compact('page', 'reports', 'member'));
     }
@@ -33,7 +33,7 @@ class ReportMemberController extends Controller
         $report = Report::findOrFail($Id_Report);
         $list_reports = List_Report::where('Id_Report', $Id_Report)->orderBy('Name_Procedure', 'asc')->get();
         $Id_Member = session('Id_Member');
-        $member = Member::find($Id_Member);
+        $member = MemberHelper::findById($Id_Member);
 
         return view('members.reports.list_report', compact('page', 'report', 'list_reports', 'member'));
     }
@@ -43,7 +43,7 @@ class ReportMemberController extends Controller
         $page = 'report';
 
         $Id_Member = session('Id_Member');
-        $member = Member::find($Id_Member);
+        $member = MemberHelper::findById($Id_Member);
 
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 
@@ -82,20 +82,19 @@ class ReportMemberController extends Controller
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
-            $pdf = $request->file('pdf');
+            $request->validate([
+                'pdf' => 'required|file|mimes:pdf|max:20480',
+            ]);
 
-            // Path target di public/storage/reports/...
-            $path = 'storage/reports/'.$timeReport.'_'.$id_member;
-            $filename = $listReport->Name_Procedure.'.pdf';
+            $path = 'reports/' . $timeReport . '_' . $id_member;
+            $filename = $listReport->Name_Procedure . '.pdf';
+            $targetPath = $path . '/' . $filename;
 
-            // Pastikan direktori ada
-            $fullPath = public_path($path);
-            if (! file_exists($fullPath)) {
-                mkdir($fullPath, 0755, true);
+            if (! Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->makeDirectory($path);
             }
 
-            // Pindahkan file ke public/storage/reports/...
-            $pdf->move($fullPath, $filename);
+            Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
             // Update waktu
             $listReport->Time_List_Report = $request->input('timestamp');

@@ -34,7 +34,7 @@ class Procedure extends Model
             return collect();
         }
 
-        return Member::whereIn('Id_Member', $picIds)->get();
+        return \App\Helpers\MemberHelper::getByIds($picIds);
     }
 
     // Helper method untuk mendapatkan nama-nama PIC

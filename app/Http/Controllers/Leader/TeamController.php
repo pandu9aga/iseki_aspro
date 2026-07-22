@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\MemberHelper;
 use App\Models\Member;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class TeamController extends Controller
     {
         $page = 'team';
 
-        $members = Member::all();
+        $members = MemberHelper::getAllMembers();
         $teams = Team::all();
 
         return view('leaders.teams.index', compact('page', 'members', 'teams'));
@@ -75,6 +76,10 @@ class TeamController extends Controller
 
     public function member_create(Request $request)
     {
+        if (MemberHelper::useRifa()) {
+            return redirect()->route('team')->withErrors(['error' => 'Cannot modify members when using RIFA integration.']);
+        }
+
         // melakukan validasi data
         $request->validate([
             'NIK_Member' => 'required',
@@ -96,6 +101,10 @@ class TeamController extends Controller
 
     public function member_update(Request $request, string $Id_Member)
     {
+        if (MemberHelper::useRifa()) {
+            return redirect()->route('team')->withErrors(['error' => 'Cannot modify members when using RIFA integration.']);
+        }
+
         // melakukan validasi data
         $request->validate([
             'NIK_Member' => 'required',
@@ -117,6 +126,10 @@ class TeamController extends Controller
 
     public function member_destroy(Member $Id_Member)
     {
+        if (MemberHelper::useRifa()) {
+            return redirect()->route('team')->withErrors(['error' => 'Cannot modify members when using RIFA integration.']);
+        }
+
         $Id_Member->delete();
 
         return redirect()->route('team')->with('success', 'Data berhasil di hapus');
@@ -124,6 +137,10 @@ class TeamController extends Controller
 
     public function member_import(Request $request)
     {
+        if (MemberHelper::useRifa()) {
+            return redirect()->route('team')->withErrors(['error' => 'Cannot modify members when using RIFA integration.']);
+        }
+
         $request->validate([
             'excel' => 'required|file|mimes:xls,xlsx',
         ]);
@@ -133,18 +150,41 @@ class TeamController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray();
 
-        foreach ($rows as $row) {
-            $nik = $row[0];
-            $nama = $row[1];
+        $imported = 0;
+        $skipped = 0;
 
-            if ($nik && $nama) {
-                DB::table('members')->insert([
-                    'NIK_Member' => $nik,
-                    'Name_Member' => $nama,
-                ]);
+        foreach ($rows as $index => $row) {
+            // Lewati baris pertama jika terlihat seperti header (bukan numeric)
+            if ($index === 0 && (! is_numeric($row[0] ?? null) || ! is_numeric($row[1] ?? null))) {
+                continue;
             }
+
+            $nik = trim($row[0] ?? '');
+            $nama = trim($row[1] ?? '');
+
+            if ($nik === '' || $nama === '') {
+                continue;
+            }
+
+            // Lewati jika NIK sudah ada
+            $exists = DB::table('members')->where('NIK_Member', $nik)->exists();
+            if ($exists) {
+                $skipped++;
+                continue;
+            }
+
+            DB::table('members')->insert([
+                'NIK_Member' => $nik,
+                'Name_Member' => $nama,
+            ]);
+            $imported++;
         }
 
-        return redirect()->route('team')->with('success', 'Data berhasil diimport.');
+        $msg = "Berhasil import {$imported} member.";
+        if ($skipped > 0) {
+            $msg .= " {$skipped} NIK duplikat dilewati.";
+        }
+
+        return redirect()->route('team')->with('success', $msg);
     }
 }

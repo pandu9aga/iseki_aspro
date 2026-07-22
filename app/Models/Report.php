@@ -14,9 +14,9 @@ class Report extends Model
 
     protected $fillable = ['Start_Report', 'Name_Report', 'Id_Member'];
 
-    public function member()
+    public function getMemberAttribute()
     {
-        return $this->belongsTo(Member::class, 'Id_Member', 'Id_Member');
+        return \App\Helpers\MemberHelper::findByIdAndDate($this->Id_Member, $this->Start_Report);
     }
 
     public function list_report()

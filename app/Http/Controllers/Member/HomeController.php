@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\List_Report;
-use App\Models\Member;
+use App\Helpers\MemberHelper;
 use Carbon\Carbon;
 
 class HomeController extends Controller
@@ -14,12 +14,13 @@ class HomeController extends Controller
         $page = 'home';
         $today = Carbon::today();
 
-        $Id_Member = session('Id_Member');
-        $member = Member::find($Id_Member);
+        $nik = session('NIK_Member');
+        $memberIds = MemberHelper::getLinkedIds($nik);
+        $member = MemberHelper::findById(session('Id_Member'));
 
         $reports = List_Report::with('report')
-            ->whereHas('report', function ($query) use ($Id_Member) {
-                $query->where('Id_Member', $Id_Member);
+            ->whereHas('report', function ($query) use ($memberIds) {
+                $query->whereIn('Id_Member', $memberIds);
             })
             ->count();
 

@@ -720,9 +720,6 @@ class ProcedureController extends Controller
             }
         }
 
-        debugbar()->info($tractorProcedureCounts);
-        debugbar()->info($tractorProcedurelist);
-
         return view('leaders.missing.index', compact('page', 'tractors', 'tractorProcedureCounts'));
     }
 

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
-use App\Models\Member;
+use App\Helpers\MemberHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,13 +14,17 @@ class ProfileMemberController extends Controller
         $page = 'profile';
 
         $Id_Member = session('Id_Member');
-        $member = Member::find($Id_Member);
+        $member = MemberHelper::findById($Id_Member);
 
         return view('members.profile.index', compact('page', 'member'));
     }
 
     public function update(Request $request, string $Id_Member)
     {
+        if (MemberHelper::useRifa()) {
+            return redirect()->route('profile_member')->withErrors(['error' => 'Cannot modify profile when using RIFA integration.']);
+        }
+
         // melakukan validasi data
         $request->validate([
             'Name_Member' => 'required',

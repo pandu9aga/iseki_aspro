@@ -42,8 +42,13 @@
                             <div class="card-body">
                                 <div class="input-group input-group-outline my-3 {{ $member->Name_Member ? 'is-filled' : '' }}">
                                     <label class="form-label">Name</label>
-                                    <input type="text" class="form-control @error('Name_Member') is-invalid @enderror" name="Name_Member" value="{{ $member->Name_Member }}">
+                                    <input type="text" class="form-control @error('Name_Member') is-invalid @enderror" name="Name_Member" value="{{ $member->Name_Member }}" {{ \App\Helpers\MemberHelper::useRifa() ? 'readonly' : '' }}>
                                 </div>
+                                @if(\App\Helpers\MemberHelper::useRifa())
+                                <div class="alert alert-info text-white mt-3 text-xs">
+                                    Profil dikelola melalui sistem RIFA.
+                                </div>
+                                @endif
                                 @error('Name_Member')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

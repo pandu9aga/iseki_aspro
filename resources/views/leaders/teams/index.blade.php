@@ -36,15 +36,21 @@
                 </a>
                 <br><br>
 
+                @if(!\App\Helpers\MemberHelper::useRifa())
                 <!-- Tombol Add -->
                 <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#addMemberModal">
                     <span style="padding-left: 50px; padding-right: 50px;"><b>+</b> Add</span>
                 </button>
 
-                <!-- Tombol Add -->
+                <!-- Tombol Import -->
                 <button class="btn btn-secondary mx-3" data-bs-toggle="modal" data-bs-target="#importMemberModal">
                     <span style="padding-left: 50px; padding-right: 50px;"><b>++</b> Import</span>
                 </button>
+                @else
+                <div class="alert alert-info text-white mx-3">
+                    <strong>Informasi:</strong> Data member dikelola dari sistem RIFA terintegrasi. Penambahan, pengubahan, dan penghapusan dinonaktifkan.
+                </div>
+                @endif
 
                 <div class="table-responsive p-0">
                     <table id="example" class="table align-items-center mb-0">
@@ -73,16 +79,20 @@
                                         <p class="text-xs text-secondary mb-0">{{ $member->Name_Member }}</p>
                                     </td>
                                     <td class="align-middle text-center">
+                                        @if(!\App\Helpers\MemberHelper::useRifa())
                                         <div class="d-flex justify-content-center">
                                             <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal"
-                                                data-bs-target="#editMemberModal" onclick="setEditMember({{ $member }})">
+                                                data-bs-target="#editMemberModal" onclick='setEditMember(@json($member))'>
                                                 <i class="material-symbols-rounded">app_registration</i>
                                             </a>
                                             <a href="#" class="text-primary text-xs mx-1" data-bs-toggle="modal"
-                                                data-bs-target="#deleteMemberModal" onclick="setDeleteMember({{ $member }})">
+                                                data-bs-target="#deleteMemberModal" onclick='setDeleteMember(@json($member))'>
                                                 <i class="material-symbols-rounded">delete</i>
                                             </a>
                                         </div>
+                                        @else
+                                        -
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

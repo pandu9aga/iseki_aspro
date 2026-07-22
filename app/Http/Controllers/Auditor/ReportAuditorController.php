@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auditor;
 
 use App\Http\Controllers\Controller;
 use App\Models\List_Report;
-use App\Models\Member;
+use App\Helpers\MemberHelper;
 use App\Models\Procedure;
 use App\Models\Report;
 use App\Models\Tractor;
@@ -29,10 +29,10 @@ class ReportAuditorController extends Controller
         $reports = Report::whereYear('Start_Report', $year)
             ->whereMonth('Start_Report', $month)
             ->orderBy('Start_Report')
-            ->with('member')
             ->get();
 
-        $members = Member::all();
+        $reportDate = Carbon::createFromDate($year, $month, 1)->format('Y-m-d');
+        $members = MemberHelper::getAllMembers($reportDate);
 
         return view('auditors.reports.reporter', compact('page', 'reports', 'members', 'year', 'month'));
     }
@@ -41,20 +41,24 @@ class ReportAuditorController extends Controller
     {
         $page = 'report';
 
-        $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
+        $report = Report::where('Id_Report', $Id_Report)->first();
         $tractors = Tractor::select('Name_Tractor', 'Photo_Tractor')
             ->distinct()
             ->orderBy('Name_Tractor')
             ->get();
 
+        $counts = List_Report::where('Id_Report', $Id_Report)
+            ->groupBy('Name_Tractor')
+            ->selectRaw('Name_Tractor, count(*) as count')
+            ->pluck('count', 'Name_Tractor');
+
         $tractorReports = [];
 
         foreach ($tractors as $tractor) {
-            $count = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $tractor->Name_Tractor)->count();
             $tractorReports[] = [
                 'Name_Tractor' => $tractor->Name_Tractor,
                 'Photo_Tractor' => $tractor->Photo_Tractor,
-                'Report_Count' => $count,
+                'Report_Count' => $counts->get($tractor->Name_Tractor, 0),
             ];
         }
 
@@ -65,7 +69,7 @@ class ReportAuditorController extends Controller
     {
         $page = 'report';
 
-        $report = Report::where('Id_Report', $Id_Report)->with('member')->first();
+        $report = Report::where('Id_Report', $Id_Report)->first();
         $list_reports = List_Report::where('Id_Report', $Id_Report)->where('Name_Tractor', $Name_Tractor)->with('report')->orderBy('Name_Procedure')->get();
 
         $tractor = Tractor::where('Name_Tractor', $Name_Tractor)->first();
@@ -123,20 +127,19 @@ class ReportAuditorController extends Controller
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
         if ($request->hasFile('pdf')) {
-            $pdf = $request->file('pdf');
+            $request->validate([
+                'pdf' => 'required|file|mimes:pdf|max:20480',
+            ]);
 
-            // Path target di public/storage/reports/...
-            $path = 'storage/reports/'.$timeReport.'_'.$id_member;
-            $filename = $listReport->Name_Procedure.'.pdf';
+            $path = 'reports/' . $timeReport . '_' . $id_member;
+            $filename = $listReport->Name_Procedure . '.pdf';
+            $targetPath = $path . '/' . $filename;
 
-            // Pastikan direktori ada
-            $fullPath = public_path($path);
-            if (! file_exists($fullPath)) {
-                mkdir($fullPath, 0755, true);
+            if (! Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->makeDirectory($path);
             }
 
-            // Pindahkan file ke public/storage/reports/...
-            $pdf->move($fullPath, $filename);
+            Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
             // Update waktu and Auditor Name
             $listReport->Time_Approved_Auditor = $request->input('timestamp');

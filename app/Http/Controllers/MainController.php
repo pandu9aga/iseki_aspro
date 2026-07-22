@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Member;
+use App\Helpers\MemberHelper;
 use App\Models\Type_User;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -56,7 +56,7 @@ class MainController extends Controller
             'NIK_Member' => 'required',
         ]);
 
-        $member = Member::where('NIK_Member', $request->NIK_Member)->first();
+        $member = MemberHelper::findByNik($request->NIK_Member);
 
         if (! $member) {
             return back()->withErrors(['loginError' => 'Invalid NIK']);

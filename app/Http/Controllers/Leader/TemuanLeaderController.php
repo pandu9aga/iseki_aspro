@@ -369,7 +369,6 @@ class TemuanLeaderController extends Controller
                 $temuan->Object_Temuan = $jsonData;
                 $temuan->Time_Penanganan = Carbon::now()->toDateTimeString();
                 $temuan->save();
-                debugbar()->log($jsonData);
 
                 return ['success' => true,
                     'message' => 'Penanganan submitted successfully.',
