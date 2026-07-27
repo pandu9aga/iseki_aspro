@@ -21,7 +21,7 @@ class ReportMemberController extends Controller
         $reports = Report::whereIn('Id_Member', $memberIds)
             ->orderBy('Start_Report', 'desc')
             ->get();
-        $member = MemberHelper::findById(session('Id_Member'));
+        $member = MemberHelper::findByNik(session('NIK_Member'));
 
         return view('members.reports.index', compact('page', 'reports', 'member'));
     }
@@ -32,8 +32,7 @@ class ReportMemberController extends Controller
 
         $report = Report::findOrFail($Id_Report);
         $list_reports = List_Report::where('Id_Report', $Id_Report)->orderBy('Name_Procedure', 'asc')->get();
-        $Id_Member = session('Id_Member');
-        $member = MemberHelper::findById($Id_Member);
+        $member = MemberHelper::findByNik(session('NIK_Member'));
 
         return view('members.reports.list_report', compact('page', 'report', 'list_reports', 'member'));
     }
@@ -42,8 +41,7 @@ class ReportMemberController extends Controller
     {
         $page = 'report';
 
-        $Id_Member = session('Id_Member');
-        $member = MemberHelper::findById($Id_Member);
+        $member = MemberHelper::findByNik(session('NIK_Member'));
 
         $listReport = List_Report::with('report')->findOrFail($Id_List_Report);
 

@@ -83,15 +83,13 @@ class MemberHelper
     {
         if (self::useRifa($asOfDate)) {
             $e = Employee::find($id);
-            if (! $e) {
-                return null;
+            if ($e) {
+                return (object) [
+                    'Id_Member'   => $e->id,
+                    'NIK_Member'  => $e->nik,
+                    'Name_Member' => $e->nama,
+                ];
             }
-
-            return (object) [
-                'Id_Member'   => $e->id,
-                'NIK_Member'  => $e->nik,
-                'Name_Member' => $e->nama,
-            ];
         }
 
         return Member::find($id);

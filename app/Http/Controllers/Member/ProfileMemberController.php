@@ -13,10 +13,10 @@ class ProfileMemberController extends Controller
     {
         $page = 'profile';
 
-        $Id_Member = session('Id_Member');
-        $member = MemberHelper::findById($Id_Member);
+        $member = MemberHelper::findByNik(session('NIK_Member'));
 
         if ($member) {
+            session(['Id_Member' => $member->Id_Member]);
             session(['Name_Member' => $member->Name_Member]);
         }
 

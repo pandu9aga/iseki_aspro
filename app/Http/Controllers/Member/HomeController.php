@@ -16,7 +16,7 @@ class HomeController extends Controller
 
         $nik = session('NIK_Member');
         $memberIds = MemberHelper::getLinkedIds($nik);
-        $member = MemberHelper::findById(session('Id_Member'));
+        $member = MemberHelper::findByNik(session('NIK_Member'));
 
         $reports = List_Report::with('report')
             ->whereHas('report', function ($query) use ($memberIds) {
