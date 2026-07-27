@@ -16,6 +16,10 @@ class ProfileMemberController extends Controller
         $Id_Member = session('Id_Member');
         $member = MemberHelper::findById($Id_Member);
 
+        if ($member) {
+            session(['Name_Member' => $member->Name_Member]);
+        }
+
         return view('members.profile.index', compact('page', 'member'));
     }
 

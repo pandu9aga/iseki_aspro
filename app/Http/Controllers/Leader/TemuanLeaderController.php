@@ -346,7 +346,7 @@ class TemuanLeaderController extends Controller
             if ($request->hasFile('pdf')) {
                 $pdf = $request->file('pdf');
 
-                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$temuan->ListReport->report->member->id;
+                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$temuan->ListReport->report->member->Id_Member;
                 $directory = public_path($relativePath);
 
                 if (! file_exists($directory)) {
@@ -400,7 +400,7 @@ class TemuanLeaderController extends Controller
             if ($request->hasFile('photo_pdf')) {
                 $photo_pdf = $request->file('photo_pdf');
 
-                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$temuan->ListReport->report->member->id;
+                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$temuan->ListReport->report->member->Id_Member;
                 $directory = public_path($relativePath);
 
                 if (! file_exists($directory)) {
