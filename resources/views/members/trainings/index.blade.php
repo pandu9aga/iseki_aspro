@@ -1,4 +1,4 @@
-﻿@extends('layouts.member')
+@extends('layouts.member')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
+                    <h3 class="text-white pt-3 mt-n2">Training</h3>
                 </div>
             </div>
         </div>
@@ -44,17 +44,17 @@
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Jobdesc</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Training</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ( $reports as $r )
-                        <tr onclick="window.location='{{ route('report_list_member', ['Id_Report' => $r->Id_Report]) }}'" class="row-data">
+                        <tr onclick="window.location='{{ route('training_list_member', ['Id_Training' => $r->Id_Training]) }}'" class="row-data">
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold mb-0">{{ $loop->iteration }}</p>
                             </td>
                             <td class="align-middle text-center">
-                                <p class="text-xs mb-0">{{ \Carbon\Carbon::parse($r->Start_Report)->format('d-m-Y') }}</p>
+                                <p class="text-xs mb-0">{{ \Carbon\Carbon::parse($r->Start_Training)->format('d-m-Y') }}</p>
                             </td>
                         </tr>
                         @endforeach
@@ -91,4 +91,3 @@
 new DataTable('#example');
 </script>
 @endsection
-

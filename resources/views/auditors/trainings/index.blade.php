@@ -1,4 +1,4 @@
-﻿@extends('layouts.auditor')
+@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
+                    <h3 class="text-white pt-3 mt-n2">Training</h3>
                 </div>
             </div>
         </div>
@@ -61,7 +61,7 @@
                 <div class="row">
                     @foreach ($months as $num => $name)
                         <div class="col-6 col-md-3 col-lg-2 mb-3">
-                            <a href="{{ route('report_auditor.list', ['year' => $selectedYear, 'month' => $num]) }}">
+                            <a href="{{ route('training_auditor.list', ['year' => $selectedYear, 'month' => $num]) }}">
                                 <div class="border rounded text-center py-3 bg-light card-hover">
                                     <strong>{{ $name }} {{ $selectedYear }}</strong>
                                 </div>
@@ -70,37 +70,6 @@
                     @endforeach
                 </div>
             </div>
-
-            {{-- <div class="table-responsive p-0">
-                <table id="example" class="table align-items-center mb-0">
-                    <thead>
-                        <tr>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Team</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width: 15%">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ( $teams as $team )
-                        <tr>
-                            <td class="align-middle text-center">
-                                <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
-                            </td>
-                            <td class="align-middle text-center">
-                                <p class="text-xs text-primary mb-0">{{ $team->Name_Team }}</p>
-                            </td>
-                            <td class="align-middle text-center">
-                                <div class="d-flex justify-content-center">
-                                    <a href="{{ route('process', ['Id_Team' => $team->Id_Team]) }}" class="text-primary text-xs mx-1">
-                                        <i class="material-symbols-rounded">app_registration</i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div> --}}
         </div>
     </section>
 </div>

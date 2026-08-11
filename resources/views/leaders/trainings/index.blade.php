@@ -1,4 +1,4 @@
-﻿@extends('layouts.leader')
+@extends('layouts.leader')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -6,7 +6,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 mx-auto">
-                        <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
+                        <h3 class="text-white pt-3 mt-n2">Training</h3>
                     </div>
                 </div>
             </div>
@@ -68,7 +68,7 @@
 
                     <!-- Tombol Duplikasi Template -->
                    {{-- <div class="my-3">
-                        <form action="{{ route('report.create.template') }}" method="POST" class="d-inline">
+                        <form action="{{ route('training.create.template') }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-success"
                                 onclick="return confirm('Yakin buat template dari data bulan lalu ke tanggal 1 bulan ini?')">
@@ -81,7 +81,7 @@
                     <div class="row">
                         @foreach ($months as $num => $name)
                             <div class="col-6 col-md-3 col-lg-2 mb-3">
-                                <a href="{{ route('reporter', ['year' => $selectedYear, 'month' => $num]) }}">
+                                <a href="{{ route('training.reporter', ['year' => $selectedYear, 'month' => $num]) }}">
                                     <div class="border rounded text-center py-3 bg-light card-hover">
                                         <strong>{{ $name }} {{ $selectedYear }}</strong>
                                     </div>

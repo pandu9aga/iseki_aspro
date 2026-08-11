@@ -66,7 +66,7 @@
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Training</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Jobdesc</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Tractor - Area</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Name Procedure</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Item Procedure</th>

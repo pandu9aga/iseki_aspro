@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\List_Report;
+use App\Models\List_Training;
 use App\Helpers\MemberHelper;
 use Carbon\Carbon;
 
@@ -24,6 +25,12 @@ class HomeController extends Controller
             })
             ->count();
 
-        return view('members.home', compact('page', 'today', 'member', 'reports'));
+        $trainings = List_Training::with('training')
+            ->whereHas('training', function ($query) use ($memberIds) {
+                $query->whereIn('Id_Member', $memberIds);
+            })
+            ->count();
+
+        return view('members.home', compact('page', 'today', 'member', 'reports', 'trainings'));
     }
 }

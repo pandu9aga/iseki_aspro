@@ -76,6 +76,18 @@
                             <i class="material-symbols-rounded text-primary" style="font-size: 100px;">assignment</i>
                             <br>
                             <div class="mt-3 mt-md-0">
+                                <h4>Jobdesc</h4>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-3 mt-lg-0 my-4">
+                    <a href="{{ route('training') }}" class="text-decoration-none">
+                        <div
+                            class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                            <i class="material-symbols-rounded text-primary" style="font-size: 100px;">school</i>
+                            <br>
+                            <div class="mt-3 mt-md-0">
                                 <h4>Training</h4>
                             </div>
                         </div>
@@ -220,12 +232,12 @@
                     <div class="info-horizontal bg-gray-100 border-radius-xl d-block d-md-flex p-4">
                         <i class="material-symbols-rounded text-gradient text-primary text-3xl">receipt_long</i>
                         <div class="ps-0 ps-md-3 mt-3 mt-md-0">
-                            <h5>Training</h5>
+                            <h5>Jobdesc</h5>
                             <p>
                                 View and manage reports submitted by training members regarding the assembling procedures
                                 they have completed or reviewed.
                                 This section provides structured documentation of feedback, observations, and potential
-                                issues encountered during the training process.
+                                issues encountered during the jobdesc process.
                             </p>
                             <a href="{{ route('report') }}" class="text-primary icon-move-right">
                                 Read more

@@ -1,4 +1,4 @@
-﻿@extends('layouts.member')
+@extends('layouts.member')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -6,7 +6,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 mx-auto">
-                        <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
+                        <h3 class="text-white pt-3 mt-n2">Training</h3>
                     </div>
                 </div>
             </div>
@@ -25,7 +25,7 @@
 
                     <div class="d-flex align-items-center gap-2 ms-auto">
                         @if($prevReportId)
-                            <a href="{{ route('report_list_member.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary mb-0" title="Previous Report">
+                            <a href="{{ route('training_list_member.detail', ['Id_List_Training' => $prevReportId]) }}" class="btn btn-outline-primary mb-0" title="Previous Report">
                                 <i class="material-symbols-rounded text-sm">chevron_left</i>
                             </a>
                         @else
@@ -37,7 +37,7 @@
                         <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
 
                         @if($nextReportId)
-                            <a href="{{ route('report_list_member.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary mb-0" title="Next Report">
+                            <a href="{{ route('training_list_member.detail', ['Id_List_Training' => $nextReportId]) }}" class="btn btn-outline-primary mb-0" title="Next Report">
                                 <i class="material-symbols-rounded text-sm">chevron_right</i>
                             </a>
                         @else
@@ -102,7 +102,7 @@
                 <!-- PDF Navigation Buttons -->
                 <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
                     @if($prevReportId)
-                        <a href="{{ route('report_list_member.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('training_list_member.detail', ['Id_List_Training' => $prevReportId]) }}" class="btn btn-outline-primary">
                             <i class="material-symbols-rounded text-sm align-middle">arrow_back</i> Previous
                         </a>
                     @else
@@ -114,7 +114,7 @@
                     <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
 
                     @if($nextReportId)
-                        <a href="{{ route('report_list_member.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('training_list_member.detail', ['Id_List_Training' => $nextReportId]) }}" class="btn btn-outline-primary">
                             Next <i class="material-symbols-rounded text-sm align-middle">arrow_forward</i>
                         </a>
                     @else
@@ -493,7 +493,7 @@
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
+            link.download = '{{ $listReport->training->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
             link.click();
         }
 
@@ -560,16 +560,16 @@
             formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
             formData.append('timestamp', now);
 
-            fetch(`{{ route('report_list_member.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
+            fetch(`{{ route('training_list_member.submit', ['Id_List_Training' => $listReport->Id_List_Training]) }}`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 body: formData
             }).then(res => {
                 if (res.ok) {
-                    alert('Report submitted successfully!');
+                    alert('Training submitted successfully!');
                     location.reload();
                 } else {
-                    alert('Failed to submit report');
+                    alert('Failed to submit training');
                 }
             });
         }

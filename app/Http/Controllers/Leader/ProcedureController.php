@@ -772,8 +772,8 @@ class ProcedureController extends Controller
             'Id_Report' => 'required|array',
             'Id_Report.*' => 'exists:reports,Id_Report',
         ], [
-            'Id_Report.required' => 'Pilih minimal satu training',
-            'Id_Report.array' => 'Format training tidak valid',
+            'Id_Report.required' => 'Pilih minimal satu jobdesc',
+            'Id_Report.array' => 'Format jobdesc tidak valid',
         ]);
 
         $procedure = Procedure::findOrFail($request->Id_Procedure);
@@ -845,9 +845,9 @@ class ProcedureController extends Controller
             $procedure->save();
         }
 
-        $message = "Berhasil menambahkan procedure ke {$successCount} training";
+        $message = "Berhasil menambahkan procedure ke {$successCount} jobdesc";
         if ($skipCount > 0) {
-            $message .= " ({$skipCount} training dilewati karena sudah ada)";
+            $message .= " ({$skipCount} jobdesc dilewati karena sudah ada)";
         }
         $message .= ' dan menambahkan '.count($memberIds).' PIC';
 

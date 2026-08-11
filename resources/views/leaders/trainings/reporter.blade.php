@@ -1,4 +1,4 @@
-﻿@extends('layouts.leader')
+@extends('layouts.leader')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -6,7 +6,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 mx-auto">
-                        <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
+                        <h3 class="text-white pt-3 mt-n2">Training</h3>
                     </div>
                 </div>
             </div>
@@ -32,7 +32,7 @@
                     </div>
                 @endif
 
-                <h5 class="text-center text-secondary mb-4">List of Jobdesc Reports in : <span
+                <h5 class="text-center text-secondary mb-4">List of Training Reports in : <span
                         class="text-primary">{{ $month }} - {{ $year }}</span></h5>
 
                 <!-- Tombol Add -->
@@ -47,7 +47,7 @@
                                 <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No
                                 </th>
                                 <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">
-                                    Start Jobdesc</th>
+                                    Start Training</th>
                                 <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">
                                     Name Member</th>
                                 <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7"
@@ -62,27 +62,27 @@
                                     </td>
                                     <td class="align-middle text-center">
                                         <p class="text-xs text-primary mb-0">
-                                            {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}</p>
+                                            {{ \Carbon\Carbon::parse($report->Start_Training)->format('d-m-Y') }}</p>
                                     </td>
                                     <td class="align-middle text-center">
                                         <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member }}</p>
                                     </td>
                                     <td class="align-middle text-center">
                                         <div class="d-flex justify-content-center">
-                                            <a href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}"
+                                            <a href="{{ route('training.list', ['Id_Training' => $report->Id_Training]) }}"
                                                 class="text-primary text-xs mx-1" title="View Details">
                                                 <i class="material-symbols-rounded">app_registration</i>
                                             </a>
                                             <!-- Tombol Edit -->
                                             <a href="#" class="text-warning text-xs mx-1 edit-btn" title="Edit"
-                                                data-id="{{ $report->Id_Report }}" data-start="{{ $report->Start_Report }}"
+                                                data-id="{{ $report->Id_Training }}" data-start="{{ $report->Start_Training }}"
                                                 data-members="{{ $report->Id_Member }}">
                                                 <i class="material-symbols-rounded">edit</i>
                                             </a>
                                             <!-- Tombol Delete -->
-                                            <form action="{{ route('reporter.destroy', $report->Id_Report) }}"
+                                            <form action="{{ route('training.reporter.destroy', $report->Id_Training) }}"
                                                 method="POST" class="d-inline"
-                                                onsubmit="return confirm('Are you sure you want to delete this report?');">
+                                                onsubmit="return confirm('Are you sure you want to delete this training?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="border-0 bg-transparent p-0 text-xs mx-1"
@@ -105,16 +105,16 @@
     <div class="modal fade" id="addReportModal" tabindex="-1" aria-labelledby="addReportModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="{{ route('reporter.create') }}" role="form" method="POST">
+                <form action="{{ route('training.reporter.create') }}" role="form" method="POST">
                     @csrf
                     <div class="modal-header bg-primary">
-                        <h5 class="modal-title text-white" id="addReportModalLabel">Add Report</h5>
+                        <h5 class="modal-title text-white" id="addReportModalLabel">Add Training</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="input-group input-group-outline my-3 is-filled">
-                            <label class="form-label">Start Jobdesc</label>
-                            <input type="date" class="form-control" name="Start_Report" required>
+                            <label class="form-label">Start Training</label>
+                            <input type="date" class="form-control" name="Start_Training" required>
                         </div>
                         <div class="input-group input-group-outline my-3 is-filled">
                             <label class="form-label">Members</label>
@@ -143,14 +143,14 @@
                     @csrf
                     @method('PUT') <!-- Gunakan method PUT untuk update -->
                     <div class="modal-header bg-warning"> <!-- Ganti warna header menjadi warning -->
-                        <h5 class="modal-title text-white" id="editReportModalLabel">Edit Report</h5>
+                        <h5 class="modal-title text-white" id="editReportModalLabel">Edit Training</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="Id_Report" id="edit_Id_Report">
+                        <input type="hidden" name="Id_Training" id="edit_Id_Training">
                         <div class="input-group input-group-outline my-3 is-filled">
-                            <label class="form-label">Start Jobdesc</label>
-                            <input type="date" class="form-control" name="Start_Report" id="edit_Start_Report"
+                            <label class="form-label">Start Training</label>
+                            <input type="date" class="form-control" name="Start_Training" id="edit_Start_Training"
                                 required>
                         </div>
                         <div class="input-group input-group-outline my-3 is-filled">
@@ -216,7 +216,7 @@
             var reportMemberId = $(this).data('members'); // Contoh: "123"
 
             // Isi form edit dengan data dari tombol
-            $('#edit_Id_Report').val(reportId);
+            $('#edit_Id_Training').val(reportId);
 
             // 1. Untuk input tanggal: Ambil bagian tanggal saja jika format lengkap, lalu set properti 'value'
             // Format Carbon di blade mungkin: d-m-Y, jadi kita perlu pastikan format yang diterima input date: Y-m-d
@@ -225,14 +225,14 @@
             var dateOnly = reportStart.split(' ')[
             0]; // Ambil bagian tanggal dari "Y-m-d H:i:s" atau gunakan "Y-m-d" jika tanpa waktu
             // Set nilai ke properti DOM input date
-            $('#edit_Start_Report')[0].value = dateOnly; // [0] mengakses elemen DOM asli, lalu set properti 'value'
+            $('#edit_Start_Training')[0].value = dateOnly; // [0] mengakses elemen DOM asli, lalu set properti 'value'
 
             // 2. Untuk Select2 Member: Gunakan val() dan trigger('change')
             $('#edit_Id_Member').val(reportMemberId).trigger(
             'change.select2'); // Gunakan 'change.select2' untuk Select2 secara eksplisit
 
             // Set action form untuk update
-            $('#editReportForm').attr('action', '{{ route('reporter.update', ':id') }}'.replace(':id', reportId));
+            $('#editReportForm').attr('action', '{{ route('training.reporter.update', ':id') }}'.replace(':id', reportId));
 
             // Tampilkan modal
             $('#editReportModal').modal('show');
@@ -316,4 +316,3 @@
         // });
     </script>
 @endsection
-

@@ -74,6 +74,13 @@
                                     <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'report' ? 'text-primary' : '' }}""
                                         href=" {{ route('report_member') }}">
                                         <i class="material-symbols-rounded opacity-6 me-2 text-md">assignment</i>
+                                        Jobdesc
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown dropdown-hover mx-2">
+                                    <a class="nav-link ps-2 d-flex cursor-pointer align-items-center font-weight-semibold {{ $page === 'training' ? 'text-primary' : '' }}""
+                                        href=" {{ route('training_member') }}">
+                                        <i class="material-symbols-rounded opacity-6 me-2 text-md">school</i>
                                         Training
                                     </a>
                                 </li>
@@ -121,6 +128,11 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('report_member') }}">
+                                    Jobdesc
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('training_member') }}">
                                     Training
                                 </a>
                             </li>

@@ -29,7 +29,7 @@
                         <table class="table table-flush">
                             <thead class="thead-light">
                                 <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Training
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Jobdesc
                                         Date</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Member
                                     </th>

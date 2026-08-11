@@ -84,7 +84,7 @@
                             <td class="align-middle text-center">
                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#assignModal"
                                     onclick="setAssign({{ $p->Id_Procedure }}, '{{ $p->Name_Procedure }}')">
-                                    <i class="material-symbols-rounded text-xs">add_task</i> Assign to Training
+                                    <i class="material-symbols-rounded text-xs">add_task</i> Assign to Jobdesc
                                 </button>
                             </td>
                         </tr>
@@ -96,22 +96,22 @@
     </section>
 </div>
 
-<!-- Modal Assign to Training -->
+<!-- Modal Assign to Jobdesc -->
 <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <form id="assignForm" method="POST" action="{{ route('missing.assign.training') }}">
+            <form id="assignForm" method="POST" action="{{ route('missing.assign.jobdesc') }}">
                 @csrf
                 <input type="hidden" name="Id_Procedure" id="assign-procedure-id">
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white" id="assignModalLabel">
-                        Assign to Training: <span id="assign-procedure-name"></span>
+                        Assign to Jobdesc: <span id="assign-procedure-name"></span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="input-group input-group-outline my-3 is-filled">
-                        <label class="form-label">Select Training</label>
+                        <label class="form-label">Select Jobdesc</label>
                         
                         <select class="form-control select2" name="Id_Report[]" id="training-select" multiple="multiple" required>
                             @foreach($trainings as $training)
@@ -127,7 +127,7 @@
                 <div class="modal-footer">
                     <button type="submit" class="btn bg-gradient-primary w-100 my-2">
                         <i class="material-symbols-rounded text-sm">check_circle</i>
-                        Assign to Selected Training
+                        Assign to Selected Jobdesc
                     </button>
                     <button type="button" class="btn bg-gradient-secondary w-100 my-2 mb-2" data-bs-dismiss="modal">Cancel</button>
                 </div>
@@ -227,7 +227,7 @@ function navigatePdf(direction) {
 $('#assignModal').on('shown.bs.modal', function() {
     $('select[name="Id_Report[]"]').select2({
         dropdownParent: $('#assignModal'),
-        placeholder: "Select Training",
+        placeholder: "Select Jobdesc",
         allowClear: true
     });
     $('.select2').each(function() {

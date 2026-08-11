@@ -1,4 +1,4 @@
-﻿@extends('layouts.auditor')
+@extends('layouts.auditor')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -25,7 +25,7 @@
 
                     <div class="d-flex align-items-center gap-2 ms-auto">
                         @if($prevReportId)
-                            <a href="{{ route('report_auditor.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary mb-0" title="Previous Report">
+                            <a href="{{ route('training_auditor.detail', ['Id_List_Training' => $prevReportId]) }}" class="btn btn-outline-primary mb-0" title="Previous Report">
                                 <i class="material-symbols-rounded text-sm">chevron_left</i>
                             </a>
                         @else
@@ -37,7 +37,7 @@
                         <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
 
                         @if($nextReportId)
-                            <a href="{{ route('report_auditor.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary mb-0" title="Next Report">
+                            <a href="{{ route('training_auditor.detail', ['Id_List_Training' => $nextReportId]) }}" class="btn btn-outline-primary mb-0" title="Next Report">
                                 <i class="material-symbols-rounded text-sm">chevron_right</i>
                             </a>
                         @else
@@ -51,23 +51,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->display_name }}</span>
                     </h4>
-
-                    {{-- @if(is_null($listReport->Time_Approved_Auditor)) --}}
-                    {{-- <button class="btn btn-warning mt-3" style="white-space:nowrap;" --}} {{--
-                        onclick="window.location.href = '{{ route('auditor-report.temuan_report', ['Id_List_Report' => $listReport->Id_List_Report]) }}'">--}}
-                        {{-- Tambahkan Temuan--}}
-                        {{-- </button>--}}
-                    @if($listReport->temuans && count($listReport->temuans) > 0)
-                        <button class="btn btn-warning mt-3" style="white-space:nowrap;"
-                            onclick="window.location.href = '{{ route('auditor-report.temuan_show', ['Id_Temuan' => $listReport->temuans[0]->Id_Temuan]) }}'">
-                            Lihat Temuan
-                        </button>
-                    @endif
-                    {{-- @endif --}}
                 </div>
                 <br>
-
-                {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
 
                 @if (is_null($listReport->Time_Approved_Auditor))
                     <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist('check')">
@@ -108,10 +93,10 @@
                     </div>
                     <br>
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
-                    
-                    <form action="{{ route('report_auditor.detail.duplicate', $listReport->Id_List_Report) }}" method="POST" class="d-inline">
+
+                    <form action="{{ route('training_auditor.detail.duplicate', $listReport->Id_List_Training) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-success mt-3 ms-2" onclick="return confirm('Apakah Anda yakin ingin menduplikat jobdesc member ini?')">Duplicate Jobdesc</button>
+                        <button type="submit" class="btn btn-sm btn-success mt-3 ms-2" onclick="return confirm('Apakah Anda yakin ingin menduplikat training member ini?')">Duplicate Training</button>
                     </form>
                 @endif
 
@@ -124,7 +109,7 @@
                 <!-- PDF Navigation Buttons -->
                 <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
                     @if($prevReportId)
-                        <a href="{{ route('report_auditor.detail', ['Id_List_Report' => $prevReportId]) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('training_auditor.detail', ['Id_List_Training' => $prevReportId]) }}" class="btn btn-outline-primary">
                             <i class="material-symbols-rounded text-sm align-middle">arrow_back</i> Previous
                         </a>
                     @else
@@ -136,7 +121,7 @@
                     <span class="text-sm text-secondary fw-bold">{{ $currentPos }} / {{ count($siblingReports) }}</span>
 
                     @if($nextReportId)
-                        <a href="{{ route('report_auditor.detail', ['Id_List_Report' => $nextReportId]) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('training_auditor.detail', ['Id_List_Training' => $nextReportId]) }}" class="btn btn-outline-primary">
                             Next <i class="material-symbols-rounded text-sm align-middle">arrow_forward</i>
                         </a>
                     @else
@@ -163,8 +148,7 @@
                     </div>
                     <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
                     <br>
-                    <button onclick="submitReport('submit')" class="btn btn-primary mt-3">Submit Report</button>
-                    <button onclick="submitReport('temuan')" class="btn btn-warning mt-3 ms-9">Submit Temuan</button>
+                    <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Report</button>
                 @endif
             </div>
         </section>
@@ -599,7 +583,7 @@
             const blob = new Blob([finalBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
+            link.download = '{{ $listReport->training->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
             link.click();
         }
     </script>
@@ -740,11 +724,6 @@
     </script>
     <script>
 
-        const FINAL_STATE = {
-            comments: []
-        }
-
-
         async function resizeImage(file, maxWidth, maxHeight) {
             return new Promise(resolve => {
                 const img = new Image();
@@ -770,7 +749,7 @@
         // ============================================
         // SUBMIT REPORT WITH ANNOTATIONS & PHOTOS
         // ============================================
-        async function submitReport(type) {
+        async function submitReport() {
             // Load existing PDF
             const existingPdf = await fetch(CONFIG.pdfUrl).then(r => r.arrayBuffer());
             const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
@@ -793,13 +772,7 @@
 
             // Save and submit
             const mergedBytes = await pdfDoc.save();
-            if (type === 'submit') {
-                console.log('submitReporting');
-                await uploadToServerReport(mergedBytes);
-            } else if (type === 'temuan') {
-                console.log('submitTemuan');
-                await uploadToServerTemuan(mergedBytes);
-            }
+            await uploadToServerReport(mergedBytes);
         }
 
         function addTimestampToFirstPage(page, font) {
@@ -868,11 +841,6 @@
             const lineHeight = fontSize + 4;
 
             // Split text by newlines
-            // Note: contentEditable usually inserts <div> or <br> for newlines.
-            // We need to handle how the browser represents newlines in contentEditable.
-            // A safer approach for contentEditable that might contain HTML:
-            // Split text by newlines
-            // Sanitize: Remove zero-width chars and ensure WinAnsi compatibility
             const rawText = element.innerText.replace(/[\u200B-\u200D\uFEFF]/g, '');
             // Split and map to ensure we check characters
             const lines = rawText.split(/\r?\n/).map(l => l.replace(/[^\x00-\xFF]/g, '')); // Basic Latin-1 filter
@@ -893,40 +861,7 @@
             const outerWidth = maxLineWidth + (2 * paddingX);
             const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
 
-            // Adjust Y because PDF coordinates are bottom-up and we want the box to start at 'y' (top-left visual)
-            // If 'y' passed here is bottom-left of the element in HTML, we need to correct it.
-            // The previous code calculated: const finalY = pageHeight - (offsetY * scaleY) - 18;
-            // accepted x,y as bottom-left ish? Let's look at previous implementation.
-            // Previous: const outerY = y - textHeight - paddingY;
-            // It seems 'y' was treated as the baseline or bottom of the first line?
-            // Actually, HTML 'top' is top.
-            // In convertAnnotationsToPDF: finalY = pageHeight - (offsetY * scaleY) - 18;
-            // This 'finalY' seems to be the TOP of the element in PDF coordinates (since PDF Y=0 is bottom).
-            // Wait, PDF Y=0 is bottom. pageHeight - y is often Top.
-            // Let's stick to the previous logic's coordinate system but expand height.
-
-            // Previous logic:
-            // const outerY = y - textHeight - paddingY;
-            // page.drawRectangle({ y: outerY ... })
-            // textY = outerY + outerHeight - fontSize - 4;
-
-            // If 'y' is the visual TOP of the element from HTML mapped to PDF:
-            // The previous logic seems to shift it down?
-            // Let's assume 'y' is the top-left corner of where we want the box.
-            // In previous code: outerY = y - textHeight - paddingY. This puts the box BELOW y? No, if y is top, y - height is even lower.
-            // Wait, if 'y' is top in PDF (high value), then y - height draws a box from (y-height) extending upwards by height? No, drawRectangle starts at x,y and goes width,height.
-            // So if we draw at y - height, the box goes from y-height to y. Correct.
-
-            // So for multiline:
-            // We want the box to extend downwards from 'y'.
-            // So the bottom of the box will be: y - outerHeight.
             const rectBottomY = y - outerHeight;
-
-            FINAL_STATE.comments.push({
-                'text': text,
-                'position': { 'x': x, 'y': y },
-                'fontSize': fontSize
-            })
 
             // Draw background (Pink)
             page.drawRectangle({
@@ -1039,7 +974,7 @@
             formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
             formData.append('timestamp', timestamp);
 
-            const response = await fetch(`{{ route('report_auditor.detail.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
+            const response = await fetch(`{{ route('training_auditor.detail.submit', ['Id_List_Training' => $listReport->Id_List_Training]) }}`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -1047,30 +982,6 @@
                 body: formData
             });
 
-            if (response.ok) {
-                alert('Report submitted successfully!');
-                location.reload();
-            } else {
-                alert('Failed to submit report');
-            }
-        }
-        async function uploadToServerTemuan(pdfBytes) {
-            const nowUTC = new Date();
-            const offsetWIB = 7 * 60;
-            const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
-            const timestamp = localWIB.toISOString().slice(0, 19).replace('T', ' ');
-
-            const formData = new FormData();
-            formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
-            formData.append('comments', JSON.stringify(FINAL_STATE.comments))
-            formData.append('Id_List_Report', '{{ $listReport->Id_List_Report }}');
-            formData.append('timestamp', timestamp);
-
-            const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: formData
-            });
             if (response.ok) {
                 alert('Report submitted successfully!');
                 location.reload();

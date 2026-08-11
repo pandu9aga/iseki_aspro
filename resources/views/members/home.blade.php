@@ -30,10 +30,21 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-4 mt-lg-0 mt-4">
+            <div class="col-lg-3 mt-lg-0 mt-4">
                 <a href="{{ route('report_member') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">assignment</i>
+                        <br>
+                        <div class="mt-3 mt-md-0">
+                            <h4>Jobdesc</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 mt-lg-0 mt-4">
+                <a href="{{ route('training_member') }}" class="text-decoration-none">
+                    <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
+                        <i class="material-symbols-rounded text-primary" style="font-size: 100px;">school</i>
                         <br>
                         <div class="mt-3 mt-md-0">
                             <h4>Training</h4>
@@ -41,7 +52,7 @@
                     </div>
                 </a>
             </div>
-            <div class="col-lg-4 mt-lg-0 mt-4">
+            <div class="col-lg-3 mt-lg-0 mt-4">
                 <a href="{{ route('profile_member') }}" class="text-decoration-none">
                     <div class="hover-card bg-gray-100 border-radius-xl p-4 h-100 align-items-center d-flex flex-column justify-content-center shadow-lg">
                         <i class="material-symbols-rounded text-primary" style="font-size: 100px;">account_circle</i>
@@ -66,9 +77,9 @@
                                     <div class="col-md-8">
                                         <div class="p-3 text-center">
                                             <h1 class="text-gradient text-primary display-3"><b id="state3" countTo="{{ $reports }}">0</b></h1>
-                                            <h3 class="mt-3 fw-bold">Training</h3>
+                                            <h3 class="mt-3 fw-bold">Jobdesc</h3>
                                             <p class="fs-5 fw-semibold">
-                                                Number of your training process
+                                                Number of your jobdesc process
                                             </p>
                                         </div>
                                     </div>

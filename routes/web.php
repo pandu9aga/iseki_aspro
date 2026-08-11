@@ -5,6 +5,7 @@ use App\Http\Controllers\Auditor\ProcedureAuditorController;
 use App\Http\Controllers\Auditor\ProfileAuditorController;
 use App\Http\Controllers\Auditor\ReportAuditorController;
 use App\Http\Controllers\Auditor\TemuanAuditorController;
+use App\Http\Controllers\Auditor\TrainingAuditorController;
 use App\Http\Controllers\Leader\AuditController;
 use App\Http\Controllers\Leader\LeaderController;
 use App\Http\Controllers\Leader\ProcedureController;
@@ -12,11 +13,13 @@ use App\Http\Controllers\Leader\ProfileController;
 use App\Http\Controllers\Leader\ReportController;
 use App\Http\Controllers\Leader\TeamController;
 use App\Http\Controllers\Leader\TemuanLeaderController;
+use App\Http\Controllers\Leader\TrainingController;
 use App\Http\Controllers\Leader\UserController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\Member\HomeController;
 use App\Http\Controllers\Member\ProfileMemberController;
 use App\Http\Controllers\Member\ReportMemberController;
+use App\Http\Controllers\Member\TrainingMemberController;
 use App\Http\Middleware\AuditorMiddleware;
 use App\Http\Middleware\LeaderMiddleware;
 use App\Http\Middleware\MemberMiddleware;
@@ -105,10 +108,10 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::get('/', [ProcedureController::class, 'index_missing'])->name('missing');
         Route::get('/area/{Name_Tractor}', [ProcedureController::class, 'index_area_missing'])->name('missing.area.index');
         Route::get('/area/procedure/{Name_Tractor}/{Name_Area}', [ProcedureController::class, 'index_procedure_missing'])->name('missing.procedure.index');
-        Route::post('/assign-to-training', [ProcedureController::class, 'assign_to_training'])->name('missing.assign.training');
+        Route::post('/assign-to-jobdesc', [ProcedureController::class, 'assign_to_training'])->name('missing.assign.jobdesc');
     });
 
-    // Report Management
+    // Report Management (Jobdesc)
     Route::prefix('report')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('report');
         Route::get('/list/{year}/{month}', [ReportController::class, 'reporter'])->name('reporter');
@@ -123,6 +126,23 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::put('/reporter/{id}', [ReportController::class, 'update'])->name('reporter.update');
         Route::delete('/reporter/{id}', [ReportController::class, 'destroy'])->name('reporter.destroy');
         Route::post('/create-template', [ReportController::class, 'createMonthlyTemplate'])->name('report.create.template');
+    });
+
+    // Training Management
+    Route::prefix('training')->group(function () {
+        Route::get('/', [TrainingController::class, 'index'])->name('training');
+        Route::get('/list/{year}/{month}', [TrainingController::class, 'reporter'])->name('training.reporter');
+        Route::post('/reporter', [TrainingController::class, 'create_reporter'])->name('training.reporter.create');
+        Route::get('/list/{Id_Training}', [TrainingController::class, 'list_report'])->name('training.list');
+        Route::get('/list/detail/{Id_Training}/{Name_Tractor}', [TrainingController::class, 'list_report_detail'])->name('training.list.detail');
+        Route::post('/store', [TrainingController::class, 'store'])->name('training.store');
+        Route::delete('/list/{Id_List_Training}', [TrainingController::class, 'destroy_list_report'])->name('training.list.destroy');
+        Route::patch('/list/reset/{Id_List_Training}', [TrainingController::class, 'reset_list_report'])->name('training.list.reset');
+        Route::get('/show/{Id_List_Training}', [TrainingController::class, 'report'])->name('training.detail');
+        Route::post('/submit/{Id_List_Training}', [TrainingController::class, 'submit_report'])->name('training.detail.submit');
+        Route::put('/reporter/{id}', [TrainingController::class, 'update'])->name('training.reporter.update');
+        Route::delete('/reporter/{id}', [TrainingController::class, 'destroy'])->name('training.reporter.destroy');
+        Route::post('/create-template', [TrainingController::class, 'createMonthlyTemplate'])->name('training.create.template');
     });
 
     Route::prefix('temuan')->group(function () {
@@ -165,6 +185,12 @@ Route::middleware(MemberMiddleware::class)->group(function () {
         Route::post('/list/submit/{Id_List_Report}', [ReportMemberController::class, 'submit_report'])->name('report_list_member.submit');
         Route::post('/list/upload-photos/{Id_List_Report}', [ReportMemberController::class, 'uploadPhotos'])->name('report_list_member.upload_photos');
     });
+    Route::prefix('training_member')->group(function () {
+        Route::get('/', [TrainingMemberController::class, 'index'])->name('training_member');
+        Route::get('/list/{Id_Training}', [TrainingMemberController::class, 'report_list_member'])->name('training_list_member');
+        Route::get('/list/report/{Id_List_Training}', [TrainingMemberController::class, 'detail'])->name('training_list_member.detail');
+        Route::post('/list/submit/{Id_List_Training}', [TrainingMemberController::class, 'submit_report'])->name('training_list_member.submit');
+    });
 });
 
 // =====================
@@ -185,6 +211,15 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
         Route::get('/report/{Id_List_Report}', [ReportAuditorController::class, 'report'])->name('report_auditor.detail');
         Route::post('/submit/{Id_List_Report}', [ReportAuditorController::class, 'submit_report'])->name('report_auditor.detail.submit');
         Route::post('/duplicate/{Id_List_Report}', [ReportAuditorController::class, 'duplicate_report'])->name('report_auditor.detail.duplicate');
+    });
+    Route::prefix('training_auditor')->group(function () {
+        Route::get('/', [TrainingAuditorController::class, 'index'])->name('training_auditor');
+        Route::get('/date/{year}/{month}', [TrainingAuditorController::class, 'reporter'])->name('training_auditor.list');
+        Route::get('/list/{Id_Training}', [TrainingAuditorController::class, 'list_report'])->name('list_training_auditor');
+        Route::get('/list/detail/{Id_Training}/{Name_Tractor}', [TrainingAuditorController::class, 'list_report_detail'])->name('list_training_detail_auditor');
+        Route::get('/report/{Id_List_Training}', [TrainingAuditorController::class, 'report'])->name('training_auditor.detail');
+        Route::post('/submit/{Id_List_Training}', [TrainingAuditorController::class, 'submit_report'])->name('training_auditor.detail.submit');
+        Route::post('/duplicate/{Id_List_Training}', [TrainingAuditorController::class, 'duplicate_report'])->name('training_auditor.detail.duplicate');
     });
 
     Route::prefix('temuan_auditor')->group(function () {

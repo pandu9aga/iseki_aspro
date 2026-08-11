@@ -1,4 +1,4 @@
-﻿@extends('layouts.leader')
+@extends('layouts.leader')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -6,7 +6,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 mx-auto">
-                        <h3 class="text-white pt-3 mt-n2">Report</h3>
+                        <h3 class="text-white pt-3 mt-n2">Training</h3>
                     </div>
                 </div>
             </div>
@@ -35,17 +35,17 @@
                     <div class="row">
                         <div class="col-12 mx-auto">
                             <div>
-                                Start Jobdesc -
+                                Start Training -
                                 <a class="text-primary"
-                                    href="{{ route('reporter', ['year' => \Carbon\Carbon::parse($report->Start_Report)->format('Y'), 'month' => \Carbon\Carbon::parse($report->Start_Report)->format('m')]) }}">
-                                    {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}
+                                    href="{{ route('training.reporter', ['year' => \Carbon\Carbon::parse($report->Start_Training)->format('Y'), 'month' => \Carbon\Carbon::parse($report->Start_Training)->format('m')]) }}">
+                                    {{ \Carbon\Carbon::parse($report->Start_Training)->format('d-m-Y') }}
                                 </a>
                             </div>
                             <div>Member - <a class="text-primary"
-                                    href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}">{{ $report->member->Name_Member }}</a>
+                                    href="{{ route('training.list', ['Id_Training' => $report->Id_Training]) }}">{{ $report->member->Name_Member }}</a>
                             </div>
                             <div>Tractor - <a class="text-primary"
-                                    href="{{ route('list_report_detail', ['Id_Report' => $Id_Report, 'Name_Tractor' => $tractor->Name_Tractor]) }}">{{ $tractor->Name_Tractor }}</a>
+                                    href="{{ route('training.list.detail', ['Id_Training' => $Id_Training, 'Name_Tractor' => $tractor->Name_Tractor]) }}">{{ $tractor->Name_Tractor }}</a>
                             </div>
                         </div>
                         <div class="row mt-2">
@@ -137,24 +137,24 @@
                                     <td class="align-middle text-center">
                                         <div class="d-flex justify-content-center">
                                             <!-- Detail -->
-                                            <a href="{{ route('report.detail', ['Id_List_Report' => $l->Id_List_Report]) }}"
+                                            <a href="{{ route('training.detail', ['Id_List_Training' => $l->Id_List_Training]) }}"
                                                 class="text-primary text-xs mx-1" title="Detail">
                                                 <i class="material-symbols-rounded">app_registration</i>
                                             </a>
                                             <!-- Delete -->
-                                            <form action="{{ route('list_report.destroy', $l->Id_List_Report) }}"
+                                            <form action="{{ route('training.list.destroy', $l->Id_List_Training) }}"
                                                 method="POST" class="d-inline delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-link text-danger p-0 mx-1"
                                                     title="Delete"
-                                                    onclick="return confirm('Hapus prosedur {{ addslashes($l->display_name) }} dari laporan ini?')">
+                                                    onclick="return confirm('Hapus prosedur {{ addslashes($l->display_name) }} dari training ini?')">
                                                     <i class="material-symbols-rounded">delete</i>
                                                 </button>
                                             </form>
                                             <!-- Reset -->
                                             @if($l->Time_Approved_Leader || $l->Time_Approved_Auditor || $l->Time_List_Report)
-                                                <form action="{{ route('list_report.reset', $l->Id_List_Report) }}"
+                                                <form action="{{ route('training.list.reset', $l->Id_List_Training) }}"
                                                     method="POST" class="d-inline reset-form">
                                                     @csrf
                                                     @method('PATCH')
@@ -180,14 +180,14 @@
     <div class="modal fade" id="addReportModal" tabindex="-1" aria-labelledby="addReportModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="{{ route('report.store') }}" role="form" method="POST">
+                <form action="{{ route('training.store') }}" role="form" method="POST">
                     @csrf
                     <div class="modal-header bg-primary">
-                        <h5 class="modal-title text-white" id="addReportModalLabel">Add Report</h5>
+                        <h5 class="modal-title text-white" id="addReportModalLabel">Add Training</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="Id_Report" value="{{ $report->Id_Report }}">
+                        <input type="hidden" name="Id_Training" value="{{ $report->Id_Training }}">
                         <div class="input-group input-group-outline my-3 is-filled">
                             <label class="form-label">Name Member</label>
                             <input type="text" class="form-control" name="Name_Member"
@@ -245,4 +245,3 @@
         });
     </script>
 @endsection
-

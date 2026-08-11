@@ -1,4 +1,4 @@
-@extends('layouts.auditor')
+﻿@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Training</h3>
+                    <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
                 </div>
             </div>
         </div>
@@ -34,7 +34,7 @@
                 <div class="row">
                     <div class="col-12 mx-auto">
                         <div>
-                            Start Training -
+                            Start Jobdesc -
                             <a class="text-primary" href="{{ route('report_auditor.list', ['year' => \Carbon\Carbon::parse($report->Start_Report)->format('Y'), 'month' => \Carbon\Carbon::parse($report->Start_Report)->format('m')]) }}">
                                 {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}
                             </a>

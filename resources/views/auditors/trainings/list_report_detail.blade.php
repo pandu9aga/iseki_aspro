@@ -1,4 +1,4 @@
-﻿@extends('layouts.member')
+@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
+                    <h3 class="text-white pt-3 mt-n2">Training</h3>
                 </div>
             </div>
         </div>
@@ -34,19 +34,19 @@
                 <div class="row">
                     <div class="col-12 mx-auto">
                         <div>
-                            Start Jobdesc -
-                            <span class="text-primary">
-                                {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}
-                            </span>
+                            Start Training -
+                            <a class="text-primary" href="{{ route('training_auditor.list', ['year' => \Carbon\Carbon::parse($report->Start_Training)->format('Y'), 'month' => \Carbon\Carbon::parse($report->Start_Training)->format('m')]) }}">
+                                {{ \Carbon\Carbon::parse($report->Start_Training)->format('d-m-Y') }}
+                            </a>
                         </div>
-                        <div>Member - <span class="text-primary">{{ $member->Name_Member }}</span></div>
+                        <div>Member - <a class="text-primary" href="{{ route('list_training_auditor', ['Id_Training' => $report->Id_Training]) }}">{{ $report->member->Name_Member }}</a></div>
                     </div>
                 </div>
             </div>
             <br>
 
             <!-- Tombol Back -->
-            <a class="btn btn-primary mx-3" href="{{ route('report_member') }}">
+            <a class="btn btn-primary mx-3" href="{{ route('list_training_auditor', ['Id_Training' => $report->Id_Training]) }}">
                 <span style="padding-left: 50px; padding-right: 50px;"><b><-</b> Back</span>
             </a>
 
@@ -65,7 +65,7 @@
                     </thead>
                     <tbody>
                         @foreach ( $list_reports as $l )
-                        <tr onclick="window.location='{{ route('report_list_member.detail', ['Id_List_Report' => $l->Id_List_Report]) }}'" class="row-data">
+                        <tr onclick="window.location='{{ route('training_auditor.detail', ['Id_List_Training' => $l->Id_List_Training]) }}'" class="row-data">
                             <td class="align-middle text-center">
                                 <p class="text-xs font-weight-bold text-secondary">{{ $loop->iteration }}</p>
                             </td>
@@ -146,4 +146,3 @@
 new DataTable('#example');
 </script>
 @endsection
-

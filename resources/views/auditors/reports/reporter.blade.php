@@ -1,4 +1,4 @@
-@extends('layouts.auditor')
+﻿@extends('layouts.auditor')
 @section('content')
 <header class="header-2">
     <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -6,7 +6,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12 mx-auto">
-                    <h3 class="text-white pt-3 mt-n2">Training</h3>
+                    <h3 class="text-white pt-3 mt-n2">Jobdesc</h3>
                 </div>
             </div>
         </div>
@@ -30,14 +30,14 @@
                 </div>
             @endif
 
-            <h5 class="text-center text-secondary mb-4">List of Training Reports in : <span class="text-primary">{{ $month }} - {{ $year }}</span></h5>
+            <h5 class="text-center text-secondary mb-4">List of Jobdesc Reports in : <span class="text-primary">{{ $month }} - {{ $year }}</span></h5>
 
             <div class="table-responsive p-0">
                 <table id="example" class="table align-items-center mb-0">
                     <thead>
                         <tr>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">No</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Training</th>
+                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Start Jobdesc</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Name Member</th>
                         </tr>
                     </thead>
