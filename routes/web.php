@@ -117,6 +117,10 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::get('/list/{year}/{month}', [ReportController::class, 'reporter'])->name('reporter');
         Route::post('/reporter', [ReportController::class, 'create_reporter'])->name('reporter.create');
         Route::get('/list/{Id_Report}', [ReportController::class, 'list_report'])->name('list_report');
+        Route::get('/replacement-list/{Id_Report_Replacement}', [ReportController::class, 'list_report_replacement'])->name('list_report_replacement');
+        Route::get('/replacement-show/{Id_List_Report_Replacement}', [ReportController::class, 'replacement_report_detail'])->name('report.replacement_detail');
+        Route::post('/replacement-submit/{Id_List_Report_Replacement}', [ReportController::class, 'submit_replacement_report'])->name('report.replacement_submit');
+        Route::post('/copy-jobdesc-replacement', [ReportController::class, 'copyJobdescReplacement'])->name('report.copy_replacement');
         Route::get('/list/detail/{Id_Report}/{Name_Tractor}', [ReportController::class, 'list_report_detail'])->name('list_report_detail');
         Route::post('/store', [ReportController::class, 'store'])->name('report.store');
         Route::delete('/list/{Id_List_Report}', [ReportController::class, 'destroy_list_report'])->name('list_report.destroy');
@@ -185,6 +189,12 @@ Route::middleware(MemberMiddleware::class)->group(function () {
         Route::post('/list/submit/{Id_List_Report}', [ReportMemberController::class, 'submit_report'])->name('report_list_member.submit');
         Route::post('/list/upload-photos/{Id_List_Report}', [ReportMemberController::class, 'uploadPhotos'])->name('report_list_member.upload_photos');
     });
+    Route::prefix('replacement_member')->group(function () {
+        Route::get('/', [ReportMemberController::class, 'replacement_index'])->name('replacement_member');
+        Route::get('/list/{Id_Report_Replacement}', [ReportMemberController::class, 'replacement_list'])->name('replacement_list_member');
+        Route::get('/detail/{Id_List_Report_Replacement}', [ReportMemberController::class, 'replacement_detail'])->name('replacement_list_member.detail');
+        Route::post('/submit/{Id_List_Report_Replacement}', [ReportMemberController::class, 'submit_replacement_report'])->name('replacement_list_member.submit');
+    });
     Route::prefix('training_member')->group(function () {
         Route::get('/', [TrainingMemberController::class, 'index'])->name('training_member');
         Route::get('/list/{Id_Training}', [TrainingMemberController::class, 'report_list_member'])->name('training_list_member');
@@ -207,6 +217,9 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
         // justt add a few sub routing fixed name since this will get bug if only using parameters only
         Route::get('/date/{year}/{month}', [ReportAuditorController::class, 'reporter'])->name('report_auditor.list');
         Route::get('/list/{Id_Report}', [ReportAuditorController::class, 'list_report'])->name('list_report_auditor');
+        Route::get('/replacement-list/{Id_Report_Replacement}', [ReportAuditorController::class, 'list_report_replacement'])->name('list_report_replacement_auditor');
+        Route::get('/replacement-show/{Id_List_Report_Replacement}', [ReportAuditorController::class, 'replacement_report_detail'])->name('report_auditor.replacement_detail');
+        Route::post('/replacement-submit/{Id_List_Report_Replacement}', [ReportAuditorController::class, 'submit_replacement_report'])->name('report_auditor.replacement_submit');
         Route::get('/list/detail/{Id_Report}/{Name_Tractor}', [ReportAuditorController::class, 'list_report_detail'])->name('list_report_detail_auditor');
         Route::get('/report/{Id_List_Report}', [ReportAuditorController::class, 'report'])->name('report_auditor.detail');
         Route::post('/submit/{Id_List_Report}', [ReportAuditorController::class, 'submit_report'])->name('report_auditor.detail.submit');

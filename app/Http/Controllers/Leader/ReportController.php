@@ -85,6 +85,10 @@ class ReportController extends Controller
         $page = 'report';
 
         $report = Report::where('Id_Report', $Id_Report)->first();
+        if (! $report) {
+            return redirect()->back()->withErrors(['error' => 'Report tidak ditemukan.']);
+        }
+
         $tractors = Tractor::select('Name_Tractor', 'Photo_Tractor')
             ->distinct()
             ->orderBy('Name_Tractor')
@@ -97,7 +101,6 @@ class ReportController extends Controller
             ->pluck('count', 'Name_Tractor');
 
         $tractorReports = [];
-
         foreach ($tractors as $tractor) {
             $tractorReports[] = [
                 'Name_Tractor' => $tractor->Name_Tractor,
@@ -106,7 +109,352 @@ class ReportController extends Controller
             ];
         }
 
-        return view('leaders.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report'));
+        // Fetch Member & Dates
+        $member = $report->member;
+        $nik = $member->NIK_Member ?? null;
+        $startReportDate = Carbon::parse($report->Start_Report)->format('Y-m-d');
+        $year = Carbon::parse($report->Start_Report)->year;
+        $month = Carbon::parse($report->Start_Report)->month;
+
+        // 1. Get Absensis from iseki_rifa
+        $absensis = [];
+        if ($nik) {
+            $emp = \App\Models\Employee::where('nik', $nik)->first();
+            if ($emp) {
+                $absensis = \Illuminate\Support\Facades\DB::connection('rifa')
+                    ->table('absensis')
+                    ->where('employee_id', $emp->id)
+                    ->whereYear('tanggal', $year)
+                    ->whereMonth('tanggal', $month)
+                    ->orderBy('tanggal', 'asc')
+                    ->get();
+            }
+        }
+
+        // Helper rule mapping Type_Plan to Name_Tractor
+        $mapTypePlanToTractors = function ($typePlan) {
+            $typePlan = trim((string) $typePlan);
+            $map = [
+                'GC' => ['MF1GC'],
+                'GNT' => ['GNT 1640'],
+                'GNTDAI' => ['MF 1650'],
+                'MF' => ['MF1E25', 'MF1E35,40'],
+                'MFDAI' => ['MF2E'],
+                'MFE' => ['MF 1741'],
+                'MFEDAI' => ['MF 1756'],
+                'NT' => ['NT'],
+                'NTDAI' => ['NT DAI'],
+                'SF2' => ['SF 2'],
+                'SF2CL' => ['SF 2'],
+                'SF2MW' => ['SF 2'],
+                'SF2日本' => ['SF 2'],
+                'SF2CL日本' => ['SF 2'],
+                'SF2MW日本' => ['SF 2'],
+                'SF5' => ['SF 2'],
+                'SUSXG2' => ['SUSXG2'],
+                'SXG2' => ['SXG 2'],
+                'SXG2CL' => ['SXG 2'],
+                'SXG2MW' => ['SXG 2'],
+                'SXG2日本' => ['SXG 2'],
+                'SXG2CL日本' => ['SF 2'],
+                'SXG2MW日本' => ['SXG 2'],
+                'SXG3' => ['SXG3'],
+                'SXG3CL' => ['SXG3'],
+                'SXG3MW' => ['SXG3'],
+                'SXG3日本' => ['SXG3'],
+                'SXG3CL日本' => ['SXG3'],
+                'SXG3MW日本' => ['SXG3'],
+                'TLE' => ['TLE'],
+                'TLEDAI' => ['TLE DAI'],
+                'TXGS' => ['TXGS EROPA', 'TXGS JAPAN'],
+            ];
+
+            return $map[$typePlan] ?? [];
+        };
+
+        // 2. Get Daily Jobs & Replacements from iseki_efficiency and Podium Plans for the whole month
+        $dailyJobsData = [];
+        if ($nik) {
+            $monthPrefix = date('Ym', strtotime($startReportDate));
+            $dailyJobs = \Illuminate\Support\Facades\DB::select(
+                "SELECT * FROM iseki_efficiency.daily_jobs WHERE Nik_Daily_Job = ? AND Production_Date_Plan LIKE ? ORDER BY Production_Date_Plan ASC",
+                [$nik, $monthPrefix . '%']
+            );
+
+            foreach ($dailyJobs as $dj) {
+                // Get replacement if any
+                $replacements = \Illuminate\Support\Facades\DB::select(
+                    "SELECT * FROM iseki_efficiency.replacements WHERE Id_Daily_Job = ?",
+                    [$dj->Id_Daily_Job]
+                );
+
+                $repDetails = [];
+                foreach ($replacements as $rep) {
+                    $repNik = $rep->NIK_Replacement;
+                    $repEmp = \App\Helpers\MemberHelper::findByNik($repNik, $startReportDate);
+                    $repName = $repEmp->Name_Member ?? $repNik;
+
+                    // Lookup Podium plan using sequence and production date from replacements
+                    $seqNo = $rep->Sequence_No_Plan ?? $dj->Sequence_No_Plan;
+                    if ($seqNo !== null && stripos((string) $seqNo, 'T') === false) {
+                        $seqNo = str_pad(trim((string) $seqNo), 5, '0', STR_PAD_LEFT);
+                    }
+                    $prodDate = $rep->Production_Date_Plan ?? $dj->Production_Date_Plan;
+
+                    $plan = \Illuminate\Support\Facades\DB::selectOne(
+                        "SELECT * FROM iseki_podium.plans WHERE Sequence_No_Plan = ? AND (Production_Date_Plan = ? OR Production_No_Plan = ?)",
+                        [$seqNo, $prodDate, $prodDate]
+                    );
+
+                    $typePlan = $plan->Type_Plan ?? null;
+                    $mappedTractors = $typePlan ? $mapTypePlanToTractors($typePlan) : [];
+
+                    // Check if already copied in report_replacements table
+                    $copiedRecord = \App\Models\ReportReplacement::where('Id_Report', $report->Id_Report)
+                        ->where('NIK_Replacement', $repNik)
+                        ->where('Sequence_No_Plan', $seqNo)
+                        ->first();
+
+                    $repDetails[] = [
+                        'replacement_nik' => $repNik,
+                        'replacement_name' => $repName,
+                        'sequence_no_plan' => $seqNo,
+                        'production_date_plan' => $prodDate,
+                        'type_plan' => $typePlan,
+                        'mapped_tractors' => $mappedTractors,
+                        'is_copied' => $copiedRecord ? true : false,
+                        'target_report_id' => $copiedRecord ? $copiedRecord->Id_Report_Target : null,
+                        'id_report_replacement' => $copiedRecord ? $copiedRecord->Id_Report_Replacement : null,
+                    ];
+                }
+
+                $dailyJobsData[] = [
+                    'daily_job' => $dj,
+                    'replacements' => $repDetails,
+                ];
+            }
+        }
+
+        return view('leaders.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report', 'absensis', 'dailyJobsData'));
+    }
+
+    public function list_report_replacement(string $Id_Report_Replacement)
+    {
+        $page = 'report';
+
+        $reportReplacement = \App\Models\ReportReplacement::with(['report', 'listReportReplacements'])->findOrFail($Id_Report_Replacement);
+        $report = $reportReplacement->report;
+        $repMember = \App\Helpers\MemberHelper::findByNik($reportReplacement->NIK_Replacement, $report->Start_Report);
+
+        $list_reports = $reportReplacement->listReportReplacements;
+
+        return view('leaders.reports.list_report_replacement', compact('page', 'reportReplacement', 'report', 'repMember', 'list_reports'));
+    }
+
+    public function replacement_report_detail(string $Id_List_Report_Replacement)
+    {
+        $page = 'report';
+
+        $user = \App\Models\User::where('Id_User', session('Id_User'))->first();
+        $listReport = \App\Models\ListReportReplacement::with('reportReplacement.report')->findOrFail($Id_List_Report_Replacement);
+
+        $idRepHeader = $listReport->Id_Report_Replacement;
+        $fullPath = 'storage/report_replacements/'.$idRepHeader;
+        $fileName = $listReport->Name_Procedure.'.pdf';
+        $pdfPath = $fullPath.'/'.$fileName;
+
+        if (! Storage::disk('public')->exists('report_replacements/'.$idRepHeader.'/'.$fileName)) {
+            $pdfPath = 'storage/procedures/'.$listReport->Name_Tractor.'/'.$listReport->Name_Area.'/'.$fileName;
+        }
+
+        $siblingReports = \App\Models\ListReportReplacement::where('Id_Report_Replacement', $idRepHeader)
+            ->orderBy('Name_Tractor')
+            ->orderBy('Name_Procedure')
+            ->pluck('Id_List_Report_Replacement')
+            ->toArray();
+
+        $currentIndex = array_search($Id_List_Report_Replacement, $siblingReports);
+        $prevReportId = ($currentIndex !== false && $currentIndex > 0) ? $siblingReports[$currentIndex - 1] : null;
+        $nextReportId = ($currentIndex !== false && $currentIndex < count($siblingReports) - 1) ? $siblingReports[$currentIndex + 1] : null;
+        $currentPos = $currentIndex !== false ? $currentIndex + 1 : 0;
+
+        return view('leaders.reports.replacement_report', compact(
+            'page', 'listReport', 'pdfPath', 'user',
+            'prevReportId', 'nextReportId',
+            'currentPos', 'siblingReports'
+        ));
+    }
+
+    public function submit_replacement_report(Request $request, $Id_List_Report_Replacement)
+    {
+        $listReport = \App\Models\ListReportReplacement::with('reportReplacement')->findOrFail($Id_List_Report_Replacement);
+
+        $idRepHeader = $listReport->Id_Report_Replacement;
+
+        if ($request->hasFile('pdf')) {
+            $request->validate([
+                'pdf' => 'required|file|mimes:pdf|max:20480',
+            ]);
+
+            $path = 'report_replacements/' . $idRepHeader;
+            $filename = $listReport->Name_Procedure . '.pdf';
+            $targetPath = $path . '/' . $filename;
+
+            if (! Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->makeDirectory($path);
+            }
+
+            Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
+
+            if (session('Id_Type_User') == 2) {
+                $listReport->Time_Approved_Leader = $request->input('timestamp');
+                $listReport->Leader_Name = session('Username_User');
+            } elseif (session('Id_Type_User') == 1) {
+                $listReport->Time_Approved_Auditor = $request->input('timestamp');
+                $listReport->Auditor_Name = session('Username_User');
+            }
+            $listReport->save();
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false], 400);
+    }
+
+    public function copyJobdescReplacement(Request $request)
+    {
+        // Only Leader (2) and Auditor (1) can copy
+        $userTypeId = session('Id_Type_User');
+        if (! in_array($userTypeId, [1, 2])) {
+            return redirect()->back()->withErrors(['error' => 'Hanya Leader dan Auditor yang memiliki akses untuk melakukan copy prosedur pengganti.']);
+        }
+
+        $request->validate([
+            'Id_Report' => 'required',
+            'replacement_nik' => 'required',
+            'mapped_tractors' => 'required|array',
+        ]);
+
+        $report = Report::where('Id_Report', $request->Id_Report)->first();
+        if (! $report) {
+            return redirect()->back()->withErrors(['error' => 'Report tidak ditemukan.']);
+        }
+
+        $sourceMember = $report->member;
+        $startReportDate = Carbon::parse($report->Start_Report)->format('Y-m-d');
+
+        // Find replacement member target
+        $repMember = \App\Helpers\MemberHelper::findByNik($request->replacement_nik, $startReportDate);
+        if (! $repMember) {
+            return redirect()->back()->withErrors(['error' => 'Member pengganti tidak ditemukan di database.']);
+        }
+
+        // Find or create target Report for replacement member on the same Start_Report date
+        $targetReport = Report::where('Id_Member', $repMember->Id_Member)
+            ->whereDate('Start_Report', $startReportDate)
+            ->first();
+
+        if (! $targetReport) {
+            $targetReport = Report::create([
+                'Id_Member' => $repMember->Id_Member,
+                'Start_Report' => $startReportDate,
+            ]);
+        }
+
+        $targetFullPath = 'reports/' . $startReportDate . '_' . $repMember->Id_Member;
+        if (! Storage::disk('public')->exists($targetFullPath)) {
+            Storage::disk('public')->makeDirectory($targetFullPath);
+        }
+
+        // Get list_reports from source report that match mapped_tractors
+        $sourceListReports = List_Report::where('Id_Report', $report->Id_Report)
+            ->whereIn('Name_Tractor', $request->mapped_tractors)
+            ->get();
+
+        if ($sourceListReports->isEmpty()) {
+            return redirect()->back()->withErrors(['error' => 'Tidak ada prosedur jobdesc pada tractor tersebut untuk disalin.']);
+        }
+
+        $copiedCount = 0;
+        foreach ($sourceListReports as $slr) {
+            // Check if already exists in target report
+            $exists = List_Report::where('Id_Report', $targetReport->Id_Report)
+                ->where('Name_Procedure', $slr->Name_Procedure)
+                ->where('Name_Area', $slr->Name_Area)
+                ->where('Name_Tractor', $slr->Name_Tractor)
+                ->exists();
+
+            if (! $exists) {
+                // Copy DB record
+                List_Report::create([
+                    'Id_Report' => $targetReport->Id_Report,
+                    'Name_Procedure' => $slr->Name_Procedure,
+                    'Name_Area' => $slr->Name_Area,
+                    'Name_Tractor' => $slr->Name_Tractor,
+                    'Item_Procedure' => $slr->Item_Procedure,
+                    'Time_List_Report' => null,
+                    'Time_Approved_Leader' => null,
+                    'Time_Approved_Auditor' => null,
+                    'Reporter_Name' => $repMember->Name_Member,
+                    'Leader_Name' => null,
+                    'Auditor_Name' => null,
+                ]);
+
+                // Copy file PDF procedure if available
+                $sourceFilePath = 'procedures/' . $slr->Name_Tractor . '/' . $slr->Name_Area . '/' . $slr->Name_Procedure . '.pdf';
+                $targetFilePath = $targetFullPath . '/' . $slr->Name_Procedure . '.pdf';
+
+                if (Storage::disk('public')->exists($sourceFilePath)) {
+                    Storage::disk('public')->copy($sourceFilePath, $targetFilePath);
+                }
+
+                // Also check if original report folder had a file
+                $sourceReportFilePath = 'reports/' . $startReportDate . '_' . $sourceMember->Id_Member . '/' . $slr->Name_Procedure . '.pdf';
+                if (Storage::disk('public')->exists($sourceReportFilePath) && ! Storage::disk('public')->exists($targetFilePath)) {
+                    Storage::disk('public')->copy($sourceReportFilePath, $targetFilePath);
+                }
+
+                $copiedCount++;
+            }
+        }
+
+        // Save record into report_replacements table
+        $repHeader = \App\Models\ReportReplacement::updateOrCreate([
+            'Id_Report' => $report->Id_Report,
+            'NIK_Replacement' => $request->replacement_nik,
+            'Sequence_No_Plan' => $request->sequence_no_plan ?? null,
+        ], [
+            'Name_Tractor' => implode(',', $request->mapped_tractors),
+            'Production_Date_Plan' => $request->production_date_plan ?? null,
+            'Type_Plan' => $request->type_plan ?? null,
+            'Id_Report_Target' => $targetReport->Id_Report,
+        ]);
+
+        // Save into list_report_replacements table for specific replacement tracking
+        $repFullPath = 'report_replacements/' . $repHeader->Id_Report_Replacement;
+        if (! Storage::disk('public')->exists($repFullPath)) {
+            Storage::disk('public')->makeDirectory($repFullPath);
+        }
+
+        foreach ($sourceListReports as $slr) {
+            \App\Models\ListReportReplacement::updateOrCreate([
+                'Id_Report_Replacement' => $repHeader->Id_Report_Replacement,
+                'Name_Procedure' => $slr->Name_Procedure,
+                'Name_Tractor' => $slr->Name_Tractor,
+            ], [
+                'Name_Area' => $slr->Name_Area,
+                'Item_Procedure' => $slr->Item_Procedure,
+                'Reporter_Name' => $repMember->Name_Member,
+            ]);
+
+            $sourceFilePath = 'procedures/' . $slr->Name_Tractor . '/' . $slr->Name_Area . '/' . $slr->Name_Procedure . '.pdf';
+            $repFilePath = $repFullPath . '/' . $slr->Name_Procedure . '.pdf';
+            if (Storage::disk('public')->exists($sourceFilePath) && ! Storage::disk('public')->exists($repFilePath)) {
+                Storage::disk('public')->copy($sourceFilePath, $repFilePath);
+            }
+        }
+
+        return redirect()->back()->with('success', "Berhasil menyalin prosedur ke member pengganti ({$repMember->Name_Member}).");
     }
 
     public function list_report_detail(string $Id_Report, string $Name_Tractor)

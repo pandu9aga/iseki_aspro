@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets/img/apple-icon.png') }}">
     <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon.png') }}">
     <title>
-        Iseki Procedure
+        ASPRO
     </title>
     <!--     Fonts and icons     -->
     <link rel="stylesheet" type="text/css" href="{{asset('assets/css/style.css')}}" />
@@ -25,7 +25,7 @@
 
     <!-- Dynamic Favicon -->
     <script src="/iseki_pro_app/js/dynamic-favicon.js"></script>
-    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "Procedure"); });</script>
+    <script>document.addEventListener("DOMContentLoaded", function() { setDynamicFavicon("flowsheet", "ASPRO"); });</script>
 </head>
 
 <body class="index-page bg-gray-200">
@@ -37,8 +37,8 @@
                     class="navbar navbar-expand-lg  blur border-radius-xl top-0 z-index-fixed shadow position-absolute my-3 p-2 start-0 end-0 mx-4">
                     <div class="container-fluid px-0">
                         <a class="navbar-brand font-weight-bolder ms-sm-3 text-sm" href="{{ route('login') }}"
-                            rel="tooltip" title="Iseki Procedure" data-placement="bottom">
-                            <span class="text-primary">Iseki Procedure</span>
+                            rel="tooltip" title="ASPRO" data-placement="bottom">
+                            <span class="text-primary">ASPRO</span>
                         </a>
                         <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navigation" aria-controls="navigation" aria-expanded="false"
