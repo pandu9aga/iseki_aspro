@@ -67,15 +67,15 @@
                     </form>
 
                     <!-- Tombol Duplikasi Template -->
-                   {{-- <div class="my-3">
+                    <div class="my-3">
                         <form action="{{ route('report.create.template') }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-success"
-                                onclick="return confirm('Yakin buat template dari data bulan lalu ke tanggal 1 bulan ini?')">
-                                ?? Buat Template Bulan Ini dari Bulan Lalu
+                                onclick="return confirm('Yakin copy semua jobdesc & list dari bulan lalu ke bulan ini?')">
+                                <i class="fa fa-copy me-1"></i> Copy Jobdesc Bulan Ini dari Bulan Lalu
                             </button>
                         </form>
-                    </div> --}}
+                    </div>
 
                     <!-- Daftar Bulan (Cukup 1x) -->
                     <div class="row">

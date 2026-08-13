@@ -555,6 +555,48 @@
                 }
             });
 
+            // Append uploaded photos (4 per page in landscape format) if any
+            if (STATE.images.length > 0) {
+                const PAGE_WIDTH = 841.89; // A4 landscape
+                const PAGE_HEIGHT = 595.28;
+                const MARGIN = 20;
+                const SLOT_COLS = 2;
+                const SLOT_ROWS = 2;
+                const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
+                const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
+
+                let photoPage = null;
+                let slotIndex = 0;
+
+                for (let file of STATE.images) {
+                    if (slotIndex % 4 === 0) {
+                        photoPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                    }
+
+                    const resizedBlob = await resizeImage(file, 1000, 1000);
+                    const imgBytes = await resizedBlob.arrayBuffer();
+                    let imgEmbed = file.type.includes('png') ?
+                        await pdfDoc.embedPng(imgBytes) :
+                        await pdfDoc.embedJpg(imgBytes);
+
+                    const { width, height } = imgEmbed.size();
+                    const scale = Math.min(SLOT_W / width, SLOT_H / height);
+                    const col = slotIndex % 2;
+                    const row = Math.floor((slotIndex % 4) / 2);
+                    const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
+                    const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
+
+                    photoPage.drawImage(imgEmbed, {
+                        x,
+                        y,
+                        width: width * scale,
+                        height: height * scale
+                    });
+
+                    slotIndex++;
+                }
+            }
+
             const pdfBytes = await pdfDoc.save();
             const formData = new FormData();
             formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));

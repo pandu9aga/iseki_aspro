@@ -126,7 +126,7 @@
 
                 <br>
                 @if (is_null($listReport->Time_Approved_Leader))
-                    {{-- <h5>Photos for : <span class="text-primary">{{ $listReport->Name_Procedure }}</span></h5>
+                    <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
                     <div class="my-3">
                         <label class="form-label d-block">Upload Photos</label>
                         <div class="d-flex gap-2">
@@ -140,7 +140,7 @@
                         <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
                     </div>
                     <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
-                    <br> --}}
+                    <br>
                     <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Report</button>
                 @endif
             </div>
@@ -155,6 +155,8 @@
 
 @section('script')
     <script>
+        let images = [];
+
         function triggerPhotoInput(mode) {
             const input = document.getElementById('imageInput');
             if (mode === 'camera') {
@@ -163,6 +165,71 @@
                 input.removeAttribute('capture');
             }
             input.click();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('imageInput');
+            if (!input) return;
+            input.addEventListener('change', function (e) {
+                for (let file of e.target.files) {
+                    images.push(file);
+                    showPreview(file);
+                }
+            });
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const container = document.createElement('div');
+                container.style.position = 'relative';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '150px';
+                img.style.maxHeight = '150px';
+                img.style.border = '1px solid #ccc';
+                img.style.padding = '2px';
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'X';
+                delBtn.style.position = 'absolute';
+                delBtn.style.top = '0';
+                delBtn.style.right = '0';
+                delBtn.style.background = 'red';
+                delBtn.style.color = 'white';
+                delBtn.style.border = 'none';
+                delBtn.style.cursor = 'pointer';
+                delBtn.style.width = '20px';
+                delBtn.style.height = '20px';
+                delBtn.onclick = function () {
+                    const index = images.indexOf(file);
+                    if (index > -1) images.splice(index, 1);
+                    container.remove();
+                };
+                container.appendChild(img);
+                container.appendChild(delBtn);
+                document.getElementById('preview').appendChild(container);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function resizeImage(file, maxWidth, maxHeight) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = function () {
+                    let width = img.width;
+                    let height = img.height;
+                    const scale = Math.min(maxWidth / width, maxHeight / height);
+                    width *= scale;
+                    height *= scale;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob(blob => resolve(blob), file.type, 0.7);
+                };
+                img.src = URL.createObjectURL(file);
+            });
         }
     </script>
     <script src="{{ asset('assets/js/pdf.min.js') }}"></script>
@@ -732,6 +799,48 @@
                     });
                 }
             });
+
+            // Append uploaded photos (4 per page in landscape format) if any
+            if (images.length > 0) {
+                const PAGE_WIDTH = 841.89; // A4 landscape
+                const PAGE_HEIGHT = 595.28;
+                const MARGIN = 20;
+                const SLOT_COLS = 2;
+                const SLOT_ROWS = 2;
+                const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
+                const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
+
+                let photoPage = null;
+                let slotIndex = 0;
+
+                for (let file of images) {
+                    if (slotIndex % 4 === 0) {
+                        photoPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                    }
+
+                    const resizedBlob = await resizeImage(file, 1000, 1000);
+                    const imgBytes = await resizedBlob.arrayBuffer();
+                    let imgEmbed = file.type.includes('png') ?
+                        await pdfDoc.embedPng(imgBytes) :
+                        await pdfDoc.embedJpg(imgBytes);
+
+                    const { width, height } = imgEmbed.size();
+                    const scale = Math.min(SLOT_W / width, SLOT_H / height);
+                    const col = slotIndex % 2;
+                    const row = Math.floor((slotIndex % 4) / 2);
+                    const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
+                    const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
+
+                    photoPage.drawImage(imgEmbed, {
+                        x,
+                        y,
+                        width: width * scale,
+                        height: height * scale
+                    });
+
+                    slotIndex++;
+                }
+            }
 
             const pdfBytes = await pdfDoc.save();
             const formData = new FormData();
