@@ -115,6 +115,21 @@
 
                 <br>
                 @if (is_null($listReport->Time_Approved_Leader))
+                    <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
+                    <div class="my-3">
+                        <label class="form-label d-block">Upload Photos</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
+                                <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
+                            </button>
+                            <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
+                                <i class="material-symbols-rounded text-sm">collections</i> Gallery
+                            </button>
+                        </div>
+                        <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
+                    </div>
+                    <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
+                    <br>
                     <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Leader Approval</button>
                 @endif
             </div>
@@ -149,10 +164,10 @@
             pdfScale: 1.5,
             fontSize: { timestamp: 8, comment: 12, mark: 18 },
             colors: {
-                check: { text: 'blue', bg: 'rgba(0,0,255,0.3)' },
+                check: { text: 'red', bg: 'rgba(255,0,0,0.3)' },
                 ng: { text: 'red', bg: 'rgba(255,0,0,0.3)' },
                 x: { text: 'red', bg: 'rgba(255,0,0,0.3)' },
-                comment: { text: 'black', bg: 'yellow', border: 'transparent' }
+                comment: { text: 'white', bg: '#8B4513', border: 'transparent' }
             }
         };
 
@@ -364,7 +379,7 @@
             const y = e.clientY - rect.top;
 
             let annotation;
-            if (STATE.currentMode === 'check') annotation = createDraggableMark('V', 'blue');
+            if (STATE.currentMode === 'check') annotation = createDraggableMark('V', 'red');
             else if (STATE.currentMode === 'ng') annotation = createDraggableMark('NG', 'red');
             else if (STATE.currentMode === 'x') annotation = createDraggableMark('X', 'red');
             else if (STATE.currentMode === 'comment') annotation = createEditableComment('');
@@ -452,12 +467,13 @@
             const lineHeight = timestampFontSize + 2;
 
             lines.forEach((line, i) => {
+                const width = font.widthOfTextAtSize(line, timestampFontSize);
                 pages[0].drawText(line, {
-                    x: 350,
+                    x: (pages[0].getWidth() - width) / 2,
                     y: startY - i * lineHeight,
                     size: timestampFontSize,
                     font: font,
-                    color: PDFLib.rgb(0, 0, 1),
+                    color: PDFLib.rgb(1, 0, 0),
                 });
             });
 
@@ -491,6 +507,48 @@
                     renderMarkToPDF(page, div, finalX, finalY, font);
                 }
             });
+
+            // Append uploaded photos (4 per page in landscape format) if any
+            if (STATE.images.length > 0) {
+                const PAGE_WIDTH = 841.89; // A4 landscape
+                const PAGE_HEIGHT = 595.28;
+                const MARGIN = 20;
+                const SLOT_COLS = 2;
+                const SLOT_ROWS = 2;
+                const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
+                const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
+
+                let photoPage = null;
+                let slotIndex = 0;
+
+                for (let file of STATE.images) {
+                    if (slotIndex % 4 === 0) {
+                        photoPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                    }
+
+                    const resizedBlob = await resizeImage(file, 1000, 1000);
+                    const imgBytes = await resizedBlob.arrayBuffer();
+                    let imgEmbed = file.type.includes('png') ?
+                        await pdfDoc.embedPng(imgBytes) :
+                        await pdfDoc.embedJpg(imgBytes);
+
+                    const { width, height } = imgEmbed.size();
+                    const scale = Math.min(SLOT_W / width, SLOT_H / height);
+                    const col = slotIndex % 2;
+                    const row = Math.floor((slotIndex % 4) / 2);
+                    const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
+                    const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
+
+                    photoPage.drawImage(imgEmbed, {
+                        x,
+                        y,
+                        width: width * scale,
+                        height: height * scale
+                    });
+
+                    slotIndex++;
+                }
+            }
 
             const pdfBytes = await pdfDoc.save();
             const formData = new FormData();
@@ -532,7 +590,7 @@
                 y: y - boxHeight,
                 width: boxWidth,
                 height: boxHeight,
-                color: PDFLib.rgb(1, 1, 0),
+                color: PDFLib.rgb(0.545, 0.271, 0.075),
                 opacity: 1
             });
 
@@ -541,7 +599,7 @@
                     x: x,
                     y: y - padding - (i + 1) * lineHeight + 4,
                     size: fontSize,
-                    color: PDFLib.rgb(0, 0, 0),
+                    color: PDFLib.rgb(1, 1, 1),
                     font
                 });
             });
@@ -563,10 +621,85 @@
             });
 
             let color = PDFLib.rgb(0, 0, 0);
-            if (div.style.color === 'blue') color = PDFLib.rgb(0, 0, 1);
-            else if (div.style.color === 'red') color = PDFLib.rgb(1, 0, 0);
+            if (div.style.color === 'red') color = PDFLib.rgb(1, 0, 0);
+            else if (div.style.color === 'blue') color = PDFLib.rgb(0, 0, 1);
 
             page.drawText(text, { x, y, size, color, font });
+        }
+
+        async function resizeImage(file, maxWidth, maxHeight) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = function () {
+                    let width = img.width;
+                    let height = img.height;
+                    const scale = Math.min(maxWidth / width, maxHeight / height);
+                    width *= scale;
+                    height *= scale;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob(blob => resolve(blob), file.type, 0.7);
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        function triggerPhotoInput(mode) {
+            const input = document.getElementById('imageInput');
+            if (!input) return;
+            if (mode === 'camera') {
+                input.setAttribute('capture', 'environment');
+            } else {
+                input.removeAttribute('capture');
+            }
+            input.click();
+        }
+
+        const imgInput = document.getElementById('imageInput');
+        if (imgInput) {
+            imgInput.addEventListener('change', function (e) {
+                for (let file of e.target.files) {
+                    STATE.images.push(file);
+                    showPreview(file);
+                }
+            });
+        }
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const container = document.createElement('div');
+                container.style.position = 'relative';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '150px';
+                img.style.maxHeight = '150px';
+                img.style.border = '1px solid #ccc';
+                img.style.padding = '2px';
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'X';
+                delBtn.style.position = 'absolute';
+                delBtn.style.top = '0';
+                delBtn.style.right = '0';
+                delBtn.style.background = 'red';
+                delBtn.style.color = 'white';
+                delBtn.style.border = 'none';
+                delBtn.style.cursor = 'pointer';
+                delBtn.style.width = '20px';
+                delBtn.style.height = '20px';
+                delBtn.onclick = function () {
+                    const index = STATE.images.indexOf(file);
+                    if (index > -1) STATE.images.splice(index, 1);
+                    container.remove();
+                };
+                container.appendChild(img);
+                container.appendChild(delBtn);
+                document.getElementById('preview').appendChild(container);
+            };
+            reader.readAsDataURL(file);
         }
     </script>
 @endsection

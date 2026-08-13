@@ -510,38 +510,45 @@
                 }
             });
 
-            // Append uploaded photos to new pages if any
+            // Append uploaded photos (4 per page in landscape format) if any
             if (STATE.images.length > 0) {
-                for (let file of STATE.images) {
-                    const resizedBlob = await resizeImage(file, 800, 1000);
-                    const imageBytes = await resizedBlob.arrayBuffer();
-                    let embeddedImg;
+                const PAGE_WIDTH = 841.89; // A4 landscape
+                const PAGE_HEIGHT = 595.28;
+                const MARGIN = 20;
+                const SLOT_COLS = 2;
+                const SLOT_ROWS = 2;
+                const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
+                const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
 
-                    if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
-                        embeddedImg = await pdfDoc.embedJpg(imageBytes);
-                    } else {
-                        embeddedImg = await pdfDoc.embedPng(imageBytes);
+                let photoPage = null;
+                let slotIndex = 0;
+
+                for (let file of STATE.images) {
+                    if (slotIndex % 4 === 0) {
+                        photoPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
                     }
 
-                    const newPage = pdfDoc.addPage();
-                    const { width, height } = newPage.getSize();
+                    const resizedBlob = await resizeImage(file, 1000, 1000);
+                    const imgBytes = await resizedBlob.arrayBuffer();
+                    let imgEmbed = file.type.includes('png') ?
+                        await pdfDoc.embedPng(imgBytes) :
+                        await pdfDoc.embedJpg(imgBytes);
 
-                    let imgW = embeddedImg.width;
-                    let imgH = embeddedImg.height;
+                    const { width, height } = imgEmbed.size();
+                    const scale = Math.min(SLOT_W / width, SLOT_H / height);
+                    const col = slotIndex % 2;
+                    const row = Math.floor((slotIndex % 4) / 2);
+                    const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
+                    const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
 
-                    const scale = Math.min((width - 40) / imgW, (height - 40) / imgH);
-                    imgW *= scale;
-                    imgH *= scale;
-
-                    const posX = (width - imgW) / 2;
-                    const posY = (height - imgH) / 2;
-
-                    newPage.drawImage(embeddedImg, {
-                        x: posX,
-                        y: posY,
-                        width: imgW,
-                        height: imgH
+                    photoPage.drawImage(imgEmbed, {
+                        x,
+                        y,
+                        width: width * scale,
+                        height: height * scale
                     });
+
+                    slotIndex++;
                 }
             }
 
