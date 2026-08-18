@@ -152,7 +152,35 @@ class MemberHelper
     }
 
     /**
-     * Ambil semua kemungkinan ID member dari kedua tabel berdasarkan NIK.
+     * Label lengkap kategori absensi (sama dengan accessor kategori_label di iseki_rifa).
+     *
+     * @param string|null $kode Kode kategori (A, C, S, dst).
+     * @param string|null $keterangan Keterangan untuk logika khusus P (Dengan Surat).
+     */
+    public static function kategoriLabel($kode, $keterangan = null)
+    {
+        return match (trim((string) $kode)) {
+            'C' => 'Cuti',
+            'CSP' => 'Cuti Setengah Hari Pagi',
+            'CSS' => 'Cuti Setengah Hari Siang',
+            'T' => 'Terlambat',
+            'IK' => 'Izin Keluar',
+            'P' => str_starts_with($keterangan ?? '', 'Dengan Surat')
+                ? 'Pulang Cepat Dengan Surat'
+                : 'Pulang Cepat',
+            'A' => 'Absen',
+            'ASP' => 'Absen Setengah Hari Pagi',
+            'ASS' => 'Absen Setengah Hari Siang',
+            'S' => 'Sakit',
+            'CK' => 'Cuti Khusus',
+            'Sk' => 'Serikat',
+            'SF' => 'Salah Fingerprint',
+            default => $kode,
+        };
+    }
+
+    /**
+     * Cari semua kemungkinan ID member dari kedua tabel berdasarkan NIK.
      * Digunakan agar riwayat report lama (dari tabel members) tetap muncul
      * setelah cutover login ke RIFA (employees).
      *

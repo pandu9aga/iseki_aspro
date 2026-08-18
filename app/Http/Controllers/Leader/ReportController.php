@@ -112,7 +112,6 @@ class ReportController extends Controller
         // Fetch Member & Dates
         $member = $report->member;
         $nik = $member->NIK_Member ?? null;
-        $startReportDate = Carbon::parse($report->Start_Report)->format('Y-m-d');
         $year = Carbon::parse($report->Start_Report)->year;
         $month = Carbon::parse($report->Start_Report)->month;
 
@@ -129,6 +128,31 @@ class ReportController extends Controller
                     ->orderBy('tanggal', 'asc')
                     ->get();
             }
+        }
+
+        return view('leaders.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report', 'absensis'));
+    }
+
+    public function list_report_daily(string $Id_Report, string $date)
+    {
+        $page = 'report';
+
+        $report = Report::where('Id_Report', $Id_Report)->first();
+        if (! $report) {
+            abort(404);
+        }
+
+        $member = $report->member;
+        $nik = $member->NIK_Member ?? null;
+        $startReportDate = Carbon::parse($report->Start_Report)->format('Y-m-d');
+        $targetDate = Carbon::parse($date)->format('Y-m-d');
+        $targetDateCompact = Carbon::parse($date)->format('Ymd');
+
+        // Hanya akun leader bernama Saiful yang boleh menyalin jobdesc pengganti
+        $canCopyJobdesc = false;
+        if (session('Id_Type_User') == 2) {
+            $loginUser = \App\Models\User::where('Id_User', session('Id_User'))->first();
+            $canCopyJobdesc = $loginUser && strtolower($loginUser->Name_User) === 'saiful';
         }
 
         // Helper rule mapping Type_Plan to Name_Tractor
@@ -172,13 +196,12 @@ class ReportController extends Controller
             return $map[$typePlan] ?? [];
         };
 
-        // 2. Get Daily Jobs & Replacements from iseki_efficiency and Podium Plans for the whole month
+        // Get Daily Jobs & Replacements for the clicked date only
         $dailyJobsData = [];
         if ($nik) {
-            $monthPrefix = date('Ym', strtotime($startReportDate));
             $dailyJobs = \Illuminate\Support\Facades\DB::select(
-                "SELECT * FROM iseki_efficiency.daily_jobs WHERE Nik_Daily_Job = ? AND Production_Date_Plan LIKE ? ORDER BY Production_Date_Plan ASC",
-                [$nik, $monthPrefix . '%']
+                "SELECT * FROM iseki_efficiency.daily_jobs WHERE Nik_Daily_Job = ? AND Production_Date_Plan = ? ORDER BY Sequence_No_Plan ASC",
+                [$nik, $targetDateCompact]
             );
 
             foreach ($dailyJobs as $dj) {
@@ -235,7 +258,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('leaders.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report', 'absensis', 'dailyJobsData'));
+        return view('leaders.reports.daily_report', compact('page', 'report', 'Id_Report', 'dailyJobsData', 'targetDate', 'canCopyJobdesc'));
     }
 
     public function list_report_replacement(string $Id_Report_Replacement)
@@ -323,10 +346,12 @@ class ReportController extends Controller
 
     public function copyJobdescReplacement(Request $request)
     {
-        // Only Leader (2) and Auditor (1) can copy
+        // Hanya akun leader bernama Saiful yang boleh menyalin jobdesc pengganti
         $userTypeId = session('Id_Type_User');
-        if (! in_array($userTypeId, [1, 2])) {
-            return redirect()->back()->withErrors(['error' => 'Hanya Leader dan Auditor yang memiliki akses untuk melakukan copy prosedur pengganti.']);
+        $loginUser = \App\Models\User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && $userTypeId == 2 && strtolower($loginUser->Name_User) === 'saiful';
+        if (! $isSaiful) {
+            return redirect()->back()->withErrors(['error' => 'Hanya leader Saiful yang memiliki akses untuk melakukan copy prosedur pengganti.']);
         }
 
         $request->validate([
@@ -340,7 +365,6 @@ class ReportController extends Controller
             return redirect()->back()->withErrors(['error' => 'Report tidak ditemukan.']);
         }
 
-        $sourceMember = $report->member;
         $startReportDate = Carbon::parse($report->Start_Report)->format('Y-m-d');
 
         // Find replacement member target
@@ -349,22 +373,7 @@ class ReportController extends Controller
             return redirect()->back()->withErrors(['error' => 'Member pengganti tidak ditemukan di database.']);
         }
 
-        // Find or create target Report for replacement member on the same Start_Report date
-        $targetReport = Report::where('Id_Member', $repMember->Id_Member)
-            ->whereDate('Start_Report', $startReportDate)
-            ->first();
-
-        if (! $targetReport) {
-            $targetReport = Report::create([
-                'Id_Member' => $repMember->Id_Member,
-                'Start_Report' => $startReportDate,
-            ]);
-        }
-
-        $targetFullPath = 'reports/' . $startReportDate . '_' . $repMember->Id_Member;
-        if (! Storage::disk('public')->exists($targetFullPath)) {
-            Storage::disk('public')->makeDirectory($targetFullPath);
-        }
+        // (Tanpa pembuatan Report target) Replacement hanya disimpan di report_replacements.
 
         // Get list_reports from source report that match mapped_tractors
         $sourceListReports = List_Report::where('Id_Report', $report->Id_Report)
@@ -373,49 +382,6 @@ class ReportController extends Controller
 
         if ($sourceListReports->isEmpty()) {
             return redirect()->back()->withErrors(['error' => 'Tidak ada prosedur jobdesc pada tractor tersebut untuk disalin.']);
-        }
-
-        $copiedCount = 0;
-        foreach ($sourceListReports as $slr) {
-            // Check if already exists in target report
-            $exists = List_Report::where('Id_Report', $targetReport->Id_Report)
-                ->where('Name_Procedure', $slr->Name_Procedure)
-                ->where('Name_Area', $slr->Name_Area)
-                ->where('Name_Tractor', $slr->Name_Tractor)
-                ->exists();
-
-            if (! $exists) {
-                // Copy DB record
-                List_Report::create([
-                    'Id_Report' => $targetReport->Id_Report,
-                    'Name_Procedure' => $slr->Name_Procedure,
-                    'Name_Area' => $slr->Name_Area,
-                    'Name_Tractor' => $slr->Name_Tractor,
-                    'Item_Procedure' => $slr->Item_Procedure,
-                    'Time_List_Report' => null,
-                    'Time_Approved_Leader' => null,
-                    'Time_Approved_Auditor' => null,
-                    'Reporter_Name' => $repMember->Name_Member,
-                    'Leader_Name' => null,
-                    'Auditor_Name' => null,
-                ]);
-
-                // Copy file PDF procedure if available
-                $sourceFilePath = 'procedures/' . $slr->Name_Tractor . '/' . $slr->Name_Area . '/' . $slr->Name_Procedure . '.pdf';
-                $targetFilePath = $targetFullPath . '/' . $slr->Name_Procedure . '.pdf';
-
-                if (Storage::disk('public')->exists($sourceFilePath)) {
-                    Storage::disk('public')->copy($sourceFilePath, $targetFilePath);
-                }
-
-                // Also check if original report folder had a file
-                $sourceReportFilePath = 'reports/' . $startReportDate . '_' . $sourceMember->Id_Member . '/' . $slr->Name_Procedure . '.pdf';
-                if (Storage::disk('public')->exists($sourceReportFilePath) && ! Storage::disk('public')->exists($targetFilePath)) {
-                    Storage::disk('public')->copy($sourceReportFilePath, $targetFilePath);
-                }
-
-                $copiedCount++;
-            }
         }
 
         // Save record into report_replacements table
@@ -427,7 +393,7 @@ class ReportController extends Controller
             'Name_Tractor' => implode(',', $request->mapped_tractors),
             'Production_Date_Plan' => $request->production_date_plan ?? null,
             'Type_Plan' => $request->type_plan ?? null,
-            'Id_Report_Target' => $targetReport->Id_Report,
+            'Id_Report_Target' => null,
         ]);
 
         // Save into list_report_replacements table for specific replacement tracking

@@ -69,7 +69,6 @@ class ReportAuditorController extends Controller
         // Fetch Member & Dates
         $member = $report->member;
         $nik = $member->NIK_Member ?? null;
-        $startReportDate = Carbon::parse($report->Start_Report)->format('Y-m-d');
         $year = Carbon::parse($report->Start_Report)->year;
         $month = Carbon::parse($report->Start_Report)->month;
 
@@ -86,6 +85,31 @@ class ReportAuditorController extends Controller
                     ->orderBy('tanggal', 'asc')
                     ->get();
             }
+        }
+
+        return view('auditors.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report', 'absensis'));
+    }
+
+    public function list_report_daily(string $Id_Report, string $date)
+    {
+        $page = 'report';
+
+        $report = \App\Models\Report::where('Id_Report', $Id_Report)->first();
+        if (! $report) {
+            abort(404);
+        }
+
+        $member = $report->member;
+        $nik = $member->NIK_Member ?? null;
+        $startReportDate = Carbon::parse($report->Start_Report)->format('Y-m-d');
+        $targetDate = Carbon::parse($date)->format('Y-m-d');
+        $targetDateCompact = Carbon::parse($date)->format('Ymd');
+
+        // Hanya akun leader bernama Saiful yang boleh menyalin jobdesc pengganti
+        $canCopyJobdesc = false;
+        if (session('Id_Type_User') == 2) {
+            $loginUser = \App\Models\User::where('Id_User', session('Id_User'))->first();
+            $canCopyJobdesc = $loginUser && strtolower($loginUser->Name_User) === 'saiful';
         }
 
         // Helper rule mapping Type_Plan to Name_Tractor
@@ -129,13 +153,12 @@ class ReportAuditorController extends Controller
             return $map[$typePlan] ?? [];
         };
 
-        // 2. Get Daily Jobs & Replacements from iseki_efficiency and Podium Plans for the whole month
+        // Get Daily Jobs & Replacements for the clicked date only
         $dailyJobsData = [];
         if ($nik) {
-            $monthPrefix = date('Ym', strtotime($startReportDate));
             $dailyJobs = \Illuminate\Support\Facades\DB::select(
-                "SELECT * FROM iseki_efficiency.daily_jobs WHERE Nik_Daily_Job = ? AND Production_Date_Plan LIKE ? ORDER BY Production_Date_Plan ASC",
-                [$nik, $monthPrefix . '%']
+                "SELECT * FROM iseki_efficiency.daily_jobs WHERE Nik_Daily_Job = ? AND Production_Date_Plan = ? ORDER BY Sequence_No_Plan ASC",
+                [$nik, $targetDateCompact]
             );
 
             foreach ($dailyJobs as $dj) {
@@ -192,7 +215,7 @@ class ReportAuditorController extends Controller
             }
         }
 
-        return view('auditors.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report', 'absensis', 'dailyJobsData'));
+        return view('auditors.reports.daily_report', compact('page', 'report', 'Id_Report', 'dailyJobsData', 'targetDate', 'canCopyJobdesc'));
     }
 
     public function list_report_replacement(string $Id_Report_Replacement)
