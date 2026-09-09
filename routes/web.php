@@ -117,6 +117,7 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::get('/list/{year}/{month}', [ReportController::class, 'reporter'])->name('reporter');
         Route::post('/reporter', [ReportController::class, 'create_reporter'])->name('reporter.create');
         Route::get('/list/{Id_Report}', [ReportController::class, 'list_report'])->name('list_report');
+        Route::get('/absensi/{Id_Report}', [ReportController::class, 'list_report_absensi'])->name('list_report_absensi');
         Route::get('/list/daily/{Id_Report}/{date}', [ReportController::class, 'list_report_daily'])->name('list_report_daily');
         Route::get('/replacement-list/{Id_Report_Replacement}', [ReportController::class, 'list_report_replacement'])->name('list_report_replacement');
         Route::get('/replacement-show/{Id_List_Report_Replacement}', [ReportController::class, 'replacement_report_detail'])->name('report.replacement_detail');

@@ -60,33 +60,11 @@
                 <!-- Data Absensi -->
                 <div class="col-12 mb-4">
                     <div class="card p-3 shadow-sm border">
-                        <h6 class="text-primary font-weight-bolder">Data Absensi Member (Month {{ \Carbon\Carbon::parse($report->Start_Report)->format('m-Y') }})</h6>
-                        <div class="table-responsive">
-                            <table class="table align-items-center mb-0 text-xs">
-                                <thead>
-                                    <tr>
-                                        <th>Tanggal</th>
-                                        <th>Kategori</th>
-                                        <th>Keterangan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($absensis as $abs)
-                                        <tr style="cursor: pointer;" onclick="window.location='{{ route('list_report_daily', ['Id_Report' => $report->Id_Report, 'date' => \Carbon\Carbon::parse($abs->tanggal)->format('Y-m-d')]) }}'">
-                                            <td>{{ \Carbon\Carbon::parse($abs->tanggal)->format('d-m-Y') }}</td>
-                                            <td>
-                                                <span class="badge bg-gradient-info">{{ $abs->kategori }}</span>
-                                                <span class="text-xs text-muted">{{ \App\Helpers\MemberHelper::kategoriLabel($abs->kategori, $abs->keterangan ?? null) }}</span>
-                                            </td>
-                                            <td>{{ $abs->keterangan ?? '-' }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted">Tidak ada data absensi.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary font-weight-bolder mb-0">Data Absensi Member (Month {{ \Carbon\Carbon::parse($report->Start_Report)->format('m-Y') }})</h6>
+                            <a href="{{ route('list_report_absensi', ['Id_Report' => $report->Id_Report]) }}" class="btn btn-sm bg-gradient-primary mb-0">
+                                <i class="material-symbols-rounded opacity-6 me-1 text-sm">calendar_month</i> List Absensi
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -109,13 +109,25 @@ class ReportController extends Controller
             ];
         }
 
+        return view('leaders.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report'));
+    }
+
+    public function list_report_absensi(string $Id_Report)
+    {
+        $page = 'report';
+
+        $report = Report::where('Id_Report', $Id_Report)->first();
+        if (! $report) {
+            return redirect()->back()->withErrors(['error' => 'Report tidak ditemukan.']);
+        }
+
         // Fetch Member & Dates
         $member = $report->member;
         $nik = $member->NIK_Member ?? null;
         $year = Carbon::parse($report->Start_Report)->year;
         $month = Carbon::parse($report->Start_Report)->month;
 
-        // 1. Get Absensis from iseki_rifa
+        // Get Absensis from iseki_rifa
         $absensis = [];
         if ($nik) {
             $emp = \App\Models\Employee::where('nik', $nik)->first();
@@ -130,7 +142,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('leaders.reports.list_report', compact('page', 'report', 'tractorReports', 'Id_Report', 'absensis'));
+        return view('leaders.reports.list_report_absensi', compact('page', 'report', 'absensis'));
     }
 
     public function list_report_daily(string $Id_Report, string $date)
