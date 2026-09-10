@@ -163,6 +163,8 @@
                                                     Carbon::parse($temuan->Time_Temuan)->floatDiffInDays(Carbon::now())
                                                 );
                                                 $urgencyClass = $daysOverdue > 1 ? 'danger' : 'warning';
+                                                $source = $temuan->source_item;
+                                                $member = $temuan->member;
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
@@ -177,13 +179,13 @@
                                                     </span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Tractor }} - {{ $temuan->ListReport->Name_Area }}</span>
+                                                    <span class="text-xs">{{ $source->Name_Tractor ?? '-' }} - {{ $source->Name_Area ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
+                                                    <span class="text-xs">{{ $source->Name_Procedure ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
+                                                    <span class="text-xs">{{ $member->Name_Member ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
@@ -232,6 +234,8 @@
                                                     Carbon::parse($temuan->Time_Temuan)->floatDiffInDays(Carbon::now())
                                                 );
                                                 $urgencyClass = $daysOverdue > 1 ? 'danger' : 'warning';
+                                                $source = $temuan->source_item;
+                                                $member = $temuan->member;
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
@@ -253,13 +257,13 @@
                                                     </span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Tractor }} - {{ $temuan->ListReport->Name_Area }}</span>
+                                                    <span class="text-xs">{{ $source->Name_Tractor ?? '-' }} - {{ $source->Name_Area ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
+                                                    <span class="text-xs">{{ $source->Name_Procedure ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
+                                                    <span class="text-xs">{{ $member->Name_Member ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 
@@ -308,6 +312,8 @@
                                                     Carbon::parse($temuan->Time_Penanganan)->floatDiffInDays(Carbon::now())
                                                 );
                                                 $urgencyClass = $daysOverdue > 1 ? 'danger' : 'warning';
+                                                $source = $temuan->source_item;
+                                                $member = $temuan->member;
                                             @endphp
                                             <tr class="row-data">
                                                 <td class="align-middle text-center">
@@ -329,13 +335,13 @@
                                                     </span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Tractor }} - {{ $temuan->ListReport->Name_Area }}</span>
+                                                    <span class="text-xs">{{ $source->Name_Tractor ?? '-' }} - {{ $source->Name_Area ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->Name_Procedure }}</span>
+                                                    <span class="text-xs">{{ $source->Name_Procedure ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
-                                                    <span class="text-xs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
+                                                    <span class="text-xs">{{ $member->Name_Member ?? '-' }}</span>
                                                 </td>
                                                 <td class="align-middle text-center">
                                                     <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}" 

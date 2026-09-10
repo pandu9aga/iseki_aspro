@@ -90,7 +90,7 @@ class TrainingAuditorController extends Controller
         $Id_User = session('Id_User');
         $user = User::where('Id_User', $Id_User)->first();
 
-        $listReport = List_Training::with('training')->findOrFail($Id_List_Training);
+        $listReport = List_Training::with(['training', 'Temuans'])->findOrFail($Id_List_Training);
 
         $id_member = $listReport->training->member->Id_Member;
         $timeReport = Carbon::parse($listReport->training->Start_Training)->format('Y-m-d');

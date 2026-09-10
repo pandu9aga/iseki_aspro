@@ -36,10 +36,17 @@
 
                 <!-- Tombol Back, List Temuan & Navigation -->
                 <div class="d-flex gap-2 mb-4 align-items-center">
-                    <a class="btn btn-primary mb-0"
-                        href="{{ route('report_auditor.detail', ['Id_List_Report' => $temuan->Id_List_Report]) }}">
-                        <i class="material-symbols-rounded text-sm">arrow_back</i> Back
-                    </a>
+                    @if($temuan->Id_List_Training)
+                        <a class="btn btn-primary mb-0"
+                            href="{{ route('training_auditor.detail', ['Id_List_Training' => $temuan->Id_List_Training]) }}">
+                            <i class="material-symbols-rounded text-sm">arrow_back</i> Back
+                        </a>
+                    @else
+                        <a class="btn btn-primary mb-0"
+                            href="{{ route('report_auditor.detail', ['Id_List_Report' => $temuan->Id_List_Report]) }}">
+                            <i class="material-symbols-rounded text-sm">arrow_back</i> Back
+                        </a>
+                    @endif
                     <a class="btn btn-info mb-0" href="{{ route('auditor-report.temuan_index') }}">
                         <i class="material-symbols-rounded text-sm">list</i> List Temuan
                     </a>
@@ -75,7 +82,7 @@
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
                             <h4 class="mb-0">Detail Temuan: <span
-                                    class="text-primary">{{ $temuan->ListReport->display_name }}</span></h4>
+                                    class="text-primary">{{ $temuan->source_item->display_name ?? '-' }}</span></h4>
                         </div>
                     </div>
                 </div>
@@ -128,7 +135,7 @@
                     </div>
                     <div class="card-body">
                         <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
-                            download="Temuan_{{ $temuan->ListReport->display_name }}_{{ $temuan->Id_Temuan }}.pdf"
+                            download="Temuan_{{ $temuan->source_item->display_name ?? 'Procedure' }}_{{ $temuan->Id_Temuan }}.pdf"
                             class="btn btn-success mb-3">
                             <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                         </a>
@@ -266,7 +273,7 @@
                             @endif
 
                             <a href="{{ asset($object->get('File_Path_Penanganan', '')) }}"
-                                download="Penanganan_{{ $temuan->ListReport->display_name }}_{{ $temuan->Id_Temuan }}.pdf"
+                                download="Penanganan_{{ $temuan->source_item->display_name ?? 'Procedure' }}_{{ $temuan->Id_Temuan }}.pdf"
                                 class="btn btn-success mb-3">
                                 <i class="material-symbols-rounded text-sm">download</i> Download PDF Penanganan
                             </a>

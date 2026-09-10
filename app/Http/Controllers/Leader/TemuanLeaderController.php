@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helper\JsonHelper;
+use App\Models\List_Report;
+use App\Models\List_Training;
 use App\Models\Temuan;
 use App\Models\User;
 use Carbon\Carbon;
@@ -30,7 +32,7 @@ class TemuanLeaderController extends Controller
 
         [$year, $monthNum] = explode('-', $month);
 
-        $query = Temuan::with(['ListReport.report', 'User'])
+        $query = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
             ->whereMonth('Time_Temuan', $monthNum);
@@ -283,13 +285,21 @@ class TemuanLeaderController extends Controller
     public function show(string $Id_Temuan)
     {
         $page = 'temuan';
-        $temuan = Temuan::with(['ListReport.report', 'User'])->findOrFail($Id_Temuan);
-        $listReport = $temuan->ListReport;
+        $temuan = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])->findOrFail($Id_Temuan);
+        $listReport = $temuan->source_item;
 
-        $id_member = $listReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
-        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
-        $fileName = $listReport->Name_Procedure.'.pdf';
+        $member = $temuan->member;
+        $id_member = $member ? $member->Id_Member : '';
+
+        if ($temuan->Id_List_Training && $temuan->ListTraining) {
+            $timeReport = Carbon::parse($temuan->ListTraining->training->Start_Training)->format('Y-m-d');
+            $fullPath = 'storage/trainings/'.$timeReport.'_'.$id_member;
+        } else {
+            $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
+            $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
+        }
+
+        $fileName = ($listReport ? $listReport->Name_Procedure : '').'.pdf';
         $pdfPath = $fullPath.'/'.$fileName;
         $current_user = User::find(session('Id_User'));
 
@@ -335,9 +345,19 @@ class TemuanLeaderController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $data) {
-            $temuan = Temuan::with(['ListReport.report', 'User'])->findOrFail($data['Id_Temuan']);
+            $temuan = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])->findOrFail($data['Id_Temuan']);
             $currentUser = User::find(session('Id_User'));
-            $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
+            
+            $sourceItem = $temuan->source_item;
+            $member = $temuan->member;
+            $id_member = $member ? $member->Id_Member : '';
+
+            if ($temuan->Id_List_Training && $temuan->ListTraining) {
+                $timeReport = Carbon::parse($temuan->ListTraining->training->Start_Training)->format('Y-m-d');
+            } else {
+                $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
+            }
+
             $jsonData = new JsonHelper($temuan->Object_Temuan);
             $jsonData->Name_User_Penanganan = $currentUser->Name_User;
             $jsonData->Comments_Penanganan = json_decode($data['comments'], true) ?? [];
@@ -346,7 +366,7 @@ class TemuanLeaderController extends Controller
             if ($request->hasFile('pdf')) {
                 $pdf = $request->file('pdf');
 
-                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$temuan->ListReport->report->member->Id_Member;
+                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$id_member;
                 $directory = public_path($relativePath);
 
                 if (! file_exists($directory)) {
@@ -355,7 +375,8 @@ class TemuanLeaderController extends Controller
                     }
                 }
 
-                $filename = 'PN _ '.$temuan->Id_Temuan.' _ '.$temuan->ListReport->Name_Procedure.'.pdf';
+                $procedureName = $sourceItem ? $sourceItem->Name_Procedure : 'Procedure';
+                $filename = 'PN _ '.$temuan->Id_Temuan.' _ '.$procedureName.'.pdf';
 
                 if (! $pdf->move($directory, $filename)) {
                     throw new \RuntimeException('Failed to move uploaded file');
@@ -388,11 +409,20 @@ class TemuanLeaderController extends Controller
             'photo_pdf' => 'required|file',
         ]);
 
-        $temuan = Temuan::with(['ListReport.report', 'User'])->findOrFail($data['Id_Temuan']);
+        $temuan = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])->findOrFail($data['Id_Temuan']);
         $currentUser = User::find(session('Id_User'));
-        $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
+        
+        $sourceItem = $temuan->source_item;
+        $member = $temuan->member;
+        $id_member = $member ? $member->Id_Member : '';
 
-        return DB::transaction(function () use ($request, $temuan, $timeReport) {
+        if ($temuan->Id_List_Training && $temuan->ListTraining) {
+            $timeReport = Carbon::parse($temuan->ListTraining->training->Start_Training)->format('Y-m-d');
+        } else {
+            $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
+        }
+
+        return DB::transaction(function () use ($request, $temuan, $timeReport, $id_member, $sourceItem) {
             $jsonData = new JsonHelper($temuan->Object_Temuan);
             $jsonData->UploudFoto_Time_Penanganan = Carbon::now()->toDateTimeString();
 
@@ -400,7 +430,7 @@ class TemuanLeaderController extends Controller
             if ($request->hasFile('photo_pdf')) {
                 $photo_pdf = $request->file('photo_pdf');
 
-                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$temuan->ListReport->report->member->Id_Member;
+                $relativePath = $this->base_path.$temuan->Id_User.'_'.$timeReport.'_'.$id_member;
                 $directory = public_path($relativePath);
 
                 if (! file_exists($directory)) {
@@ -409,8 +439,9 @@ class TemuanLeaderController extends Controller
                     }
                 }
 
+                $procedureName = $sourceItem ? $sourceItem->Name_Procedure : 'Procedure';
                 $extension = $photo_pdf->getClientOriginalExtension();
-                $fileName = 'PN _ '.$temuan->Id_Temuan.' _ '.$temuan->ListReport->Name_Procedure.'.'.$extension;
+                $fileName = 'PN _ '.$temuan->Id_Temuan.' _ '.$procedureName.'.'.$extension;
 
                 if (! $photo_pdf->move($directory, $fileName)) {
                     throw new \RuntimeException('Failed to move uploaded file');
@@ -433,7 +464,7 @@ class TemuanLeaderController extends Controller
         $month = $request->input('month', Carbon::now()->format('Y-m'));
         [$year, $monthNum] = explode('-', $month);
 
-        $temuans = Temuan::with(['ListReport.report', 'User'])
+        $temuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
             ->whereMonth('Time_Temuan', $monthNum)
@@ -559,7 +590,7 @@ class TemuanLeaderController extends Controller
         [$year, $monthNum] = explode('-', $month);
 
         // Belum dikategorikan (> 1 hari)
-        $uncategorizedTemuans = Temuan::with(['ListReport.report', 'User'])
+        $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->whereNotNull('Time_Temuan')
             ->where(function ($query) {
                 $query->whereNull('Tipe_Temuan')
@@ -572,7 +603,7 @@ class TemuanLeaderController extends Controller
             ->get();
 
         // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan" dan belum dikategorikan)
-        $noPenangananTemuans = Temuan::with(['ListReport.report', 'User'])
+        $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
             ->whereNotNull('Tipe_Temuan')
@@ -585,7 +616,7 @@ class TemuanLeaderController extends Controller
             ->get();
 
         // Belum di validasi (sudah ada penanganan tapi belum tervalidasi)
-        $noValidasiTemuans = Temuan::with(['ListReport.report', 'User'])
+        $noValidasiTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->whereNotNull('Time_Temuan')
             ->whereNotNull('Time_Penanganan')
             ->where(function ($query) {

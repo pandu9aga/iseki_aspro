@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auditor;
 use App\Http\Controllers\Controller;
 use App\Http\Helper\JsonHelper;
 use App\Models\List_Report;
+use App\Models\List_Training;
 use App\Models\Temuan;
 use App\Models\User;
 use Carbon\Carbon;
@@ -17,132 +18,33 @@ class TemuanAuditorController extends Controller
 {
     private string $base_path = 'storage/temuans/';
 
-    //    public function temuan_report(string $Id_List_Report)
-    //    {
-    //        $page = 'temuan';
-    //        $listReport = List_Report::where('Id_List_Report', $Id_List_Report)->first();
-    //
-    //        $current_user = User::where('Id_User', session('Id_User'))->first();
-    //        $id_member = $listReport->report->member->Id_Member;
-    //        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
-    //        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
-    //        $fileName = $listReport->Name_Procedure.'.pdf';
-    //        $pdfPath = $fullPath.'/'.$fileName;
-    //
-    //        $listTemuan = Temuan::where('Id_List_Report', $Id_List_Report)->where('Id_User', $current_user->Id_User)->whereNotNull('Time_Temuan')->get();
-    //        $totalListTemuan = $listTemuan->count();
-    //
-    //        $ListTemuanNull = Temuan::where('Id_List_Report', $Id_List_Report)->where('Id_User', $current_user->Id_User)->whereNull('Time_Temuan')->first();
-    //        $totalListTemuanNull = $ListTemuanNull ? 1 : 0;
-    //
-    //        return view('auditors.temuan.temuan', [
-    //            'page' => $page,
-    //            'listReport' => $listReport,
-    //            'current_user' => $current_user,
-    //            'pdfPath' => $pdfPath,
-    //            'listTemuan' => $listTemuan,
-    //            'totalListTemuan' => $totalListTemuan,
-    //            'ListTemuanNull' => array_merge([
-    //                'Id_Temuan' => $ListTemuanNull?->Id_Temuan], $ListTemuanNull ? (new JsonHelper($ListTemuanNull->Object_Temuan))->toArray() : []) ?? [],
-    //            'totalListTemuanNull' => $totalListTemuanNull,
-    //        ]);
-    //    }
-
-    //    public function create_temuan(Request $request)
-    //    {
-    //        $data = $request->validate([
-    //            'Id_List_Report' => 'required|int',
-    //            'photo_pdf' => 'required|file',
-    //        ]);
-    //
-    //        $listReport = List_Report::with('report')->findOrFail($data['Id_List_Report']);
-    //        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
-    //        $current_user = User::where('Id_User', session('Id_User'))->firstOrFail();
-    //
-    //        try {
-    //            return DB::transaction(function () use ($request, $data, $listReport, $timeReport, $current_user) {
-    //                $jsonData = new JsonHelper;
-    //                $jsonData->UploudFoto_Time_Temuan = now()->toDateTimeString();
-    //                $jsonData->Name_User_Temuan = $current_user->Name_User;
-    //                $jsonData->File_Path_Temuan = '';
-    //                $jsonData->Is_Submit_Penanganan = false;
-    //                $jsonData->UploudFoto_Time_Penanganan = '';
-    //                $jsonData->File_Path_Penanganan = '';
-    //                $jsonData->Name_User_Penanganan = '';
-    //                $jsonData->Validation_Notes = '';
-    //                $jsonData->Validation_Time = '';
-    //
-    //                $temuan = new Temuan;
-    //                $temuan->Id_List_Report = $data['Id_List_Report'];
-    //                $temuan->Id_User = $current_user->Id_User;
-    //                $temuan->Object_Temuan = $jsonData->toJson();
-    //
-    //                $temuan->save();
-    //
-    //                if ($request->hasFile('photo_pdf')) {
-    //                    $photo_pdf = $request->file('photo_pdf');
-    //
-    //                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->Id_Member;
-    //                    $directory = public_path($relativePath);
-    //
-    //                    if (! file_exists($directory)) {
-    //                        if (! mkdir($directory, 0755, true) && ! is_dir($directory)) {
-    //                            throw new \RuntimeException('Failed to create directory: '.$directory);
-    //                        }
-    //                    }
-    //
-    //                    $extension = $photo_pdf->getClientOriginalExtension();
-    //                    $fileName = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.'.$extension;
-    //
-    //                    if (! $photo_pdf->move($directory, $fileName)) {
-    //                        throw new \RuntimeException('Failed to move uploaded file');
-    //                    }
-    //
-    //                    $jsonData->Photo_PDF_Temuan = $fileName;
-    //                    $jsonData->File_Path_Temuan = $relativePath.'/'.$fileName;
-    //
-    //                    $temuan->Object_Temuan = $jsonData;
-    //
-    //                    $temuan->save();
-    //                }
-    //
-    //                return response()->json([
-    //                    'success' => true,
-    //                    'message' => 'Temuan berhasil ditambahkan',
-    //                    'data' => [
-    //                        'Id_Temuan' => $temuan->Id_Temuan,
-    //                        'file_path' => $jsonData->File_Path_Temuan ?? null,
-    //                    ],
-    //                ]);
-    //            });
-    //        } catch (\Exception $e) {
-    //            Log::error('Failed to create temuan', [
-    //                'error' => $e->getMessage(),
-    //                'trace' => $e->getTraceAsString(),
-    //            ]);
-    //
-    //            return response()->json([
-    //                'success' => false,
-    //                'message' => 'Gagal menambahkan temuan: '.$e->getMessage(),
-    //            ], 500);
-    //        }
-    //    }
-
     public function submit_temuan(Request $request)
     {
         $data = $request->validate([
-            'Id_List_Report' => 'required|int',
+            'Id_List_Report' => 'nullable|int|required_without:Id_List_Training',
+            'Id_List_Training' => 'nullable|int|required_without:Id_List_Report',
             'pdf' => 'required|file',
             'timestamp' => 'required|string',
             'comments' => 'nullable|string',
         ]);
 
-        $listReport = List_Report::with('report')->findOrFail($data['Id_List_Report']);
-        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
+        $isTraining = !empty($data['Id_List_Training']);
+        if ($isTraining) {
+            $listModel = List_Training::with('training.member')->findOrFail($data['Id_List_Training']);
+            $id_member = $listModel->training->member->Id_Member;
+            $timeReport = Carbon::parse($listModel->training->Start_Training)->format('Y-m-d');
+            $folderSource = 'trainings';
+        } else {
+            $listModel = List_Report::with('report.member')->findOrFail($data['Id_List_Report']);
+            $id_member = $listModel->report->member->Id_Member;
+            $timeReport = Carbon::parse($listModel->report->Start_Report)->format('Y-m-d');
+            $folderSource = 'reports';
+        }
+
         $current_user = User::where('Id_User', session('Id_User'))->firstOrFail();
 
         try {
-            return DB::transaction(function () use ($request, $data, $listReport, $timeReport, $current_user) {
+            return DB::transaction(function () use ($request, $data, $listModel, $timeReport, $id_member, $folderSource, $isTraining, $current_user) {
                 $jsonData = new JsonHelper;
                 $jsonData->Name_User_Temuan = $current_user->Name_User;
                 $jsonData->File_Path_Temuan = '';
@@ -154,7 +56,11 @@ class TemuanAuditorController extends Controller
                 $jsonData->Validation_Time = '';
 
                 $temuan = new Temuan;
-                $temuan->Id_List_Report = $data['Id_List_Report'];
+                if ($isTraining) {
+                    $temuan->Id_List_Training = $data['Id_List_Training'];
+                } else {
+                    $temuan->Id_List_Report = $data['Id_List_Report'];
+                }
                 $temuan->Id_User = $current_user->Id_User;
                 $temuan->Object_Temuan = $jsonData->toJson();
 
@@ -163,10 +69,10 @@ class TemuanAuditorController extends Controller
                 if ($request->hasFile('pdf')) {
                     $pdf = $request->file('pdf');
 
-                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$listReport->report->member->Id_Member;
+                    $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$id_member;
                     $directory = public_path($relativePath);
-                    $path = 'storage/reports/'.$timeReport.'_'.$listReport->report->member->Id_Member;
-                    $filename_report = $listReport->Name_Procedure.'.pdf';
+                    $path = 'storage/'.$folderSource.'/'.$timeReport.'_'.$id_member;
+                    $filename_report = $listModel->Name_Procedure.'.pdf';
 
                     $fullPath = public_path($path);
                     if (! file_exists($fullPath)) {
@@ -178,7 +84,7 @@ class TemuanAuditorController extends Controller
                         }
                     }
 
-                    $filename = 'TM_'.$temuan->Id_Temuan.' _ '.$listReport->Name_Procedure.'.pdf';
+                    $filename = 'TM_'.$temuan->Id_Temuan.' _ '.$listModel->Name_Procedure.'.pdf';
 
                     if (! $pdf->move($directory, $filename) || ! copy($directory.'/'.$filename, $fullPath.'/'.$filename_report)) {
                         throw new \RuntimeException('Failed to move PDF file');
@@ -191,9 +97,9 @@ class TemuanAuditorController extends Controller
                     $temuan->Object_Temuan = $jsonData;
                     $temuan->Time_Temuan = $data['timestamp'];
                     $temuan->save();
-                    $listReport->Time_Approved_Auditor = $request->input('timestamp');
-                    $listReport->Auditor_Name = session('Username_User');
-                    $listReport->save();
+                    $listModel->Time_Approved_Auditor = $request->input('timestamp');
+                    $listModel->Auditor_Name = session('Username_User');
+                    $listModel->save();
 
                     return response()->json([
                         'success' => true,
@@ -242,7 +148,7 @@ class TemuanAuditorController extends Controller
 
         [$year, $monthNum] = explode('-', $month);
 
-        $query = Temuan::with(['ListReport.report', 'User'])
+        $query = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
@@ -340,11 +246,21 @@ class TemuanAuditorController extends Controller
     public function show(string $Id_Temuan)
     {
         $page = 'temuan';
-        $temuan = Temuan::with(['ListReport.report', 'User'])->where('Id_Temuan', $Id_Temuan)->firstOrFail();
-        $id_member = $temuan->ListReport->report->member->Id_Member;
-        $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
-        $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
-        $fileName = $temuan->ListReport->Name_Procedure.'.pdf';
+        $temuan = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])->where('Id_Temuan', $Id_Temuan)->firstOrFail();
+        
+        $sourceItem = $temuan->source_item;
+        $member = $temuan->member;
+        $id_member = $member ? $member->Id_Member : '';
+        
+        if ($temuan->Id_List_Training && $temuan->ListTraining) {
+            $timeReport = Carbon::parse($temuan->ListTraining->training->Start_Training)->format('Y-m-d');
+            $fullPath = 'storage/trainings/'.$timeReport.'_'.$id_member;
+        } else {
+            $timeReport = Carbon::parse($temuan->ListReport->report->Start_Report)->format('Y-m-d');
+            $fullPath = 'storage/reports/'.$timeReport.'_'.$id_member;
+        }
+        
+        $fileName = ($sourceItem ? $sourceItem->Name_Procedure : '').'.pdf';
         $pdfPath = $fullPath.'/'.$fileName;
 
         // Get sibling temuan IDs for prev/next navigation
@@ -538,7 +454,7 @@ class TemuanAuditorController extends Controller
         $Id_User = session('Id_User');
         [$year, $monthNum] = explode('-', $month);
 
-        $temuans = Temuan::with(['ListReport.report', 'User'])
+        $temuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
@@ -680,7 +596,7 @@ class TemuanAuditorController extends Controller
         [$year, $monthNum] = explode('-', $month);
 
         // Belum dikategorikan (> 1 hari)
-        $uncategorizedTemuans = Temuan::with(['ListReport.report', 'User'])
+        $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->where(function ($query) {
@@ -694,7 +610,7 @@ class TemuanAuditorController extends Controller
             ->get();
 
         // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan" dan belum dikategorikan)
-        $noPenangananTemuans = Temuan::with(['ListReport.report', 'User'])
+        $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
@@ -708,7 +624,7 @@ class TemuanAuditorController extends Controller
             ->get();
 
         // Belum di validasi (sudah ada penanganan tapi belum tervalidasi)
-        $noValidasiTemuans = Temuan::with(['ListReport.report', 'User'])
+        $noValidasiTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNotNull('Time_Penanganan')

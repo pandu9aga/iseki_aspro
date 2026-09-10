@@ -51,6 +51,13 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->display_name }}</span>
                     </h4>
+
+                    @if($listReport->Temuans && count($listReport->Temuans) > 0)
+                        <button class="btn btn-warning mt-3" style="white-space:nowrap;"
+                            onclick="window.location.href = '{{ route('auditor-report.temuan_show', ['Id_Temuan' => $listReport->Temuans[0]->Id_Temuan]) }}'">
+                            Lihat Temuan
+                        </button>
+                    @endif
                 </div>
                 <br>
 
@@ -148,7 +155,8 @@
                     </div>
                     <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
                     <br>
-                    <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Report</button>
+                    <button onclick="submitReport('submit')" class="btn btn-primary mt-3">Submit Report</button>
+                    <button onclick="submitReport('temuan')" class="btn btn-warning mt-3 ms-9">Submit Temuan</button>
                 @endif
             </div>
         </section>
@@ -723,6 +731,9 @@
         }
     </script>
     <script>
+        const FINAL_STATE = {
+            comments: []
+        };
 
         async function resizeImage(file, maxWidth, maxHeight) {
             return new Promise(resolve => {
@@ -749,7 +760,7 @@
         // ============================================
         // SUBMIT REPORT WITH ANNOTATIONS & PHOTOS
         // ============================================
-        async function submitReport() {
+        async function submitReport(type) {
             // Load existing PDF
             const existingPdf = await fetch(CONFIG.pdfUrl).then(r => r.arrayBuffer());
             const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
@@ -772,7 +783,13 @@
 
             // Save and submit
             const mergedBytes = await pdfDoc.save();
-            await uploadToServerReport(mergedBytes);
+            if (type === 'submit') {
+                console.log('submitReporting');
+                await uploadToServerReport(mergedBytes);
+            } else if (type === 'temuan') {
+                console.log('submitTemuan');
+                await uploadToServerTemuan(mergedBytes);
+            }
         }
 
         function addTimestampToFirstPage(page, font) {
@@ -862,6 +879,12 @@
             const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
 
             const rectBottomY = y - outerHeight;
+
+            FINAL_STATE.comments.push({
+                'text': text,
+                'position': { 'x': x, 'y': y },
+                'fontSize': fontSize
+            });
 
             // Draw background (Pink)
             page.drawRectangle({
@@ -982,6 +1005,31 @@
                 body: formData
             });
 
+            if (response.ok) {
+                alert('Report submitted successfully!');
+                location.reload();
+            } else {
+                alert('Failed to submit report');
+            }
+        }
+
+        async function uploadToServerTemuan(pdfBytes) {
+            const nowUTC = new Date();
+            const offsetWIB = 7 * 60;
+            const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
+            const timestamp = localWIB.toISOString().slice(0, 19).replace('T', ' ');
+
+            const formData = new FormData();
+            formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
+            formData.append('comments', JSON.stringify(FINAL_STATE.comments));
+            formData.append('Id_List_Training', '{{ $listReport->Id_List_Training }}');
+            formData.append('timestamp', timestamp);
+
+            const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: formData
+            });
             if (response.ok) {
                 alert('Report submitted successfully!');
                 location.reload();

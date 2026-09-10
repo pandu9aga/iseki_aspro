@@ -19,13 +19,15 @@
             @forelse ($temuans as $index => $temuan)
                 @php
                     $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
+                    $source = $temuan->source_item;
+                    $member = $temuan->member;
                 @endphp
                 <tr class="row-data">
                     <td class="align-middle text-center ps-2">
                         <span class="text-secondary text-xxs font-weight-bold">{{ count($temuans) - $index }}</span>
                     </td>
                     <td class="align-middle text-center">
-                        @if($temuan->ListReport)
+                        @if($source)
                             <a href="{{ route('auditor-report.temuan_show', ['Id_Temuan' => $temuan->Id_Temuan]) }}"
                                 class="text-info me-1" title="Lihat Detail">
                                 <i class="material-symbols-rounded text-sm">visibility</i>
@@ -43,16 +45,16 @@
                     </td>
                     <td class="align-middle text-center">
                         <div class="d-flex flex-column align-items-center">
-                            <span class="text-xxs font-weight-bold">{{ $temuan->ListReport ? $temuan->ListReport->Name_Tractor : '-' }}</span>
-                            <span class="text-xxs text-secondary">{{ $temuan->ListReport ? $temuan->ListReport->Name_Area : '' }}</span>
+                            <span class="text-xxs font-weight-bold">{{ $source ? $source->Name_Tractor : '-' }}</span>
+                            <span class="text-xxs text-secondary">{{ $source ? $source->Name_Area : '' }}</span>
                         </div>
                     </td>
                     <td class="align-middle text-center">
-                        <span class="text-sm">{{ $temuan->ListReport->display_name ?? '-' }}</span>
+                        <span class="text-sm">{{ $source->display_name ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-left ps-3">
-                        <span class="text-xs" title="{{ $temuan->ListReport->Item_Procedure ?? '-' }}">
-                            {{ Str::limit($temuan->ListReport->Item_Procedure ?? '-', 20) }}
+                        <span class="text-xs" title="{{ $source->Item_Procedure ?? '-' }}">
+                            {{ Str::limit($source->Item_Procedure ?? '-', 20) }}
                         </span>
                     </td>
                     <td class="align-middle text-center">
@@ -89,7 +91,7 @@
                         @endif
                     </td>
                     <td class="align-middle text-center">
-                        <span class="text-xxs">{{ $temuan->ListReport->report->member->Name_Member ?? '-' }}</span>
+                        <span class="text-xxs">{{ $member->Name_Member ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
                         <span class="text-xxs text-secondary font-weight-bold">{{ $temuan->User->Name_User ?? '-' }}</span>

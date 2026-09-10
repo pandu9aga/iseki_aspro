@@ -31,6 +31,11 @@ class List_Training extends Model
         return $this->belongsTo(Training::class, 'Id_Training', 'Id_Training');
     }
 
+    public function Temuans()
+    {
+        return $this->hasMany(Temuan::class, 'Id_List_Training', 'Id_List_Training');
+    }
+
     public function getDisplayNameAttribute()
     {
         return preg_replace('/ - Retrain \d+$/', '', $this->Name_Procedure);

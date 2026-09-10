@@ -71,7 +71,7 @@
                         <div class="d-flex align-items-center">
                             <i class="material-symbols-rounded text-2xl text-primary me-2">report_problem</i>
                             <h4 class="mb-0">Penanganan Temuan: <span
-                                    class="text-primary">{{ $temuan->ListReport->display_name }}</span></h4>
+                                    class="text-primary">{{ $listReport->display_name ?? '-' }}</span></h4>
                         </div>
                     </div>
                 </div>
@@ -160,7 +160,7 @@
                 <!-- Temuan Section -->
                 @php
                     $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
-                    $listReport = $temuan->ListReport;
+                    $listReport = $temuan->source_item;
                     $comments = $object->get('Comments_Temuan', []);
                     $comments_penanganan = $object->get('Comments_Penanganan', []);
                 @endphp
@@ -212,7 +212,7 @@
                     </div>
                     <div class="card-body">
                         <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
-                            download="Temuan_{{ $temuan->ListReport->display_name }}_{{ $temuan->Id_Temuan }}.pdf"
+                            download="Temuan_{{ $listReport->display_name ?? 'Procedure' }}_{{ $temuan->Id_Temuan }}.pdf"
                             class="btn btn-success mb-3">
                             <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                         </a>
