@@ -30,12 +30,12 @@ class TemuanAuditorController extends Controller
 
         $isTraining = !empty($data['Id_List_Training']);
         if ($isTraining) {
-            $listModel = List_Training::with('training.member')->findOrFail($data['Id_List_Training']);
+            $listModel = List_Training::with('training')->findOrFail($data['Id_List_Training']);
             $id_member = $listModel->training->member->Id_Member;
             $timeReport = Carbon::parse($listModel->training->Start_Training)->format('Y-m-d');
             $folderSource = 'trainings';
         } else {
-            $listModel = List_Report::with('report.member')->findOrFail($data['Id_List_Report']);
+            $listModel = List_Report::with('report')->findOrFail($data['Id_List_Report']);
             $id_member = $listModel->report->member->Id_Member;
             $timeReport = Carbon::parse($listModel->report->Start_Report)->format('Y-m-d');
             $folderSource = 'reports';
@@ -148,7 +148,7 @@ class TemuanAuditorController extends Controller
 
         [$year, $monthNum] = explode('-', $month);
 
-        $query = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
+        $query = Temuan::with(['ListReport.report', 'ListTraining.training', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
@@ -246,7 +246,7 @@ class TemuanAuditorController extends Controller
     public function show(string $Id_Temuan)
     {
         $page = 'temuan';
-        $temuan = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])->where('Id_Temuan', $Id_Temuan)->firstOrFail();
+        $temuan = Temuan::with(['ListReport.report', 'ListTraining.training', 'User'])->where('Id_Temuan', $Id_Temuan)->firstOrFail();
         
         $sourceItem = $temuan->source_item;
         $member = $temuan->member;
@@ -454,7 +454,7 @@ class TemuanAuditorController extends Controller
         $Id_User = session('Id_User');
         [$year, $monthNum] = explode('-', $month);
 
-        $temuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
+        $temuans = Temuan::with(['ListReport.report', 'ListTraining.training', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereYear('Time_Temuan', $year)
@@ -596,7 +596,7 @@ class TemuanAuditorController extends Controller
         [$year, $monthNum] = explode('-', $month);
 
         // Belum dikategorikan (> 1 hari)
-        $uncategorizedTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
+        $uncategorizedTemuans = Temuan::with(['ListReport.report', 'ListTraining.training', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->where(function ($query) {
@@ -610,7 +610,7 @@ class TemuanAuditorController extends Controller
             ->get();
 
         // Belum ada penanganan (> 1 hari, kecuali "Tidak perlu penanganan" dan belum dikategorikan)
-        $noPenangananTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
+        $noPenangananTemuans = Temuan::with(['ListReport.report', 'ListTraining.training', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNull('Time_Penanganan')
@@ -624,7 +624,7 @@ class TemuanAuditorController extends Controller
             ->get();
 
         // Belum di validasi (sudah ada penanganan tapi belum tervalidasi)
-        $noValidasiTemuans = Temuan::with(['ListReport.report.member', 'ListTraining.training.member', 'User'])
+        $noValidasiTemuans = Temuan::with(['ListReport.report', 'ListTraining.training', 'User'])
             ->where('Id_User', $Id_User)
             ->whereNotNull('Time_Temuan')
             ->whereNotNull('Time_Penanganan')
