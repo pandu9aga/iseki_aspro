@@ -29,29 +29,38 @@
                         <table class="table table-flush">
                             <thead class="thead-light">
                                 <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Jobdesc
-                                        Date</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Member
-                                    </th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor
-                                    </th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                        Procedure</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Audit
-                                        Time</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action
-                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Type</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Date</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Member</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tractor</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Procedure</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Audit Time</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($audits as $audit)
                                     <tr>
                                         <td>
-                                            <p class="text-sm font-weight-normal mb-0">{{ $audit->report->Start_Report }}</p>
+                                            @if(($audit->audit_type ?? 'Jobdesc') === 'Training')
+                                                <span class="badge badge-sm bg-gradient-warning">Training</span>
+                                            @else
+                                                <span class="badge badge-sm bg-gradient-primary">Jobdesc</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <p class="text-sm font-weight-normal mb-0">
-                                                {{ $audit->report->member->Name_Member ?? 'Unknown' }}</p>
+                                                {{ ($audit->audit_type ?? 'Jobdesc') === 'Training' ? ($audit->training->Start_Training ?? '-') : ($audit->report->Start_Report ?? '-') }}
+                                            </p>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm font-weight-normal mb-0">
+                                                @if(($audit->audit_type ?? 'Jobdesc') === 'Training')
+                                                    {{ $audit->training->member->Name_Member ?? 'Unknown' }}
+                                                @else
+                                                    {{ $audit->report->member->Name_Member ?? 'Unknown' }}
+                                                @endif
+                                            </p>
                                         </td>
                                         <td>
                                             <p class="text-sm font-weight-normal mb-0">{{ $audit->Name_Tractor }}</p>
@@ -64,16 +73,23 @@
                                             <p class="text-sm font-weight-normal mb-0">{{ $audit->Time_Approved_Auditor }}</p>
                                         </td>
                                         <td>
-                                            <a href="{{ route('report.detail', ['Id_List_Report' => $audit->Id_List_Report, 'context' => 'audit', 'date' => $date, 'auditorName' => $auditorName]) }}"
-                                                class="btn btn-link text-primary p-0" data-bs-toggle="tooltip" title="View PDF">
-                                                <i class="material-symbols-rounded text-lg">picture_as_pdf</i>
-                                            </a>
+                                            @if(($audit->audit_type ?? 'Jobdesc') === 'Training')
+                                                <a href="{{ route('training.detail', ['Id_List_Training' => $audit->Id_List_Training, 'context' => 'audit', 'date' => $date, 'auditorName' => $auditorName]) }}"
+                                                    class="btn btn-link text-primary p-0" data-bs-toggle="tooltip" title="View PDF">
+                                                    <i class="material-symbols-rounded text-lg">picture_as_pdf</i>
+                                                </a>
+                                            @else
+                                                <a href="{{ route('report.detail', ['Id_List_Report' => $audit->Id_List_Report, 'context' => 'audit', 'date' => $date, 'auditorName' => $auditorName]) }}"
+                                                    class="btn btn-link text-primary p-0" data-bs-toggle="tooltip" title="View PDF">
+                                                    <i class="material-symbols-rounded text-lg">picture_as_pdf</i>
+                                                </a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
                                 @if(count($audits) == 0)
                                     <tr>
-                                        <td colspan="6" class="text-center py-4">No audits found for this day.</td>
+                                        <td colspan="7" class="text-center py-4">No audits found for this day.</td>
                                     </tr>
                                 @endif
                             </tbody>

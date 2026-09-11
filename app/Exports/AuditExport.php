@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\List_Report;
+use App\Models\List_Training;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -29,18 +30,36 @@ class AuditExport implements FromCollection, ShouldAutoSize, WithEvents, WithHea
 
     public function collection()
     {
-        return List_Report::with('report')
+        $reports = List_Report::with('report')
             ->whereYear('Time_Approved_Auditor', $this->year)
             ->whereMonth('Time_Approved_Auditor', $this->month)
-            ->orderBy('Auditor_Name', 'asc')
-            ->orderBy('Time_Approved_Auditor', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->audit_type = 'Jobdesc';
+                return $item;
+            });
+
+        $trainings = List_Training::with('training')
+            ->whereYear('Time_Approved_Auditor', $this->year)
+            ->whereMonth('Time_Approved_Auditor', $this->month)
+            ->get()
+            ->map(function ($item) {
+                $item->audit_type = 'Training';
+                return $item;
+            });
+
+        return $reports->concat($trainings)
+            ->sortBy(function ($item) {
+                return ($item->Auditor_Name ?? 'Unknown Auditor').'_'.$item->Time_Approved_Auditor;
+            })
+            ->values();
     }
 
     public function headings(): array
     {
         return [
             'No',
+            'Type',
             'Auditor',
             'Audit Date',
             'Audit Time',
@@ -49,15 +68,20 @@ class AuditExport implements FromCollection, ShouldAutoSize, WithEvents, WithHea
         ];
     }
 
-    public function map($listReport): array
+    public function map($item): array
     {
+        $member = ($item->audit_type ?? 'Jobdesc') === 'Training'
+            ? ($item->training->member->Name_Member ?? 'Unknown')
+            : ($item->report->member->Name_Member ?? 'Unknown');
+
         return [
             ++$this->rowNumber,
-            $listReport->Auditor_Name ?? 'Unknown Auditor',
-            $listReport->Time_Approved_Auditor ? Carbon::parse($listReport->Time_Approved_Auditor)->format('Y-m-d') : '-',
-            $listReport->Time_Approved_Auditor ? Carbon::parse($listReport->Time_Approved_Auditor)->format('H:i:s') : '-',
-            $listReport->Name_Procedure,
-            $listReport->report->member->Name_Member ?? 'Unknown',
+            $item->audit_type ?? 'Jobdesc',
+            $item->Auditor_Name ?? 'Unknown Auditor',
+            $item->Time_Approved_Auditor ? Carbon::parse($item->Time_Approved_Auditor)->format('Y-m-d') : '-',
+            $item->Time_Approved_Auditor ? Carbon::parse($item->Time_Approved_Auditor)->format('H:i:s') : '-',
+            $item->Name_Procedure,
+            $member,
         ];
     }
 
@@ -72,7 +96,7 @@ class AuditExport implements FromCollection, ShouldAutoSize, WithEvents, WithHea
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $lastColumn = 'F';
+                $lastColumn = 'G';
                 $lastRow = $event->sheet->getHighestRow();
                 $cellRange = 'A1:'.$lastColumn.$lastRow;
 
