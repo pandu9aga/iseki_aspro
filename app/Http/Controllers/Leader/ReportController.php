@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Leader;
 
 use App\Http\Controllers\Controller;
-use App\Models\List_Report;
 use App\Helpers\MemberHelper;
+use App\Models\Employee;
+use App\Models\List_Report;
+use App\Models\Member;
 use App\Models\Procedure;
 use App\Models\Report;
 use App\Models\Tractor;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request; // Pastikan model ini diimpor
-use Illuminate\Support\Facades\Storage; // Pastikan model ini diimpor
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
 {
@@ -35,7 +37,14 @@ class ReportController extends Controller
         $reportDate = Carbon::createFromDate($year, $month, 1)->format('Y-m-d');
         $members = MemberHelper::getAllMembers($reportDate);
 
-        return view('leaders.reports.reporter', compact('page', 'reports', 'members', 'year', 'month'));
+        // Hanya akun milik Saiful yang dapat melihat & menggunakan fitur re-upload master PDF
+        $loginUser = User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && (
+            strtolower($loginUser->Username_User ?? '') === 'saiful' ||
+            strtolower($loginUser->Name_User ?? '') === 'saiful'
+        );
+
+        return view('leaders.reports.reporter', compact('page', 'reports', 'members', 'year', 'month', 'isSaiful'));
     }
 
     public function create_reporter(Request $request)
@@ -344,9 +353,21 @@ class ReportController extends Controller
             if (session('Id_Type_User') == 2) {
                 $listReport->Time_Approved_Leader = $request->input('timestamp');
                 $listReport->Leader_Name = session('Username_User');
+                $role = 'leader';
             } elseif (session('Id_Type_User') == 1) {
                 $listReport->Time_Approved_Auditor = $request->input('timestamp');
                 $listReport->Auditor_Name = session('Username_User');
+                $role = 'auditor';
+            } else {
+                $role = 'leader';
+            }
+
+            if ($request->filled('qr_codes')) {
+                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                    $listReport->Qr_Codes,
+                    $role,
+                    $request->input('qr_codes')
+                );
             }
             $listReport->save();
 
@@ -599,9 +620,16 @@ class ReportController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
-            // Update waktu
+            // Update waktu & Qr_Codes
             $listReport->Time_Approved_Leader = $request->input('timestamp');
             $listReport->Leader_Name = session('Username_User');
+            if ($request->filled('qr_codes')) {
+                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                    $listReport->Qr_Codes,
+                    'leader',
+                    $request->input('qr_codes')
+                );
+            }
             $listReport->save();
 
             return response()->json(['success' => true]);
@@ -610,81 +638,129 @@ class ReportController extends Controller
         return response()->json(['success' => false], 400);
     }
 
-    public function createMonthlyTemplate()
+    public function createMonthlyTemplate(Request $request)
     {
-        $firstDayThisMonth = now()->startOfMonth();
-        $firstDayLastMonth = $firstDayThisMonth->copy()->subMonth()->startOfMonth();
-        $lastDayLastMonth = $firstDayThisMonth->copy()->subDay();
+        // Validasi input jika dikirim dari modal
+        $validated = $request->validate([
+            'source_year' => 'nullable|integer|min:2020|max:2099',
+            'source_month' => 'nullable|integer|min:1|max:12',
+            'target_year' => 'nullable|integer|min:2020|max:2099',
+            'target_month' => 'nullable|integer|min:1|max:12',
+        ]);
 
-        // Ambil ID Member yang memiliki laporan di bulan lalu
-        $memberIds = Report::whereBetween('Start_Report', [$firstDayLastMonth, $lastDayLastMonth])
+        if ($request->filled('source_year') && $request->filled('source_month') && $request->filled('target_year') && $request->filled('target_month')) {
+            $sourceStart = Carbon::createFromDate($request->source_year, $request->source_month, 1)->startOfMonth();
+            $sourceEnd = $sourceStart->copy()->endOfMonth();
+
+            $targetStart = Carbon::createFromDate($request->target_year, $request->target_month, 1)->startOfMonth();
+        } else {
+            // Default fallback jika dipanggil tanpa parameter (bulan lalu -> bulan ini)
+            $targetStart = now()->startOfMonth();
+            $sourceStart = $targetStart->copy()->subMonth()->startOfMonth();
+            $sourceEnd = $sourceStart->copy()->endOfMonth();
+        }
+
+        // Hindari timeout script
+        set_time_limit(0);
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '512M');
+
+        // Ambil ID Member yang memiliki laporan di bulan sumber
+        $memberIds = Report::whereBetween('Start_Report', [$sourceStart->format('Y-m-d 00:00:00'), $sourceEnd->format('Y-m-d 23:59:59')])
             ->distinct()
             ->pluck('Id_Member');
 
         if ($memberIds->isEmpty()) {
-            return redirect()->back()->with('warning', 'Tidak ada data di bulan lalu untuk dijadikan template.');
+            return redirect()->back()->with('warning', "Tidak ada data jobdesc di bulan {$sourceStart->format('F Y')} untuk dijadikan template.");
         }
 
         $createdCount = 0;
+        $skippedCount = 0;
+
+        $publicStoragePath = storage_path('app/public');
+
+        $sourceUseRifa = MemberHelper::useRifa($sourceStart);
+        $targetUseRifa = MemberHelper::useRifa($targetStart);
 
         foreach ($memberIds as $idMember) {
-            // Pastikan report untuk tanggal 1 bulan ini belum ada
-            if (Report::where('Id_Member', $idMember)
-                ->whereDate('Start_Report', $firstDayThisMonth)
+            // Tentukan targetIdMember:
+            // Jika pindah era (dari sebelum Agustus 2026 ke Agustus 2026 ke atas),
+            // konversikan Id_Member lokal ke id employee RIFA berdasarkan NIK.
+            $targetIdMember = $idMember;
+            if (! $sourceUseRifa && $targetUseRifa) {
+                $sourceMember = Member::find($idMember);
+                if ($sourceMember) {
+                    $employee = Employee::where('nik', $sourceMember->NIK_Member)->first();
+                    if ($employee) {
+                        $targetIdMember = $employee->id;
+                    }
+                }
+            } elseif ($sourceUseRifa && ! $targetUseRifa) {
+                // Jika dari era RIFA ke era lama, cari ID lokal berdasarkan NIK
+                $employee = Employee::find($idMember);
+                if ($employee) {
+                    $localMember = Member::where('NIK_Member', $employee->nik)->first();
+                    if ($localMember) {
+                        $targetIdMember = $localMember->Id_Member;
+                    }
+                }
+            }
+
+            // Cek apakah report untuk target member di tanggal 1 bulan target sudah ada
+            if (Report::where('Id_Member', $targetIdMember)
+                ->whereDate('Start_Report', $targetStart->format('Y-m-d'))
                 ->exists()
             ) {
+                $skippedCount++;
                 continue;
             }
 
-            // Ambil data report bulan lalu untuk referensi nama member, dll.
-            $lastReport = Report::where('Id_Member', $idMember)
-                ->whereBetween('Start_Report', [$firstDayLastMonth, $lastDayLastMonth])
+            // Ambil data report bulan sumber
+            $sourceReport = Report::where('Id_Member', $idMember)
+                ->whereBetween('Start_Report', [$sourceStart->format('Y-m-d 00:00:00'), $sourceEnd->format('Y-m-d 23:59:59')])
                 ->orderBy('Start_Report', 'desc')
                 ->first();
 
-            if (! $lastReport) {
+            if (! $sourceReport) {
                 continue;
             }
 
-            // Buat folder baru untuk bulan ini
-            $newFolder = $firstDayThisMonth->format('Y-m-d') . '_' . $idMember;
-            $newPath = 'reports/' . $newFolder;
-            if (! Storage::disk('public')->exists($newPath)) {
-                Storage::disk('public')->makeDirectory($newPath);
+            // Buat folder baru untuk bulan target
+            $newFolder = $targetStart->format('Y-m-d') . '_' . $targetIdMember;
+            $newFullPath = $publicStoragePath . DIRECTORY_SEPARATOR . 'reports' . DIRECTORY_SEPARATOR . $newFolder;
+            if (! is_dir($newFullPath)) {
+                @mkdir($newFullPath, 0755, true);
             }
 
-            // Buat entri Report baru
+            // Buat entri Report baru di bulan target dengan targetIdMember yang sudah sesuai era
             $newReport = Report::create([
-                'Id_Member' => $idMember,
-                'Start_Report' => $firstDayThisMonth->format('Y-m-d'),
+                'Id_Member' => $targetIdMember,
+                'Start_Report' => $targetStart->format('Y-m-d 00:00:00'),
+                'Name_Report' => $sourceReport->Name_Report ?? '',
             ]);
 
-            // 🔥 GANTI: Ambil semua prosedur yang TERSIMPAN di List_Report bulan lalu
-            // agar kita tahu prosedur apa saja yang pernah ditambahkan ke report tersebut.
-            // Kita tidak mengambil dari tabel Procedure secara keseluruhan karena bisa jadi
-            // prosedur yang tersedia di tabel Procedure tidak semuanya digunakan/ditambahkan
-            // ke report bulan lalu.
-            $oldListReports = List_Report::where('Id_Report', $lastReport->Id_Report)->get();
+            // Ambil semua prosedur yang tersimpan di List_Report sumber
+            $oldListReports = List_Report::where('Id_Report', $sourceReport->Id_Report)->get();
 
             if ($oldListReports->isNotEmpty()) {
                 $insertData = [];
-                foreach ($oldListReports as $item) {
-                    // 🔥 GANTI: Ambil file dari folder master prosedur
-                    // Format path: procedures/{Name_Tractor}/{Name_Area}/{Name_Procedure}.pdf
-                    $masterSourcePdf = "procedures/{$item->Name_Tractor}/{$item->Name_Area}/{$item->Name_Procedure}.pdf";
-                    $newTargetPdf = "{$newPath}/{$item->Name_Procedure}.pdf";
+                $sourceReportDate = Carbon::parse($sourceReport->Start_Report)->format('Y-m-d');
+                $sourceFallbackDir = $publicStoragePath . DIRECTORY_SEPARATOR . 'reports' . DIRECTORY_SEPARATOR . $sourceReportDate . '_' . $idMember;
 
-                    // Cek apakah file master ada
-                    if (Storage::disk('public')->exists($masterSourcePdf)) {
-                        // Salin dari master ke folder report baru
-                        Storage::disk('public')->copy($masterSourcePdf, $newTargetPdf);
-                        // \Log::info("Copying from master: {$masterSourcePdf} to {$newTargetPdf}");
-                    } else {
-                        // Jika file master tidak ditemukan, log atau lewati
-                        // \Log::warning("Master file not found: {$masterSourcePdf}");
+                foreach ($oldListReports as $item) {
+                    $pdfFileName = $item->Name_Procedure . '.pdf';
+                    $masterSourcePdfPath = $publicStoragePath . DIRECTORY_SEPARATOR . 'procedures' . DIRECTORY_SEPARATOR . $item->Name_Tractor . DIRECTORY_SEPARATOR . $item->Name_Area . DIRECTORY_SEPARATOR . $pdfFileName;
+                    $targetPdfPath = $newFullPath . DIRECTORY_SEPARATOR . $pdfFileName;
+
+                    // Salin master PDF bersih via operasi filesystem native (jauh lebih cepat dibanding Storage API)
+                    if (is_file($masterSourcePdfPath)) {
+                        @copy($masterSourcePdfPath, $targetPdfPath);
+                    } elseif (is_file($sourceFallbackDir . DIRECTORY_SEPARATOR . $pdfFileName)) {
+                        // Fallback jika di procedures/ belum ada
+                        @copy($sourceFallbackDir . DIRECTORY_SEPARATOR . $pdfFileName, $targetPdfPath);
                     }
 
-                    // Siapkan data untuk insert ke List_Report
+                    // Siapkan data untuk insert ke List_Report dalam kondisi KOSONGAN
                     $insertData[] = [
                         'Id_Report' => $newReport->Id_Report,
                         'Name_Procedure' => $item->Name_Procedure,
@@ -694,22 +770,32 @@ class ReportController extends Controller
                         'Time_List_Report' => null,
                         'Time_Approved_Leader' => null,
                         'Time_Approved_Auditor' => null,
-                        'Reporter_Name' => $item->Reporter_Name, // Bisa diupdate jika perlu
+                        'Reporter_Name' => $item->Reporter_Name,
                         'Leader_Name' => null,
                         'Auditor_Name' => null,
                     ];
                 }
-                // Masukkan semua data List_Report baru sekaligus
-                List_Report::insert($insertData);
+
+                // Masukkan data List_Report baru secara chunked agar hemat memory dan efisien
+                foreach (array_chunk($insertData, 500) as $chunk) {
+                    List_Report::insert($chunk);
+                }
             }
 
             $createdCount++;
         }
 
+        $sourceLabel = $sourceStart->format('F Y');
+        $targetLabel = $targetStart->format('F Y');
+
         if ($createdCount > 0) {
-            return redirect()->back()->with('success', "Berhasil buat template untuk {$createdCount} member di tanggal 1 bulan ini dari file master.");
+            $msg = "Berhasil menyalin template jobdesc untuk {$createdCount} member dari bulan {$sourceLabel} ke bulan {$targetLabel}. Status approval & tanda tangan telah dikosongkan.";
+            if ($skippedCount > 0) {
+                $msg .= " ({$skippedCount} member dilewati karena sudah ada data di bulan target).";
+            }
+            return redirect()->back()->with('success', $msg);
         } else {
-            return redirect()->back()->with('info', 'Template bulan ini sudah ada atau tidak ada laporan bulan lalu untuk diproses.');
+            return redirect()->back()->with('info', "Tidak ada data baru yang dibuat. Semua ({$skippedCount}) member sudah memiliki data di bulan {$targetLabel} atau tidak ada data di {$sourceLabel}.");
         }
     }
 
@@ -829,4 +915,206 @@ class ReportController extends Controller
 
         return redirect()->back()->with('success', 'Approval berhasil direset.');
     }
+
+    /**
+     * Upload / salin ulang file PDF dari master data procedure untuk sebuah report
+     * berdasarkan data master di DB (tabel procedures) selama item list_report belum ada approval sama sekali.
+     */
+    public function syncMasterPdf($Id_Report)
+    {
+        $loginUser = User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && (
+            strtolower($loginUser->Username_User ?? '') === 'saiful' ||
+            strtolower($loginUser->Name_User ?? '') === 'saiful'
+        );
+
+        if (! $isSaiful) {
+            return redirect()->back()->withErrors(['error' => 'Hanya akun Saiful yang diizinkan untuk mengupload ulang master PDF.']);
+        }
+
+        // Hindari timeout
+        set_time_limit(0);
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '512M');
+
+        $report = Report::findOrFail($Id_Report);
+        $publicStoragePath = config('filesystems.disks.public.root', public_path('storage'));
+        $appPublicStoragePath = storage_path('app/public');
+
+        $timeReport = Carbon::parse($report->Start_Report)->format('Y-m-d');
+        $targetDir = $publicStoragePath . DIRECTORY_SEPARATOR . 'reports' . DIRECTORY_SEPARATOR . $timeReport . '_' . $report->Id_Member;
+
+        if (! is_dir($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
+        // Ambil list report yang belum ada approval sama sekali (member, leader, auditor)
+        $unapprovedItems = List_Report::where('Id_Report', $report->Id_Report)
+            ->whereNull('Time_List_Report')
+            ->whereNull('Time_Approved_Leader')
+            ->whereNull('Time_Approved_Auditor')
+            ->get();
+
+        if ($unapprovedItems->isEmpty()) {
+            return redirect()->back()->with('warning', 'Tidak ada item unapproved yang dapat disinkronkan.');
+        }
+
+        $syncedCount = 0;
+        $dbMatchedCount = 0;
+
+        foreach ($unapprovedItems as $item) {
+            $baseProcName = $item->display_name;
+
+            // Cari data master procedure di database
+            $procedure = Procedure::where('Name_Tractor', $item->Name_Tractor)
+                ->where('Name_Area', $item->Name_Area)
+                ->where(function ($q) use ($item, $baseProcName) {
+                    $q->where('Name_Procedure', $item->Name_Procedure)
+                      ->orWhere('Name_Procedure', $baseProcName);
+                })
+                ->first();
+
+            if ($procedure) {
+                $dbMatchedCount++;
+
+                // Sinkronkan data prosedur jika ada pembaruan di master procedure
+                if (! empty($procedure->Item_Procedure) && $item->Item_Procedure !== $procedure->Item_Procedure) {
+                    $item->Item_Procedure = $procedure->Item_Procedure;
+                    $item->save();
+                }
+
+                $procFileName = $procedure->Name_Procedure . '.pdf';
+                $destPdfPath = $targetDir . DIRECTORY_SEPARATOR . $item->Name_Procedure . '.pdf';
+
+                // Cek kemungkinan lokasi file master PDF
+                $candidatePaths = [
+                    $publicStoragePath . DIRECTORY_SEPARATOR . 'procedures' . DIRECTORY_SEPARATOR . $item->Name_Tractor . DIRECTORY_SEPARATOR . $item->Name_Area . DIRECTORY_SEPARATOR . $procFileName,
+                    $appPublicStoragePath . DIRECTORY_SEPARATOR . 'procedures' . DIRECTORY_SEPARATOR . $item->Name_Tractor . DIRECTORY_SEPARATOR . $item->Name_Area . DIRECTORY_SEPARATOR . $procFileName,
+                ];
+
+                $copied = false;
+                foreach ($candidatePaths as $sourcePath) {
+                    if (is_file($sourcePath)) {
+                        if (@copy($sourcePath, $destPdfPath)) {
+                            $copied = true;
+                            $syncedCount++;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        $message = "Berhasil memproses {$dbMatchedCount} prosedur unapproved berdasarkan master data DB (dengan {$syncedCount} file PDF tersalin).";
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Upload / salin ulang file PDF dari master data procedure untuk seluruh report dalam satu bulan
+     * berdasarkan data master di DB (tabel procedures) selama item list_report belum ada approval sama sekali.
+     */
+    public function syncMonthMasterPdf($year, $month)
+    {
+        $loginUser = User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && (
+            strtolower($loginUser->Username_User ?? '') === 'saiful' ||
+            strtolower($loginUser->Name_User ?? '') === 'saiful'
+        );
+
+        if (! $isSaiful) {
+            return redirect()->back()->withErrors(['error' => 'Hanya akun Saiful yang diizinkan untuk mengupload ulang master PDF.']);
+        }
+
+        // Hindari timeout eksekusi
+        set_time_limit(0);
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '512M');
+
+        $reports = Report::whereYear('Start_Report', $year)
+            ->whereMonth('Start_Report', $month)
+            ->get();
+
+        if ($reports->isEmpty()) {
+            return redirect()->back()->with('warning', 'Tidak ada data report pada bulan ini.');
+        }
+
+        $publicStoragePath = config('filesystems.disks.public.root', public_path('storage'));
+        $appPublicStoragePath = storage_path('app/public');
+
+        $totalSynced = 0;
+        $totalDbMatched = 0;
+        $processedReports = 0;
+
+        foreach ($reports as $report) {
+            $timeReport = Carbon::parse($report->Start_Report)->format('Y-m-d');
+            $targetDir = $publicStoragePath . DIRECTORY_SEPARATOR . 'reports' . DIRECTORY_SEPARATOR . $timeReport . '_' . $report->Id_Member;
+
+            if (! is_dir($targetDir)) {
+                @mkdir($targetDir, 0755, true);
+            }
+
+            // Ambil hanya item yang belum diapprove sama sekali
+            $unapprovedItems = List_Report::where('Id_Report', $report->Id_Report)
+                ->whereNull('Time_List_Report')
+                ->whereNull('Time_Approved_Leader')
+                ->whereNull('Time_Approved_Auditor')
+                ->get();
+
+            if ($unapprovedItems->isEmpty()) {
+                continue;
+            }
+
+            $processedReports++;
+
+            foreach ($unapprovedItems as $item) {
+                $baseProcName = $item->display_name;
+
+                // Cari data master procedure di database
+                $procedure = Procedure::where('Name_Tractor', $item->Name_Tractor)
+                    ->where('Name_Area', $item->Name_Area)
+                    ->where(function ($q) use ($item, $baseProcName) {
+                        $q->where('Name_Procedure', $item->Name_Procedure)
+                          ->orWhere('Name_Procedure', $baseProcName);
+                    })
+                    ->first();
+
+                if ($procedure) {
+                    $totalDbMatched++;
+
+                    // Sinkronkan Item_Procedure jika di master DB ada perubahan
+                    if (! empty($procedure->Item_Procedure) && $item->Item_Procedure !== $procedure->Item_Procedure) {
+                        $item->Item_Procedure = $procedure->Item_Procedure;
+                        $item->save();
+                    }
+
+                    $procFileName = $procedure->Name_Procedure . '.pdf';
+                    $destPdfPath = $targetDir . DIRECTORY_SEPARATOR . $item->Name_Procedure . '.pdf';
+
+                    // Cek kemungkinan lokasi file master PDF
+                    $candidatePaths = [
+                        $publicStoragePath . DIRECTORY_SEPARATOR . 'procedures' . DIRECTORY_SEPARATOR . $item->Name_Tractor . DIRECTORY_SEPARATOR . $item->Name_Area . DIRECTORY_SEPARATOR . $procFileName,
+                        $appPublicStoragePath . DIRECTORY_SEPARATOR . 'procedures' . DIRECTORY_SEPARATOR . $item->Name_Tractor . DIRECTORY_SEPARATOR . $item->Name_Area . DIRECTORY_SEPARATOR . $procFileName,
+                    ];
+
+                    foreach ($candidatePaths as $sourcePath) {
+                        if (is_file($sourcePath)) {
+                            if (@copy($sourcePath, $destPdfPath)) {
+                                $totalSynced++;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($processedReports === 0) {
+            return redirect()->back()->with('warning', 'Semua item jobdesc di bulan ini sudah memiliki approval atau tidak memiliki data.');
+        }
+
+        $msg = "Berhasil memproses data master procedure pada {$processedReports} report member ({$totalDbMatched} prosedur unapproved terverifikasi di master data DB, {$totalSynced} file PDF disinkronkan).";
+
+        return redirect()->back()->with('success', $msg);
+    }
 }
+

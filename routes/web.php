@@ -132,6 +132,8 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::put('/reporter/{id}', [ReportController::class, 'update'])->name('reporter.update');
         Route::delete('/reporter/{id}', [ReportController::class, 'destroy'])->name('reporter.destroy');
         Route::post('/create-template', [ReportController::class, 'createMonthlyTemplate'])->name('report.create.template');
+        Route::post('/sync-master-pdf/{Id_Report}', [ReportController::class, 'syncMasterPdf'])->name('report.sync_master_pdf');
+        Route::post('/sync-master-pdf-month/{year}/{month}', [ReportController::class, 'syncMonthMasterPdf'])->name('report.sync_master_pdf_month');
     });
 
     // Training Management

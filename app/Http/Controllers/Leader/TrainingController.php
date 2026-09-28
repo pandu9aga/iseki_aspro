@@ -273,9 +273,16 @@ class TrainingController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
-            // Update waktu
+            // Update waktu & Qr_Codes
             $listReport->Time_Approved_Leader = $request->input('timestamp');
             $listReport->Leader_Name = session('Username_User');
+            if ($request->filled('qr_codes')) {
+                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                    $listReport->Qr_Codes,
+                    'leader',
+                    $request->input('qr_codes')
+                );
+            }
             $listReport->save();
 
             return response()->json(['success' => true]);

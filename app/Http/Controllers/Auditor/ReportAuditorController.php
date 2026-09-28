@@ -288,6 +288,13 @@ class ReportAuditorController extends Controller
 
             $listReport->Time_Approved_Auditor = $request->input('timestamp');
             $listReport->Auditor_Name = session('Username_User');
+            if ($request->filled('qr_codes')) {
+                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                    $listReport->Qr_Codes,
+                    'auditor',
+                    $request->input('qr_codes')
+                );
+            }
             $listReport->save();
 
             return response()->json(['success' => true]);
@@ -372,9 +379,16 @@ class ReportAuditorController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
-            // Update waktu and Auditor Name
+            // Update waktu and Auditor Name & Qr_Codes
             $listReport->Time_Approved_Auditor = $request->input('timestamp');
             $listReport->Auditor_Name = session('Username_User');
+            if ($request->filled('qr_codes')) {
+                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                    $listReport->Qr_Codes,
+                    'auditor',
+                    $request->input('qr_codes')
+                );
+            }
             $listReport->save();
 
             return response()->json(['success' => true]);

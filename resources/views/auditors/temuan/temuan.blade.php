@@ -248,6 +248,7 @@
             </div>
         </section>
     </div>
+    @include('components.qr-approval-modal')
 @endsection
 
 @section('style')
@@ -1247,7 +1248,14 @@
             async function submitReport() {
                 try {
                     const pdfBytes = await loadAndAnnotatePDF();
-                    await uploadToServer(pdfBytes);
+                    openQrApprovalScanner(async function(scannedQrs) {
+                        try {
+                            await uploadToServer(pdfBytes, scannedQrs);
+                        } catch (error) {
+                            console.error('Submit error:', error);
+                            alert('Failed to submit report: ' + error.message);
+                        }
+                    });
                 } catch (error) {
                     console.error('Submit error:', error);
                     alert('Failed to submit report: ' + error.message);
@@ -1266,13 +1274,16 @@
                 return await pdfDoc.save();
             }
 
-            async function uploadToServer(pdfBytes) {
+            async function uploadToServer(pdfBytes, scannedQrs) {
                 const formData = new FormData();
                 formData.append('Id_List_Report', '{{ $listReport->Id_List_Report }}');
                 formData.append('Id_Temuan', '{{ $ListTemuanNull['Id_Temuan'] }}');
                 formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
                 formData.append('timestamp', getWIBTimestamp());
                 formData.append('comments', JSON.stringify(FINAL_STATE.comments));
+                if (scannedQrs) {
+                    formData.append('qr_codes', JSON.stringify(scannedQrs));
+                }
 
                 const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
                     method: 'POST',

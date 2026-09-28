@@ -1,4 +1,4 @@
-﻿@extends('layouts.member')
+@extends('layouts.member')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg.jpg') }}')">
@@ -89,6 +89,7 @@
                     </div>
                     <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b>
                     </div>
+                    @include('components.qr-approval-display')
                     <br>
 
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
@@ -146,6 +147,9 @@
             </div>
         </section>
     </div>
+
+    @include('components.qr-approval-modal')
+
     <style>
         .selected {
             outline: 2px dashed red;
@@ -598,21 +602,27 @@
             }
 
             const pdfBytes = await pdfDoc.save();
-            const formData = new FormData();
-            formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
-            formData.append('timestamp', now);
 
-            fetch(`{{ route('report_list_member.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: formData
-            }).then(res => {
-                if (res.ok) {
-                    alert('Report submitted successfully!');
-                    location.reload();
-                } else {
-                    alert('Failed to submit report');
-                }
+            openQrApprovalScanner(function(scannedQrs) {
+                const formData = new FormData();
+                formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
+                formData.append('timestamp', now);
+                formData.append('qr_codes', JSON.stringify(scannedQrs));
+
+                fetch(`{{ route('report_list_member.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                }).then(res => {
+                    if (res.ok) {
+                        alert('Report submitted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Failed to submit report');
+                    }
+                }).catch(err => {
+                    alert('Error submitting report: ' + err.message);
+                });
             });
         }
 

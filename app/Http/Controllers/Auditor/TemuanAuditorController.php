@@ -99,6 +99,13 @@ class TemuanAuditorController extends Controller
                     $temuan->save();
                     $listModel->Time_Approved_Auditor = $request->input('timestamp');
                     $listModel->Auditor_Name = session('Username_User');
+                    if ($request->filled('qr_codes')) {
+                        $listModel->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                            $listModel->Qr_Codes,
+                            'auditor',
+                            $request->input('qr_codes')
+                        );
+                    }
                     $listModel->save();
 
                     return response()->json([

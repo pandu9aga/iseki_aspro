@@ -94,8 +94,15 @@ class ReportMemberController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
-            // Update waktu
+            // Update waktu & Qr_Codes
             $listReport->Time_List_Report = $request->input('timestamp');
+            if ($request->filled('qr_codes')) {
+                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                    $listReport->Qr_Codes,
+                    'member',
+                    $request->input('qr_codes')
+                );
+            }
             $listReport->save();
 
             return response()->json(['success' => true]);
@@ -186,8 +193,15 @@ class ReportMemberController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
-            // Update timestamp
+            // Update timestamp & Qr_Codes
             $listReport->Time_List_Report = $request->input('timestamp');
+            if ($request->filled('qr_codes')) {
+                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                    $listReport->Qr_Codes,
+                    'member',
+                    $request->input('qr_codes')
+                );
+            }
             $listReport->save();
 
             return response()->json(['success' => true]);

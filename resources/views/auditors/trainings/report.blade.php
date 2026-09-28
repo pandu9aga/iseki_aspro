@@ -98,6 +98,7 @@
                     </div>
                     <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b>
                     </div>
+                    @include('components.qr-approval-display', ['qrCodes' => $listReport->Qr_Codes])
                     <br>
                     <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
 
@@ -161,6 +162,7 @@
             </div>
         </section>
     </div>
+    @include('components.qr-approval-modal')
     <style>
         .selected {
             outline: 2px dashed red;
@@ -783,13 +785,16 @@
 
             // Save and submit
             const mergedBytes = await pdfDoc.save();
-            if (type === 'submit') {
-                console.log('submitReporting');
-                await uploadToServerReport(mergedBytes);
-            } else if (type === 'temuan') {
-                console.log('submitTemuan');
-                await uploadToServerTemuan(mergedBytes);
-            }
+
+            openQrApprovalScanner(async function(scannedQrs) {
+                if (type === 'submit') {
+                    console.log('submitReporting');
+                    await uploadToServerReport(mergedBytes, scannedQrs);
+                } else if (type === 'temuan') {
+                    console.log('submitTemuan');
+                    await uploadToServerTemuan(mergedBytes, scannedQrs);
+                }
+            });
         }
 
         function addTimestampToFirstPage(page, font) {
@@ -987,7 +992,7 @@
             return await pdfDoc.save();
         }
 
-        async function uploadToServerReport(pdfBytes) {
+        async function uploadToServerReport(pdfBytes, scannedQrs) {
             const nowUTC = new Date();
             const offsetWIB = 7 * 60;
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
@@ -996,6 +1001,9 @@
             const formData = new FormData();
             formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
             formData.append('timestamp', timestamp);
+            if (scannedQrs) {
+                formData.append('qr_codes', JSON.stringify(scannedQrs));
+            }
 
             const response = await fetch(`{{ route('training_auditor.detail.submit', ['Id_List_Training' => $listReport->Id_List_Training]) }}`, {
                 method: 'POST',
@@ -1013,7 +1021,7 @@
             }
         }
 
-        async function uploadToServerTemuan(pdfBytes) {
+        async function uploadToServerTemuan(pdfBytes, scannedQrs) {
             const nowUTC = new Date();
             const offsetWIB = 7 * 60;
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
@@ -1024,6 +1032,9 @@
             formData.append('comments', JSON.stringify(FINAL_STATE.comments));
             formData.append('Id_List_Training', '{{ $listReport->Id_List_Training }}');
             formData.append('timestamp', timestamp);
+            if (scannedQrs) {
+                formData.append('qr_codes', JSON.stringify(scannedQrs));
+            }
 
             const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
                 method: 'POST',

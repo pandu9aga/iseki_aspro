@@ -22,6 +22,7 @@ class ListReportReplacement extends Model
         'Reporter_Name',
         'Leader_Name',
         'Auditor_Name',
+        'Qr_Codes',
     ];
 
     public function reportReplacement()

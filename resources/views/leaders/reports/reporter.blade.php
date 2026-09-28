@@ -1,4 +1,4 @@
-﻿@extends('layouts.leader')
+@extends('layouts.leader')
 @section('content')
     <header class="header-2">
         <div class="page-header min-vh-35 relative" style="background-image: url('{{ asset('assets/img/bg10.jpg') }}')">
@@ -32,13 +32,48 @@
                     </div>
                 @endif
 
+                @if (session('success'))
+                    <div class="row">
+                        <div class="col-12 col-lg-8 mx-auto">
+                            <div class="alert alert-success text-white text-xs alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                @if (session('warning'))
+                    <div class="row">
+                        <div class="col-12 col-lg-8 mx-auto">
+                            <div class="alert alert-warning text-white text-xs alert-dismissible fade show" role="alert">
+                                {{ session('warning') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <h5 class="text-center text-secondary mb-4">List of Jobdesc Reports in : <span
                         class="text-primary">{{ $month }} - {{ $year }}</span></h5>
 
-                <!-- Tombol Add -->
-                <button class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#addReportModal">
-                    <span style="padding-left: 50px; padding-right: 50px;"><b>+</b> Add</span>
-                </button>
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <!-- Tombol Add -->
+                    <button class="btn btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#addReportModal">
+                        <span style="padding-left: 30px; padding-right: 30px;"><b>+</b> Add</span>
+                    </button>
+
+                    @if ($isSaiful)
+                        <!-- Tombol Upload/Sync Ulang PDF Master Bulanan (Khusus Akun Saiful) -->
+                        <form action="{{ route('report.sync_master_pdf_month', ['year' => $year, 'month' => $month]) }}" method="POST"
+                            onsubmit="return confirm('Upload / sinkronkan ulang seluruh file PDF dari master procedure untuk SEMUA report di bulan {{ $month }}-{{ $year }} yang BELUM ada approval? Prosedur yang sudah diapprove TIDAK akan terpengaruh.');">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-info mb-0" title="Upload ulang PDF master untuk semua jobdesc yang belum di-approve di bulan ini">
+                                <i class="material-symbols-rounded align-middle me-1" style="font-size: 18px;">cloud_sync</i>
+                                Re-upload Master PDF (Bulan Ini)
+                            </button>
+                        </form>
+                    @endif
+                </div>
 
                 <div class="table-responsive p-0">
                     <table id="example" class="table align-items-center mb-0">
@@ -51,7 +86,7 @@
                                 <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">
                                     Name Member</th>
                                 <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7"
-                                    style="width: 15%">Action</th>
+                                    style="width: 18%">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,14 +100,26 @@
                                             {{ \Carbon\Carbon::parse($report->Start_Report)->format('d-m-Y') }}</p>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member }}</p>
+                                        <p class="text-xs text-primary mb-0">{{ $report->member->Name_Member ?? 'Unknown Member' }}</p>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <div class="d-flex justify-content-center">
+                                        <div class="d-flex justify-content-center align-items-center">
                                             <a href="{{ route('list_report', ['Id_Report' => $report->Id_Report]) }}"
                                                 class="text-primary text-xs mx-1" title="View Details">
                                                 <i class="material-symbols-rounded">app_registration</i>
                                             </a>
+                                            @if ($isSaiful)
+                                                <!-- Tombol Sync / Re-upload PDF Master dari Procedure (Khusus Akun Saiful) -->
+                                                <form action="{{ route('report.sync_master_pdf', $report->Id_Report) }}"
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirm('Upload / salin ulang file PDF dari master procedure untuk item yang BELUM ada approval pada member ini? Item yang sudah di-approve tidak akan tertimpa.');">
+                                                    @csrf
+                                                    <button type="submit" class="border-0 bg-transparent p-0 text-xs mx-1"
+                                                        title="Upload Ulang PDF Master (Hanya yang belum approve)">
+                                                        <i class="text-info material-symbols-rounded">sync</i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                             <!-- Tombol Edit -->
                                             <a href="#" class="text-warning text-xs mx-1 edit-btn" title="Edit"
                                                 data-id="{{ $report->Id_Report }}" data-start="{{ $report->Start_Report }}"

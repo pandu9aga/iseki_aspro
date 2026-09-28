@@ -24,6 +24,7 @@ class List_Training extends Model
         'Reporter_Name',
         'Leader_Name',
         'Auditor_Name',
+        'Qr_Codes',
     ];
 
     public function training()
