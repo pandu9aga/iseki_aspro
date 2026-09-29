@@ -124,7 +124,10 @@ class TrainingController extends Controller
             ->orderBy('Name_Procedure')
             ->get(['Name_Procedure']);
 
-        return view('leaders.trainings.list_report_detail', compact('page', 'report', 'list_reports', 'procedures', 'Id_Training', 'tractor'));
+        $loginUser = \App\Models\User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && strtolower($loginUser->Name_User ?? '') === 'saiful';
+
+        return view('leaders.trainings.list_report_detail', compact('page', 'report', 'list_reports', 'procedures', 'Id_Training', 'tractor', 'isSaiful'));
     }
 
     public function store(Request $request)
@@ -272,6 +275,9 @@ class TrainingController extends Controller
             }
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
+
+            // Simpan snapshot leader untuk keperluan partial reset
+            Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.leader.pdf');
 
             // Update waktu & Qr_Codes
             $listReport->Time_Approved_Leader = $request->input('timestamp');
@@ -472,33 +478,68 @@ class TrainingController extends Controller
 
     public function reset_list_report(string $Id_List_Training)
     {
-        $listReport = List_Training::with(['training'])->findOrFail($Id_List_Training);
-
-        $nameTractor = $listReport->Name_Tractor;
-        $nameArea = $listReport->Name_Area;
-        $procedureName = $listReport->Name_Procedure;
-
-        $sourcePath = 'procedures/' . $nameTractor . '/' . $nameArea . '/' . $procedureName . '.pdf';
-
-        $timeReport = Carbon::parse($listReport->training->Start_Training)->format('Y-m-d');
-
-        $fullPath = 'trainings/' . $timeReport . '_' . $listReport->training->Id_Member;
-
-        $targetPath = $fullPath . '/' . $procedureName . '.pdf';
-
-        // copy dan replace file dari procedures ke trainings jika file target ada
-        if (Storage::disk('public')->exists($sourcePath)) {
-            Storage::disk('public')->copy($sourcePath, $targetPath);
+        // Hanya akun leader bernama Saiful yang boleh melakukan reset
+        $loginUser = \App\Models\User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && strtolower($loginUser->Name_User ?? '') === 'saiful';
+        if (! $isSaiful) {
+            return redirect()->back()->withErrors(['error' => 'Hanya leader Saiful yang diizinkan untuk melakukan reset approval.']);
         }
 
-        // Reset approval timestamps and names
-        $listReport->Time_Approved_Leader = null;
-        $listReport->Time_Approved_Auditor = null;
-        $listReport->Time_List_Report = null;
-        $listReport->Leader_Name = null;
-        $listReport->Auditor_Name = null;
+        $role = request()->input('role', 'all'); // 'leader', 'auditor', atau 'all'
+
+        $listReport = List_Training::with(['training'])->findOrFail($Id_List_Training);
+
+        $id_member = $listReport->training->Id_Member;
+        $timeReport = Carbon::parse($listReport->training->Start_Training)->format('Y-m-d');
+        $procedureName = $listReport->Name_Procedure;
+        $basePath = 'trainings/' . $timeReport . '_' . $id_member;
+        $mainPdf = $basePath . '/' . $procedureName . '.pdf';
+
+        if ($role === 'auditor') {
+            $leaderSnapshot = $basePath . '/' . $procedureName . '.leader.pdf';
+            if (Storage::disk('public')->exists($leaderSnapshot)) {
+                Storage::disk('public')->copy($leaderSnapshot, $mainPdf);
+            }
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.auditor.pdf');
+
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'auditor');
+
+        } elseif ($role === 'leader') {
+            $memberSnapshot = $basePath . '/' . $procedureName . '.member.pdf';
+            if (Storage::disk('public')->exists($memberSnapshot)) {
+                Storage::disk('public')->copy($memberSnapshot, $mainPdf);
+            }
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.leader.pdf');
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.auditor.pdf');
+
+            $listReport->Time_Approved_Leader = null;
+            $listReport->Leader_Name = null;
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'leader');
+
+        } else {
+            $sourcePath = 'procedures/' . $listReport->Name_Tractor . '/' . $listReport->Name_Area . '/' . $procedureName . '.pdf';
+            if (Storage::disk('public')->exists($sourcePath)) {
+                Storage::disk('public')->copy($sourcePath, $mainPdf);
+            }
+            foreach (['member', 'leader', 'auditor'] as $snap) {
+                Storage::disk('public')->delete($basePath . '/' . $procedureName . '.' . $snap . '.pdf');
+            }
+
+            $listReport->Time_List_Report = null;
+            $listReport->Time_Approved_Leader = null;
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Leader_Name = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = null;
+        }
+
         $listReport->save();
 
         return redirect()->back()->with('success', 'Approval berhasil direset.');
     }
+
 }

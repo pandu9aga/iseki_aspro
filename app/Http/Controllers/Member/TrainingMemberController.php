@@ -94,6 +94,9 @@ class TrainingMemberController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
+            // Simpan snapshot member untuk keperluan partial reset
+            Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.member.pdf');
+
             // Update waktu & Qr_Codes
             $listReport->Time_List_Report = $request->input('timestamp');
             if ($request->filled('qr_codes')) {

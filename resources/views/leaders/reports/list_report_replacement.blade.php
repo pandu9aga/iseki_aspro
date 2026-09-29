@@ -44,7 +44,10 @@
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Item Procedure</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Check Member</th>
                             <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Leader Approvement</th>
-                            <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Auditor Approvement</th>
+                        <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7">Auditor Approvement</th>
+                            @if($isSaiful)
+                                <th class="text-center text-uppercase text-primary text-xxs font-weight-bolder opacity-7" style="width:10%">Action</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -95,6 +98,63 @@
                                     </span>
                                 </p>
                             </td>
+                            @if($isSaiful)
+                            <td class="align-middle text-center" onclick="event.stopPropagation()">
+                                @if($l->Time_Approved_Leader || $l->Time_Approved_Auditor || $l->Time_List_Report)
+                                    <div class="dropdown d-inline">
+                                        <button class="btn btn-link text-warning p-0" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false" title="Reset Approval">
+                                            <i class="material-symbols-rounded">restart_alt</i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                                            @if($l->Time_Approved_Auditor)
+                                                <li>
+                                                    <form action="{{ route('report.replacement.reset', $l->Id_List_Report_Replacement) }}"
+                                                        method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="role" value="auditor">
+                                                        <button type="submit" class="dropdown-item text-warning"
+                                                            onclick="return confirm('Reset approval AUDITOR untuk {{ addslashes($l->display_name) }}?\nCoretan member & leader akan dipertahankan.')">
+                                                            <i class="material-symbols-rounded me-1" style="font-size:16px">verified_user</i> Reset Auditor
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            @endif
+                                            @if($l->Time_Approved_Leader)
+                                                <li>
+                                                    <form action="{{ route('report.replacement.reset', $l->Id_List_Report_Replacement) }}"
+                                                        method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="role" value="leader">
+                                                        <button type="submit" class="dropdown-item text-orange"
+                                                            onclick="return confirm('Reset approval LEADER & AUDITOR untuk {{ addslashes($l->display_name) }}?\nCoretan member akan dipertahankan.')">
+                                                            <i class="material-symbols-rounded me-1" style="font-size:16px">manage_accounts</i> Reset Leader
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            @endif
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <form action="{{ route('report.replacement.reset', $l->Id_List_Report_Replacement) }}"
+                                                    method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="role" value="all">
+                                                    <button type="submit" class="dropdown-item text-danger"
+                                                        onclick="return confirm('Reset SEMUA approval untuk {{ addslashes($l->display_name) }}?\nSemua coretan dan foto akan dihapus.')">
+                                                        <i class="material-symbols-rounded me-1" style="font-size:16px">delete_sweep</i> Reset Semua
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-muted">-</span>
+                                @endif
+                            </td>
+                            @endif
                         </tr>
                         @endforeach
                     </tbody>

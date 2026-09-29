@@ -292,7 +292,10 @@ class ReportController extends Controller
 
         $list_reports = $reportReplacement->listReportReplacements;
 
-        return view('leaders.reports.list_report_replacement', compact('page', 'reportReplacement', 'report', 'repMember', 'list_reports'));
+        $loginUser = User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && strtolower($loginUser->Name_User ?? '') === 'saiful';
+
+        return view('leaders.reports.list_report_replacement', compact('page', 'reportReplacement', 'report', 'repMember', 'list_reports', 'isSaiful'));
     }
 
     public function replacement_report_detail(string $Id_List_Report_Replacement)
@@ -361,6 +364,9 @@ class ReportController extends Controller
             } else {
                 $role = 'leader';
             }
+
+            // Simpan snapshot berdasarkan role untuk keperluan partial reset
+            Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.' . $role . '.pdf');
 
             if ($request->filled('qr_codes')) {
                 $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
@@ -471,7 +477,10 @@ class ReportController extends Controller
             ->orderBy('Name_Procedure')
             ->get(['Name_Procedure']);
 
-        return view('leaders.reports.list_report_detail', compact('page', 'report', 'list_reports', 'procedures', 'Id_Report', 'tractor'));
+        $loginUser = User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && strtolower($loginUser->Name_User ?? '') === 'saiful';
+
+        return view('leaders.reports.list_report_detail', compact('page', 'report', 'list_reports', 'procedures', 'Id_Report', 'tractor', 'isSaiful'));
     }
 
     public function store(Request $request)
@@ -619,6 +628,9 @@ class ReportController extends Controller
             }
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
+
+            // Simpan snapshot leader untuk keperluan partial reset
+            Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.leader.pdf');
 
             // Update waktu & Qr_Codes
             $listReport->Time_Approved_Leader = $request->input('timestamp');
@@ -886,35 +898,146 @@ class ReportController extends Controller
 
     public function reset_list_report(string $Id_List_Report)
     {
-        $listReport = List_Report::with(['report'])->findOrFail($Id_List_Report);
-
-        $nameTractor = $listReport->Name_Tractor;
-        $nameArea = $listReport->Name_Area;
-        $procedureName = $listReport->Name_Procedure;
-
-        $sourcePath = 'procedures/' . $nameTractor . '/' . $nameArea . '/' . $procedureName . '.pdf';
-
-        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
-
-        $fullPath = 'reports/' . $timeReport . '_' . $listReport->report->Id_Member;
-
-        $targetPath = $fullPath . '/' . $procedureName . '.pdf';
-
-        // copy dan replace file dari procedures ke reports jika file target ada
-        if (Storage::disk('public')->exists($sourcePath)) {
-            Storage::disk('public')->copy($sourcePath, $targetPath);
+        // Hanya akun leader bernama Saiful yang boleh melakukan reset
+        $loginUser = User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && strtolower($loginUser->Name_User ?? '') === 'saiful';
+        if (! $isSaiful) {
+            return redirect()->back()->withErrors(['error' => 'Hanya leader Saiful yang diizinkan untuk melakukan reset approval.']);
         }
 
-        // Reset approval timestamps and names
-        $listReport->Time_Approved_Leader = null;
-        $listReport->Time_Approved_Auditor = null;
-        $listReport->Time_List_Report = null;
-        $listReport->Leader_Name = null;
-        $listReport->Auditor_Name = null;
+        $role = request()->input('role', 'all'); // 'leader', 'auditor', atau 'all'
+
+        $listReport = List_Report::with(['report'])->findOrFail($Id_List_Report);
+
+        $id_member = $listReport->report->Id_Member;
+        $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
+        $procedureName = $listReport->Name_Procedure;
+        $basePath = 'reports/' . $timeReport . '_' . $id_member;
+        $mainPdf = $basePath . '/' . $procedureName . '.pdf';
+
+        if ($role === 'auditor') {
+            // Reset hanya approval auditor — kembalikan PDF ke snapshot leader jika ada
+            $leaderSnapshot = $basePath . '/' . $procedureName . '.leader.pdf';
+            if (Storage::disk('public')->exists($leaderSnapshot)) {
+                Storage::disk('public')->copy($leaderSnapshot, $mainPdf);
+            }
+            // Hapus snapshot auditor
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.auditor.pdf');
+
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'auditor');
+
+        } elseif ($role === 'leader') {
+            // Reset approval leader dan auditor — kembalikan PDF ke snapshot member jika ada
+            $memberSnapshot = $basePath . '/' . $procedureName . '.member.pdf';
+            if (Storage::disk('public')->exists($memberSnapshot)) {
+                Storage::disk('public')->copy($memberSnapshot, $mainPdf);
+            }
+            // Hapus snapshot leader dan auditor
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.leader.pdf');
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.auditor.pdf');
+
+            $listReport->Time_Approved_Leader = null;
+            $listReport->Leader_Name = null;
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'leader');
+
+        } else {
+            // Reset semua (fallback legacy) — salin dari master procedures
+            $sourcePath = 'procedures/' . $listReport->Name_Tractor . '/' . $listReport->Name_Area . '/' . $procedureName . '.pdf';
+            if (Storage::disk('public')->exists($sourcePath)) {
+                Storage::disk('public')->copy($sourcePath, $mainPdf);
+            }
+            // Hapus semua snapshot
+            foreach (['member', 'leader', 'auditor'] as $snap) {
+                Storage::disk('public')->delete($basePath . '/' . $procedureName . '.' . $snap . '.pdf');
+            }
+
+            $listReport->Time_List_Report = null;
+            $listReport->Time_Approved_Leader = null;
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Leader_Name = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = null;
+        }
+
         $listReport->save();
 
         return redirect()->back()->with('success', 'Approval berhasil direset.');
     }
+
+    /**
+     * Partial reset for replacement report items.
+     *
+     * @param  string  $Id_List_Report_Replacement
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function reset_replacement_report(string $Id_List_Report_Replacement)
+    {
+        // Hanya akun leader bernama Saiful yang boleh melakukan reset
+        $loginUser = User::where('Id_User', session('Id_User'))->first();
+        $isSaiful = $loginUser && strtolower($loginUser->Name_User ?? '') === 'saiful';
+        if (! $isSaiful) {
+            return redirect()->back()->withErrors(['error' => 'Hanya leader Saiful yang diizinkan untuk melakukan reset approval.']);
+        }
+
+        $role = request()->input('role', 'all');
+
+        $listReport = \App\Models\ListReportReplacement::findOrFail($Id_List_Report_Replacement);
+        $idRepHeader = $listReport->Id_Report_Replacement;
+        $procedureName = $listReport->Name_Procedure;
+        $basePath = 'report_replacements/' . $idRepHeader;
+        $mainPdf = $basePath . '/' . $procedureName . '.pdf';
+
+        if ($role === 'auditor') {
+            $leaderSnapshot = $basePath . '/' . $procedureName . '.leader.pdf';
+            if (Storage::disk('public')->exists($leaderSnapshot)) {
+                Storage::disk('public')->copy($leaderSnapshot, $mainPdf);
+            }
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.auditor.pdf');
+
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'auditor');
+
+        } elseif ($role === 'leader') {
+            $memberSnapshot = $basePath . '/' . $procedureName . '.member.pdf';
+            if (Storage::disk('public')->exists($memberSnapshot)) {
+                Storage::disk('public')->copy($memberSnapshot, $mainPdf);
+            }
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.leader.pdf');
+            Storage::disk('public')->delete($basePath . '/' . $procedureName . '.auditor.pdf');
+
+            $listReport->Time_Approved_Leader = null;
+            $listReport->Leader_Name = null;
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'leader');
+
+        } else {
+            $sourcePath = 'procedures/' . $listReport->Name_Tractor . '/' . $listReport->Name_Area . '/' . $procedureName . '.pdf';
+            if (Storage::disk('public')->exists($sourcePath)) {
+                Storage::disk('public')->copy($sourcePath, $mainPdf);
+            }
+            foreach (['member', 'leader', 'auditor'] as $snap) {
+                Storage::disk('public')->delete($basePath . '/' . $procedureName . '.' . $snap . '.pdf');
+            }
+
+            $listReport->Time_List_Report = null;
+            $listReport->Time_Approved_Leader = null;
+            $listReport->Time_Approved_Auditor = null;
+            $listReport->Leader_Name = null;
+            $listReport->Auditor_Name = null;
+            $listReport->Qr_Codes = null;
+        }
+
+        $listReport->save();
+
+        return redirect()->back()->with('success', 'Approval pengganti berhasil direset.');
+    }
+
 
     /**
      * Upload / salin ulang file PDF dari master data procedure untuk sebuah report

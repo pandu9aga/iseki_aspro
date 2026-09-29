@@ -70,4 +70,35 @@ class QrHelper
 
         return $current;
     }
+
+    /**
+     * Remove QR codes for a specific role and all roles that come after it in the approval chain.
+     * Approval order: member -> leader -> auditor.
+     *
+     * @param mixed  $existingQrCodes
+     * @param string $role 'member'|'leader'|'auditor'
+     * @return array
+     */
+    public static function removeRole($existingQrCodes, string $role): array
+    {
+        $current = [];
+        if (is_string($existingQrCodes)) {
+            $current = json_decode($existingQrCodes, true) ?? [];
+        } elseif (is_array($existingQrCodes)) {
+            $current = $existingQrCodes;
+        }
+
+        $order = ['member', 'leader', 'auditor'];
+        $startIdx = array_search($role, $order);
+
+        if ($startIdx === false) {
+            return $current;
+        }
+
+        foreach (array_slice($order, $startIdx) as $r) {
+            unset($current[$r]);
+        }
+
+        return $current;
+    }
 }

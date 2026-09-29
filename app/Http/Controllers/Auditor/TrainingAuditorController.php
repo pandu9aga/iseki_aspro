@@ -141,6 +141,9 @@ class TrainingAuditorController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
+            // Simpan snapshot auditor untuk keperluan partial reset
+            Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.auditor.pdf');
+
             // Update waktu and Auditor Name & Qr_Codes
             $listReport->Time_Approved_Auditor = $request->input('timestamp');
             $listReport->Auditor_Name = session('Username_User');

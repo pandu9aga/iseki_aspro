@@ -127,6 +127,7 @@ Route::middleware(LeaderMiddleware::class)->group(function () {
         Route::post('/store', [ReportController::class, 'store'])->name('report.store');
         Route::delete('/list/{Id_List_Report}', [ReportController::class, 'destroy_list_report'])->name('list_report.destroy');
         Route::patch('/list/reset/{Id_List_Report}', [ReportController::class, 'reset_list_report'])->name('list_report.reset');
+        Route::patch('/replacement/reset/{Id_List_Report_Replacement}', [ReportController::class, 'reset_replacement_report'])->name('report.replacement.reset');
         Route::get('/show/{Id_List_Report}', [ReportController::class, 'report'])->name('report.detail');
         Route::post('/submit/{Id_List_Report}', [ReportController::class, 'submit_report'])->name('report.detail.submit');
         Route::put('/reporter/{id}', [ReportController::class, 'update'])->name('reporter.update');
