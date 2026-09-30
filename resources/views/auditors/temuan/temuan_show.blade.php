@@ -91,7 +91,18 @@
                     $object = new \App\Http\Helper\JsonHelper($temuan->Object_Temuan);
                     $comments_temuan = $object->get('Comments_Temuan', []);
                     $comments_penanganan = $object->get('Comments_Penanganan', []);
+                    $sourceType = $temuan->Id_List_Training ? 'training' : 'report';
+                    $sourceId = $temuan->Id_List_Training ?: $temuan->Id_List_Report;
+                    $qrCodes = $temuan->source_item->Qr_Codes ?? [];
+                    $photos = $temuan->source_item->Photos ?? [];
                 @endphp
+
+                <!-- QR Approval Display -->
+                @include('components.qr-approval-display', [
+                    'itemType' => $sourceType,
+                    'itemId' => $sourceId,
+                    'qrCodes' => $qrCodes
+                ])
 
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header pb-0">
@@ -134,15 +145,26 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <a href="{{ asset($object->get('File_Path_Temuan', '')) }}"
+                        <a href="{{ asset($object->get('File_Path_Temuan', $pdfPath)) }}"
                             download="Temuan_{{ $temuan->source_item->display_name ?? 'Procedure' }}_{{ $temuan->Id_Temuan }}.pdf"
                             class="btn btn-success mb-3">
                             <i class="material-symbols-rounded text-sm">download</i> Download PDF Temuan
                         </a>
 
                         <div id="pdf-container-temuan" class="border rounded mb-3"
-                            style="height:100%; overflow:auto; position:relative; background: #f5f5f5;">
+                            style="height:600px; overflow:auto; position:relative; background: #f5f5f5;">
                             <canvas id="default-pdf-canvas-temuan"></canvas>
+                            <div id="editor-layer-temuan" style="position:absolute; top:0; left:0; pointer-events:none;"></div>
+                        </div>
+
+                        <!-- Dokumentasi Foto Per User (di bawah PDF) -->
+                        <div class="mb-4">
+                            @include('components.photo-gallery-display', [
+                                'itemType' => $sourceType,
+                                'itemId' => $sourceId,
+                                'photos' => $photos,
+                                'currentRole' => null
+                            ])
                         </div>
 
                         @if(!empty($comments_temuan) && is_array($comments_temuan))
@@ -531,16 +553,30 @@
 @section('script')
     <script src="{{ asset('assets/js/pdf.min.js') }}"></script>
     <script src="{{ asset('assets/js/pdf-lib.min.js') }}"></script>
+    <script src="{{ asset('assets/js/aspro-annotations.js') }}"></script>
 
-    {{-- Render Default PDF to get their Size (Isolated) this will be reuse for the loop submitted Temuan --}}
     <script>
         const PDF_SCALE = 1.5;
         pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
+        const TEMUAN_DATA = {
+            savedAnnotations: @json($temuan->source_item->Annotations ?? []),
+            timestamps: {
+                member: '{{ $temuan->source_item->Time_List_Report ?? "" }}',
+                leader: '{{ $temuan->source_item->Time_Approved_Leader ?? "" }}',
+                auditor: '{{ $temuan->Time_Temuan ?? ($temuan->source_item->Time_Approved_Auditor ?? "") }}'
+            },
+            names: {
+                member: '{{ $temuan->member->Name_Member ?? ($temuan->source_item->Reporter_Name ?? "") }}',
+                leader: '{{ $temuan->source_item->Leader_Name ?? "" }}',
+                auditor: '{{ $object->get("Name_User_Temuan") ?? ($temuan->source_item->Auditor_Name ?? "") }}'
+            }
+        };
 
-        function RenderPDF(pdfUrl, canvasId) {
+        function RenderPDF(pdfUrl, canvasId, layerId) {
             async function renderDefaultPDF() {
                 const canvasPDFDefault = document.getElementById(canvasId);
+                const layerEl = layerId ? document.getElementById(layerId) : null;
                 if (!canvasPDFDefault) return;
 
                 try {
@@ -570,6 +606,11 @@
                     canvasPDFDefault.width = maxWidth;
                     canvasPDFDefault.height = totalHeight;
 
+                    if (layerEl) {
+                        layerEl.style.width = maxWidth + 'px';
+                        layerEl.style.height = totalHeight + 'px';
+                    }
+
                     let currentY = 0;
                     for (const { page, viewport } of viewports) {
                         const tempCanvas = document.createElement('canvas');
@@ -578,6 +619,18 @@
                         await page.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
                         ctx.drawImage(tempCanvas, 0, currentY);
                         currentY += viewport.height;
+                    }
+
+                    // Render annotations display-only (tidak bisa diedit)
+                    if (layerEl && window.AsproAnnotationEngine && TEMUAN_DATA.savedAnnotations) {
+                        AsproAnnotationEngine.renderSavedAnnotations(
+                            layerEl,
+                            TEMUAN_DATA.savedAnnotations,
+                            null, // null currentRole = read-only for all annotations
+                            null,
+                            TEMUAN_DATA.timestamps,
+                            TEMUAN_DATA.names
+                        );
                     }
                 } catch (error) {
                     console.error('RenderPDF error:', error, canvasId);
@@ -600,14 +653,15 @@
             url = url.replace(/\\/g, '/').replace(/ /g, '%20');
             return url + (url.includes('?') ? '&' : '?') + "t=" + new Date().getTime();
         }
-        @if($object->get('File_Path_Temuan'))
-            const urlTemuan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Temuan')) !!}");
-            if (urlTemuan) RenderPDF(urlTemuan, "default-pdf-canvas-temuan");
-        @endif
+        const rawUrlTemuan = "{!! $object->get('File_Path_Temuan') ? str_replace('\\', '/', $object->get('File_Path_Temuan')) : $pdfPath !!}";
+        if (rawUrlTemuan) {
+            const urlTemuan = getPdfUrl(rawUrlTemuan);
+            RenderPDF(urlTemuan, "default-pdf-canvas-temuan", "editor-layer-temuan");
+        }
 
             @if($object->Is_Submit_Penanganan && $object->get('File_Path_Penanganan'))
                 const urlPenanganan = getPdfUrl("{!! str_replace('\\', '/', $object->get('File_Path_Penanganan')) !!}");
-                if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan");
+                if (urlPenanganan) RenderPDF(urlPenanganan, "default-pdf-canvas-penanganan", null);
             @endif
     </script>
 

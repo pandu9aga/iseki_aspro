@@ -23,7 +23,7 @@ class TemuanAuditorController extends Controller
         $data = $request->validate([
             'Id_List_Report' => 'nullable|int|required_without:Id_List_Training',
             'Id_List_Training' => 'nullable|int|required_without:Id_List_Report',
-            'pdf' => 'required|file',
+            'pdf' => 'nullable|file',
             'timestamp' => 'required|string',
             'comments' => 'nullable|string',
         ]);
@@ -45,25 +45,47 @@ class TemuanAuditorController extends Controller
 
         try {
             return DB::transaction(function () use ($request, $data, $listModel, $timeReport, $id_member, $folderSource, $isTraining, $current_user) {
-                $jsonData = new JsonHelper;
-                $jsonData->Name_User_Temuan = $current_user->Name_User;
-                $jsonData->File_Path_Temuan = '';
-                $jsonData->Is_Submit_Penanganan = false;
-                $jsonData->UploudFoto_Time_Penanganan = '';
-                $jsonData->File_Path_Penanganan = '';
-                $jsonData->Name_User_Penanganan = '';
-                $jsonData->Validation_Notes = '';
-                $jsonData->Validation_Time = '';
-
-                $temuan = new Temuan;
+                $temuanQuery = Temuan::where('Id_User', $current_user->Id_User);
                 if ($isTraining) {
-                    $temuan->Id_List_Training = $data['Id_List_Training'];
+                    $temuanQuery->where('Id_List_Training', $data['Id_List_Training']);
                 } else {
-                    $temuan->Id_List_Report = $data['Id_List_Report'];
+                    $temuanQuery->where('Id_List_Report', $data['Id_List_Report']);
                 }
-                $temuan->Id_User = $current_user->Id_User;
-                $temuan->Object_Temuan = $jsonData->toJson();
+                $temuan = $temuanQuery->first();
 
+                $jsonData = new JsonHelper;
+                if ($temuan) {
+                    $existingJson = new JsonHelper($temuan->Object_Temuan);
+                    $jsonData->File_Path_Temuan = $existingJson->get('File_Path_Temuan', '');
+                    $jsonData->Is_Submit_Penanganan = $existingJson->Is_Submit_Penanganan ?? false;
+                    $jsonData->UploudFoto_Time_Penanganan = $existingJson->get('UploudFoto_Time_Penanganan', '');
+                    $jsonData->File_Path_Penanganan = $existingJson->get('File_Path_Penanganan', '');
+                    $jsonData->Name_User_Penanganan = $existingJson->get('Name_User_Penanganan', '');
+                    $jsonData->Validation_Notes = $existingJson->get('Validation_Notes', '');
+                    $jsonData->Validation_Time = $existingJson->get('Validation_Time', '');
+                    $jsonData->Is_Rejected = $existingJson->get('Is_Rejected', false);
+                    $jsonData->Rejection_Notes = $existingJson->get('Rejection_Notes', '');
+                    $jsonData->Rejection_Time = $existingJson->get('Rejection_Time', '');
+                } else {
+                    $temuan = new Temuan;
+                    if ($isTraining) {
+                        $temuan->Id_List_Training = $data['Id_List_Training'];
+                    } else {
+                        $temuan->Id_List_Report = $data['Id_List_Report'];
+                    }
+                    $temuan->Id_User = $current_user->Id_User;
+                    
+                    $jsonData->File_Path_Temuan = '';
+                    $jsonData->Is_Submit_Penanganan = false;
+                    $jsonData->UploudFoto_Time_Penanganan = '';
+                    $jsonData->File_Path_Penanganan = '';
+                    $jsonData->Name_User_Penanganan = '';
+                    $jsonData->Validation_Notes = '';
+                    $jsonData->Validation_Time = '';
+                }
+                
+                $jsonData->Name_User_Temuan = $current_user->Name_User;
+                $temuan->Object_Temuan = $jsonData->toJson();
                 $temuan->save();
 
                 if ($request->hasFile('pdf')) {
@@ -71,13 +93,7 @@ class TemuanAuditorController extends Controller
 
                     $relativePath = $this->base_path.$current_user->Id_User.'_'.$timeReport.'_'.$id_member;
                     $directory = public_path($relativePath);
-                    $path = 'storage/'.$folderSource.'/'.$timeReport.'_'.$id_member;
-                    $filename_report = $listModel->Name_Procedure.'.pdf';
 
-                    $fullPath = public_path($path);
-                    if (! file_exists($fullPath)) {
-                        mkdir($fullPath, 0755, true);
-                    }
                     if (! file_exists($directory)) {
                         if (! mkdir($directory, 0755, true) && ! is_dir($directory)) {
                             throw new \RuntimeException('Failed to create directory: '.$directory);
@@ -86,48 +102,44 @@ class TemuanAuditorController extends Controller
 
                     $filename = 'TM_'.$temuan->Id_Temuan.' _ '.$listModel->Name_Procedure.'.pdf';
 
-                    if (! $pdf->move($directory, $filename) || ! copy($directory.'/'.$filename, $fullPath.'/'.$filename_report)) {
+                    if (! $pdf->move($directory, $filename)) {
                         throw new \RuntimeException('Failed to move PDF file');
                     }
 
                     $jsonData->File_Path_Temuan = $relativePath.'/'.$filename;
-                    $jsonData->Submit_Time_Temuan = Carbon::now()->toDateTimeString();
-                    $jsonData->Comments_Temuan = json_decode($data['comments'] ?? '', true) ?? '';
-
-                    $temuan->Object_Temuan = $jsonData;
-                    $temuan->Time_Temuan = $data['timestamp'];
-                    $temuan->save();
-                    $listModel->Time_Approved_Auditor = $request->input('timestamp');
-                    $listModel->Auditor_Name = session('Username_User');
-                    if ($request->filled('annotations')) {
-                        $listModel->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
-                            $listModel->Annotations,
-                            'auditor',
-                            $request->input('annotations')
-                        );
-                    }
-                    if ($request->filled('qr_codes')) {
-                        $listModel->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                            $listModel->Qr_Codes,
-                            'auditor',
-                            $request->input('qr_codes')
-                        );
-                    }
-                    $listModel->save();
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Temuan berhasil disubmit',
-                        'data' => [
-                            'Id_Temuan' => $temuan->Id_Temuan,
-                            'file_path' => $jsonData->File_Path_Temuan,
-                        ],
-                    ]);
+                } elseif ($temuan->wasRecentlyCreated) {
+                    // Only clear if it's a completely new temuan without PDF
+                    $jsonData->File_Path_Temuan = '';
                 }
+
+                $jsonData->Submit_Time_Temuan = Carbon::now()->toDateTimeString();
+                $jsonData->Comments_Temuan = json_decode($data['comments'] ?? '', true) ?? '';
+
+                $temuan->Object_Temuan = $jsonData;
+                $temuan->Time_Temuan = $data['timestamp'];
+                $temuan->save();
+                
+                $listModel->Time_Approved_Auditor = $request->input('timestamp');
+                $listModel->Auditor_Name = session('Username_User');
+                if ($request->filled('annotations')) {
+                    $listModel->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                        $listModel->Annotations,
+                        'auditor',
+                        $request->input('annotations')
+                    );
+                }
+                if ($request->filled('qr_codes')) {
+                    $listModel->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                        $listModel->Qr_Codes,
+                        'auditor',
+                        $request->input('qr_codes')
+                    );
+                }
+                $listModel->save();
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Temuan berhasil ditambahkan',
+                    'message' => 'Temuan berhasil disubmit',
                     'data' => [
                         'Id_Temuan' => $temuan->Id_Temuan,
                         'file_path' => $jsonData->File_Path_Temuan ?? null,

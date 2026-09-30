@@ -882,15 +882,7 @@
                 if (type === 'submit') {
                     await uploadToServerReport(currentAnnotations, scannedQrs);
                 } else if (type === 'temuan') {
-                    const existingPdf = await fetch(CONFIG.pdfUrl).then(r => r.arrayBuffer());
-                    const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
-                    const pages = pdfDoc.getPages();
-                    const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-                    addTimestampToFirstPage(pages[0], font);
-                    convertAnnotationsToPDF(pages, font);
-                    const mergedBytes = await pdfDoc.save();
-
-                    await uploadToServerTemuan(mergedBytes, currentAnnotations, scannedQrs);
+                    await uploadToServerTemuan(null, currentAnnotations, scannedQrs);
                 }
             });
         }
@@ -926,14 +918,25 @@
 
             // Process each annotation
             DOM.editorLayer.querySelectorAll('div').forEach(div => {
-                const x = parseFloat(div.style.left);
-                const y = parseFloat(div.style.top);
+                // Abaikan bar stamp header atau elemen stamp header
+                if (div.classList.contains('aspro-header-stamp-bar') || div.closest('.aspro-header-stamp-bar')) return;
+                if (div.classList.contains('aspro-header-stamp') || div.closest('.aspro-header-stamp')) return;
+
+                const rawLeft = div.style.left;
+                const rawTop = div.style.top;
+                if (!rawLeft || !rawTop) return;
+
+                const x = parseFloat(rawLeft);
+                const y = parseFloat(rawTop);
+                if (isNaN(x) || isNaN(y)) return;
 
                 // Find which page this annotation belongs to
                 let pageIndex = yOffsets.findIndex((offset, i) => y < offset + STATE.pageViewportHeights[i]);
                 if (pageIndex === -1) pageIndex = pages.length - 1;
 
                 const page = pages[pageIndex];
+                if (!page) return;
+
                 const pageHeight = page.getHeight();
                 const pageWidth = page.getWidth();
 
@@ -943,6 +946,8 @@
                 const scaleY = pageHeight / STATE.pageViewportHeights[pageIndex];
                 const finalX = x * scaleX;
                 const finalY = pageHeight - (offsetY * scaleY) - 18;
+
+                if (isNaN(finalX) || isNaN(finalY)) return;
 
                 // Render annotation to PDF
                 if (div.contentEditable === 'true') {
@@ -1125,11 +1130,17 @@
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
             const timestamp = localWIB.toISOString().slice(0, 19).replace('T', ' ');
 
+            const extractedComments = annotations ? annotations.filter(a => a.type === 'comment').map(a => ({
+                text: a.text,
+                position: { x: a.left, y: a.top },
+                fontSize: 13
+            })) : [];
+
             const formData = new FormData();
             if (pdfBytes) {
                 formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
             }
-            formData.append('comments', JSON.stringify(FINAL_STATE.comments));
+            formData.append('comments', JSON.stringify(extractedComments));
             formData.append('annotations', JSON.stringify(annotations));
             formData.append('Id_List_Training', '{{ $listReport->Id_List_Training }}');
             formData.append('timestamp', timestamp);
