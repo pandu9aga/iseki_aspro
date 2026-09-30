@@ -51,9 +51,23 @@
                 <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->display_name }}</span></h4>
                 <br>
 
+                <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report ?? '-' }}</span></b></div>
+                <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader ?? '-' }}</span></b></div>
+                <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor ?? '-' }}</span></b></div>
+
+                @include('components.qr-approval-display', [
+                    'itemType' => 'report',
+                    'itemId' => $listReport->Id_List_Report,
+                    'qrCodes' => $listReport->Qr_Codes
+                ])
+
+                <div class="mt-2 mb-3">
+                    <button class="btn btn-sm btn-primary mb-0" onclick="downloadPdf()">Download PDF</button>
+                </div>
+
                 {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
 
-                @if (is_null($listReport->Time_Approved_Leader))
+                <div class="mb-3">
                     <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist('check')">
                         <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
                     </button>
@@ -81,19 +95,7 @@
                         <i class="material-symbols-rounded" id="comment-btn-icon">text_fields</i>
                         <!-- Ganti ikon sesuai kebutuhan -->
                     </button>
-                @endif
-
-                @if ($listReport->Time_Approved_Leader)
-                    <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
-                    <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b>
-                    </div>
-                    <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b>
-                    </div>
-                    @include('components.qr-approval-display')
-                    <br>
-
-                    <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
-                @endif
+                </div>
 
                 <div id="pdf-container" style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
                     <canvas id="pdf-canvas"></canvas>
@@ -125,25 +127,33 @@
                     @endif
                 </div>
 
+                <!-- Dokumentasi Foto Per User di bawah PDF -->
+                @include('components.photo-gallery-display', [
+                    'itemType' => 'report',
+                    'itemId' => $listReport->Id_List_Report,
+                    'photos' => $listReport->Photos,
+                    'currentRole' => 'leader'
+                ])
+
                 <br>
-@if (is_null($listReport->Time_Approved_Leader))
-                    <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
-                    <div class="my-3">
-                        <label class="form-label d-block">Upload Photos</label>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
-                                <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
-                            </button>
-                            <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
-                                <i class="material-symbols-rounded text-sm">collections</i> Gallery
-                            </button>
-                        </div>
-                        <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
+                <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
+                <div class="my-3">
+                    <label class="form-label d-block">Upload Photos</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
+                            <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
+                        </button>
+                        <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
+                            <i class="material-symbols-rounded text-sm">collections</i> Gallery
+                        </button>
                     </div>
-                    <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
-                    <br>
-                    <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Report</button>
-                @endif
+                    <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
+                </div>
+                <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
+                <br>
+                <button onclick="submitReport()" class="btn btn-primary mt-3">
+                    {{ $listReport->Time_Approved_Leader ? 'Update Report & Stamp' : 'Submit Report' }}
+                </button>
             </div>
         </section>
     </div>
@@ -174,11 +184,22 @@
         document.addEventListener('DOMContentLoaded', function () {
             const input = document.getElementById('imageInput');
             if (!input) return;
-            input.addEventListener('change', function (e) {
+            input.addEventListener('change', async function (e) {
                 for (let file of e.target.files) {
-                    images.push(file);
-                    showPreview(file);
+                    try {
+                        const resizedBlob = await resizeImage(file, 1600, 1600);
+                        if (!resizedBlob) throw new Error('resize null');
+                        const jpegName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+                        const blobFile = new File([resizedBlob], jpegName, { type: 'image/jpeg' });
+                        images.push(blobFile);
+                        showPreview(blobFile);
+                    } catch (err) {
+                        // Fallback: pakai file asli (mungkin besar, tapi coba upload)
+                        images.push(file);
+                        showPreview(file);
+                    }
                 }
+                e.target.value = '';
             });
         });
 
@@ -217,20 +238,30 @@
         }
 
         async function resizeImage(file, maxWidth, maxHeight) {
-            return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
                 const img = new Image();
+                img.onerror = function() { reject(new Error('img load failed')); };
                 img.onload = function () {
                     let width = img.width;
                     let height = img.height;
+                    if (width <= maxWidth && height <= maxHeight) {
+                        // Jika sudah kecil, tetap convert ke JPEG untuk konsistensi tipe
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob null')), 'image/jpeg', 0.82);
+                        return;
+                    }
                     const scale = Math.min(maxWidth / width, maxHeight / height);
-                    width *= scale;
-                    height *= scale;
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
                     const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob(blob => resolve(blob), file.type, 0.7);
+                    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob null')), 'image/jpeg', 0.82);
                 };
                 img.src = URL.createObjectURL(file);
             });
@@ -238,8 +269,26 @@
     </script>
     <script src="{{ asset('assets/js/pdf.min.js') }}"></script>
     <script src="{{ asset('assets/js/pdf-lib.min.js') }}"></script>
+    <script src="{{ asset('assets/js/aspro-annotations.js') }}"></script>
     <script>
-        const pdfUrl = "{{ asset($pdfPath) }}?t=" + new Date().getTime();
+        const CONFIG = {
+            pdfUrl: "{{ asset($pdfPath) }}?t=" + new Date().getTime(),
+            itemType: 'report',
+            itemId: '{{ $listReport->Id_List_Report }}',
+            currentRole: 'leader',
+            savedAnnotations: @json($listReport->Annotations ?? []),
+            timestamps: {
+                member: '{{ $listReport->Time_List_Report }}',
+                leader: '{{ $listReport->Time_Approved_Leader }}',
+                auditor: '{{ $listReport->Time_Approved_Auditor }}'
+            },
+            names: {
+                member: '{{ $listReport->report->member->Name_Member ?? '' }}',
+                leader: '{{ $user->Name_User ?? ($listReport->Leader_Name ?? '') }}',
+                auditor: '{{ $listReport->Auditor_Name ?? '' }}'
+            }
+        };
+        const pdfUrl = CONFIG.pdfUrl;
         const pdfCanvas = document.getElementById('pdf-canvas');
         pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
         const editorLayer = document.getElementById('editor-layer');
@@ -307,8 +356,58 @@
                 ctx.drawImage(tempCanvas, 0, currentY);
                 currentY += vp.height;
             }
+
+            // Render saved annotations from JSON onto editor layer
+            if (window.AsproAnnotationEngine && CONFIG.savedAnnotations) {
+                AsproAnnotationEngine.renderSavedAnnotations(
+                    editorLayer,
+                    CONFIG.savedAnnotations,
+                    'leader',
+                    setupLeaderElement,
+                    CONFIG.timestamps,
+                    CONFIG.names
+                );
+            }
         }
         renderPDF();
+
+        function setupLeaderElement(div) {
+            if (div.contentEditable === 'true') {
+                div.addEventListener('input', () => saveState());
+                div.addEventListener('focus', () => div.removeAttribute('draggable'));
+                div.addEventListener('blur', () => div.setAttribute('draggable', 'true'));
+                div.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        document.execCommand('insertLineBreak');
+                    }
+                });
+            }
+            div.addEventListener('click', e => {
+                e.stopPropagation();
+                if (selectedObject) selectedObject.classList.remove('selected');
+                selectedObject = div;
+                div.classList.add('selected');
+                div.style.border = '2px dashed red';
+                document.getElementById('delete-btn').disabled = false;
+            });
+            div.addEventListener('dragstart', e => {
+                div.startX = e.clientX - div.offsetLeft;
+                div.startY = e.clientY - div.offsetTop;
+            });
+            div.addEventListener('dragend', e => {
+                let x = e.clientX - div.startX;
+                let y = e.clientY - div.startY;
+                const maxX = editorLayer.clientWidth - div.offsetWidth;
+                const maxY = editorLayer.clientHeight - div.offsetHeight;
+                x = Math.max(0, Math.min(x, maxX));
+                y = Math.max(0, Math.min(y, maxY));
+                div.style.left = x + 'px';
+                div.style.top = y + 'px';
+                saveState();
+            });
+        }
 
         function saveState() {
             history.push(editorLayer.innerHTML);
@@ -524,6 +623,7 @@
             }
 
             if (newElement) {
+                newElement.setAttribute('data-role', CONFIG.currentRole || 'leader');
                 editorLayer.appendChild(newElement);
 
                 const w = newElement.offsetWidth / 2;
@@ -635,232 +735,71 @@
 
         // --- Fungsi Download PDF ---
         async function downloadPdf() {
-            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], {
-                type: 'application/pdf'
-            });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->report->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
-            link.click();
+            try {
+                const res = await fetch(`{{ route('item.annotations.get', ['type' => 'report', 'id' => $listReport->Id_List_Report]) }}`);
+                const data = await res.json();
+                const masterUrl = data.master_pdf_url || CONFIG.pdfUrl;
+
+                await AsproAnnotationEngine.downloadAnnotatedPdf({
+                    masterPdfUrl: masterUrl,
+                    downloadFilename: '{{ $listReport->report->member->Name_Member }}-{{ $listReport->display_name }}.pdf',
+                    canvasWidth: pdfCanvas.width,
+                    pageViewportHeights: pageViewportHeights,
+                    annotations: data.annotations || CONFIG.savedAnnotations,
+                    timestamps: data.timestamps || CONFIG.timestamps,
+                    names: data.names || CONFIG.names
+                });
+            } catch (err) {
+                console.error('Download error:', err);
+                window.open(CONFIG.pdfUrl, '_blank');
+            }
         }
 
         // --- Fungsi Submit Report ---
         async function submitReport() {
-            const existingPdf = await fetch(pdfUrl).then(r => r.arrayBuffer());
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
-            const pages = pdfDoc.getPages();
-            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-            const fontSize = 8;
+            const currentAnnotations = AsproAnnotationEngine.serializeLayer(editorLayer, CONFIG.currentRole || 'leader');
+
             const nowUTC = new Date();
-            const offsetWIB = 7 * 60; // WIB = UTC+7 dalam menit
+            const offsetWIB = 7 * 60;
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
             const now = localWIB.toISOString().slice(0, 19).replace('T', ' ');
-            const lines = [now, "{{ $user->Name_User }}"];
-            let yStart = pages[0].getHeight() - 10;
-            const lineHeight = fontSize + 2;
 
-            lines.forEach((line, idx) => {
-                const width = font.widthOfTextAtSize(line, fontSize);
-                pages[0].drawText(line, {
-                    x: (pages[0].getWidth() - width) / 2,
-                    y: yStart - idx * lineHeight,
-                    size: fontSize,
-                    font,
-                    color: PDFLib.rgb(1, 0, 0)
-                });
-            });
-
-            // Hitung offset halaman berdasarkan tinggi viewport per halaman
-            const canvasW = pdfCanvas.width;
-            let yOffsets = [0];
-            for (let i = 0; i < pageViewportHeights.length - 1; i++) {
-                yOffsets.push(yOffsets[i] + pageViewportHeights[i]);
-            }
-
-            editorLayer.querySelectorAll('div').forEach(div => {
-                let x = parseFloat(div.style.left);
-                let y = parseFloat(div.style.top);
-
-                let pageIndex = yOffsets.findIndex((offset, i) => y < offset + pageViewportHeights[i]);
-                if (pageIndex === -1) pageIndex = pages.length - 1;
-
-                const page = pages[pageIndex];
-                const pageHeight = page.getHeight();
-                const pageWidth = page.getWidth();
-
-                const offsetY = y - yOffsets[pageIndex];
-                const scaleX = pageWidth / canvasW;
-                const scaleY = pageHeight / pageViewportHeights[pageIndex];
-
-                const finalX = x * scaleX;
-                const finalY = pageHeight - (offsetY * scaleY) - 18;
-
-                // --- Periksa apakah elemen ini adalah komentar (menggunakan contentEditable) ---
-                if (div.contentEditable === 'true') {
-                    // --- Ini adalah elemen komentar ---
-                    const text = div.textContent;
-                    // Hindari menyimpan placeholder teks jika kosong
-                    if (text && text.trim() !== '' && text.trim() !== 'Tulis komentar...') {
-                        const fontSizeComment = 12; // Ukuran teks komentar di PDF
-                        const lineHeight = fontSizeComment + 4;
-
-                        // Split text by newlines (handle contentEditable behavior)
-                        // Sanitize: Remove zero-width chars and ensure WinAnsi compatibility
-                        const rawText = div.innerText.replace(/[\u200B-\u200D\uFEFF]/g, '');
-                        // Split and map to ensure we check characters
-                        const lines = rawText.split(/\r?\n/).map(l => l.replace(/[^\x00-\xFF]/g, '')); // Basic Latin-1 filter
-
-                        // Calculate max width
-                        let maxLineWidth = 0;
-                        lines.forEach(line => {
-                            try {
-                                const width = font.widthOfTextAtSize(line, fontSizeComment);
-                                if (width > maxLineWidth) maxLineWidth = width;
-                            } catch (e) {
-                                console.warn('Skipping unsupported character line:', line);
-                            }
-                        });
-
-
-                        const paddingX = 6;
-                        const paddingY = 6;
-                        const outerWidth = maxLineWidth + (2 * paddingX);
-                        const outerHeight = (lines.length * lineHeight) + (2 * paddingY);
-
-                        // Adjust Y position (similarly to previous fixes)
-                        // finalY comes from: pageHeight - (offsetY * scaleY) - 18;
-                        // Assuming finalY is the visual TOP of the element in PDF coords relative to bottom-left origin?
-                        // If y (HTML) is top-left, increasing y means going down.
-                        // Increasing HTML y increases offsetY, which decreases finalY.
-                        // So finalY is indeed the top Y coordinate in PDF space (higher value).
-                        // To draw a box extending DOWN from finalY, we need to start at finalY - outerHeight.
-
-                        const outerX = finalX - paddingX;
-                        const rectBottomY = finalY - outerHeight;
-
-                        // --- 1. Gambar background cokelat ---
-                        page.drawRectangle({
-                            x: outerX,
-                            y: rectBottomY,
-                            width: outerWidth,
-                            height: outerHeight,
-                            color: PDFLib.rgb(0.545, 0.271, 0.075), // #8B4513 (Brown)
-                            opacity: 1
-                        });
-
-                        // --- 2. Gambar teks putih ---
-                        lines.forEach((line, index) => {
-                            // finalY is top, go down by padding and lines
-                            // PDF Y increases upwards, so we subtract from finalY
-                            const textY = finalY - paddingY - (index + 1) * lineHeight + 4; // +4 baseline adjust
-
-                            page.drawText(line, {
-                                x: finalX, // Align left
-                                y: textY,
-                                size: fontSizeComment,
-                                color: PDFLib.rgb(1, 1, 1), // Putih
-                                font
+            openQrApprovalScanner(async function(scannedQrs) {
+                if (images && images.length > 0) {
+                    let uploadErrors = 0;
+                    for (let file of images) {
+                        const photoForm = new FormData();
+                        photoForm.append('role', 'leader');
+                        photoForm.append('photo', file, file.name);
+                        try {
+                            const photoRes = await fetch(`{{ route('item.photo.upload', ['type' => 'report', 'id' => $listReport->Id_List_Report]) }}`, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                body: photoForm
                             });
-                        });
+                            if (!photoRes.ok) {
+                                uploadErrors++;
+                                const errData = await photoRes.json().catch(() => ({}));
+                                console.warn('Photo upload failed:', photoRes.status, errData);
+                            }
+                        } catch (e) {
+                            uploadErrors++;
+                            console.warn('Failed to upload photo:', e);
+                        }
                     }
-                } else {
-                    // --- Ini adalah elemen V, X, atau NG ---
-                    // Gunakan logika lama seperti sebelumnya
-                    const textContent = div.textContent;
-                    const size = (textContent === 'V' || textContent === 'X' || textContent === 'NG') ? 18 : 12;
-
-                    // Hitung panjang teks (kira-kira, tidak super presisi)
-                    const textWidth = 20 * textContent.length * 0.6;
-                    const textHeight = 18; // tinggi line kira-kira
-
-                    // Gambar kotak background putih 50%
-                    page.drawRectangle({
-                        x: finalX - 2,
-                        y: finalY - 2,
-                        width: textWidth + 4,
-                        height: textHeight + 4,
-                        color: PDFLib.rgb(1, 1, 1),
-                        opacity: 0.5
-                    });
-
-                    // Warna teks disesuaikan berdasarkan warna yang ditetapkan di style elemen HTML
-                    let textColor = PDFLib.rgb(0, 0, 0); // Default hitam
-                    if (div.style.color === 'red') {
-                        textColor = PDFLib.rgb(1, 0, 0); // Merah
-                    } else if (div.style.color === 'green') {
-                        textColor = PDFLib.rgb(0, 1, 0); // Hijau
+                    if (uploadErrors > 0) {
+                        alert(`${uploadErrors} foto gagal diupload. Pastikan ukuran foto tidak terlalu besar.`);
                     }
-
-                    page.drawText(textContent, {
-                        x: finalX,
-                        y: finalY,
-                        size: size,
-                        color: textColor,
-                        font
-                    });
                 }
-            });
 
-            // Append uploaded photos (4 per page in landscape format) if any
-            if (images.length > 0) {
-                const PAGE_WIDTH = 841.89; // A4 landscape
-                const PAGE_HEIGHT = 595.28;
-                const MARGIN = 20;
-                const SLOT_COLS = 2;
-                const SLOT_ROWS = 2;
-                const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
-                const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
-
-                let photoPage = null;
-                let slotIndex = 0;
-
-                for (let file of images) {
-                    if (slotIndex % 4 === 0) {
-                        photoPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-                    }
-
-                    const resizedBlob = await resizeImage(file, 1000, 1000);
-                    const imgBytes = await resizedBlob.arrayBuffer();
-                    let imgEmbed = file.type.includes('png') ?
-                        await pdfDoc.embedPng(imgBytes) :
-                        await pdfDoc.embedJpg(imgBytes);
-
-                    const { width, height } = imgEmbed.size();
-                    const scale = Math.min(SLOT_W / width, SLOT_H / height);
-                    const col = slotIndex % 2;
-                    const row = Math.floor((slotIndex % 4) / 2);
-                    const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
-                    const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
-
-                    photoPage.drawImage(imgEmbed, {
-                        x,
-                        y,
-                        width: width * scale,
-                        height: height * scale
-                    });
-
-                    slotIndex++;
-                }
-            }
-
-            const pdfBytes = await pdfDoc.save();
-
-            openQrApprovalScanner(function(scannedQrs) {
                 const formData = new FormData();
-                formData.append('pdf', new Blob([pdfBytes], {
-                    type: 'application/pdf'
-                }));
                 formData.append('timestamp', now);
+                formData.append('annotations', JSON.stringify(currentAnnotations));
                 formData.append('qr_codes', JSON.stringify(scannedQrs));
 
                 fetch(`{{ route('report.detail.submit', ['Id_List_Report' => $listReport->Id_List_Report]) }}`, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
                 }).then(res => {
                     if (res.ok) {

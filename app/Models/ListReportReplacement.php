@@ -23,7 +23,18 @@ class ListReportReplacement extends Model
         'Leader_Name',
         'Auditor_Name',
         'Qr_Codes',
+        'Annotations',
+        'Photos',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'Qr_Codes' => 'array',
+            'Annotations' => 'array',
+            'Photos' => 'array',
+        ];
+    }
 
     public function reportReplacement()
     {

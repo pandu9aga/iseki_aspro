@@ -367,20 +367,39 @@ class ReportController extends Controller
 
             // Simpan snapshot berdasarkan role untuk keperluan partial reset
             Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.' . $role . '.pdf');
-
-            if ($request->filled('qr_codes')) {
-                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                    $listReport->Qr_Codes,
-                    $role,
-                    $request->input('qr_codes')
-                );
+        } else {
+            if (session('Id_Type_User') == 2) {
+                $listReport->Time_Approved_Leader = $request->input('timestamp', now()->toDateTimeString());
+                $listReport->Leader_Name = session('Username_User');
+                $role = 'leader';
+            } elseif (session('Id_Type_User') == 1) {
+                $listReport->Time_Approved_Auditor = $request->input('timestamp', now()->toDateTimeString());
+                $listReport->Auditor_Name = session('Username_User');
+                $role = 'auditor';
+            } else {
+                $role = 'leader';
             }
-            $listReport->save();
-
-            return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 400);
+        // Simpan / update annotations JSON jika dikirim
+        if ($request->filled('annotations')) {
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                $listReport->Annotations,
+                $role,
+                $request->input('annotations')
+            );
+        }
+
+        if ($request->filled('qr_codes')) {
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                $listReport->Qr_Codes,
+                $role,
+                $request->input('qr_codes')
+            );
+        }
+        $listReport->save();
+
+        return response()->json(['success' => true]);
     }
 
     public function copyJobdescReplacement(Request $request)
@@ -631,23 +650,30 @@ class ReportController extends Controller
 
             // Simpan snapshot leader untuk keperluan partial reset
             Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.leader.pdf');
-
-            // Update waktu & Qr_Codes
-            $listReport->Time_Approved_Leader = $request->input('timestamp');
-            $listReport->Leader_Name = session('Username_User');
-            if ($request->filled('qr_codes')) {
-                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                    $listReport->Qr_Codes,
-                    'leader',
-                    $request->input('qr_codes')
-                );
-            }
-            $listReport->save();
-
-            return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 400);
+        // Simpan / update annotations JSON jika dikirim
+        if ($request->filled('annotations')) {
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                $listReport->Annotations,
+                'leader',
+                $request->input('annotations')
+            );
+        }
+
+        // Update waktu & Qr_Codes
+        $listReport->Time_Approved_Leader = $request->input('timestamp', now()->toDateTimeString());
+        $listReport->Leader_Name = session('Username_User');
+        if ($request->filled('qr_codes')) {
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                $listReport->Qr_Codes,
+                'leader',
+                $request->input('qr_codes')
+            );
+        }
+        $listReport->save();
+
+        return response()->json(['success' => true]);
     }
 
     public function createMonthlyTemplate(Request $request)
@@ -927,6 +953,8 @@ class ReportController extends Controller
             $listReport->Time_Approved_Auditor = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'auditor');
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::removeRoleAnnotations($listReport->Annotations, 'auditor');
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'report', $listReport->Id_List_Report, 'auditor');
 
         } elseif ($role === 'leader') {
             // Reset approval leader dan auditor — kembalikan PDF ke snapshot member jika ada
@@ -943,6 +971,8 @@ class ReportController extends Controller
             $listReport->Time_Approved_Auditor = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'leader');
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::removeRoleAnnotations($listReport->Annotations, 'leader');
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'report', $listReport->Id_List_Report, 'leader');
 
         } else {
             // Reset semua (fallback legacy) — salin dari master procedures
@@ -961,6 +991,8 @@ class ReportController extends Controller
             $listReport->Leader_Name = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = null;
+            $listReport->Annotations = null;
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'report', $listReport->Id_List_Report, 'member');
         }
 
         $listReport->save();
@@ -1001,6 +1033,8 @@ class ReportController extends Controller
             $listReport->Time_Approved_Auditor = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'auditor');
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::removeRoleAnnotations($listReport->Annotations, 'auditor');
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'replacement', $listReport->Id_List_Report_Replacement, 'auditor');
 
         } elseif ($role === 'leader') {
             $memberSnapshot = $basePath . '/' . $procedureName . '.member.pdf';
@@ -1015,6 +1049,8 @@ class ReportController extends Controller
             $listReport->Time_Approved_Auditor = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'leader');
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::removeRoleAnnotations($listReport->Annotations, 'leader');
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'replacement', $listReport->Id_List_Report_Replacement, 'leader');
 
         } else {
             $sourcePath = 'procedures/' . $listReport->Name_Tractor . '/' . $listReport->Name_Area . '/' . $procedureName . '.pdf';
@@ -1031,6 +1067,8 @@ class ReportController extends Controller
             $listReport->Leader_Name = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = null;
+            $listReport->Annotations = null;
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'replacement', $listReport->Id_List_Report_Replacement, 'member');
         }
 
         $listReport->save();

@@ -143,23 +143,30 @@ class TrainingAuditorController extends Controller
 
             // Simpan snapshot auditor untuk keperluan partial reset
             Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.auditor.pdf');
-
-            // Update waktu and Auditor Name & Qr_Codes
-            $listReport->Time_Approved_Auditor = $request->input('timestamp');
-            $listReport->Auditor_Name = session('Username_User');
-            if ($request->filled('qr_codes')) {
-                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                    $listReport->Qr_Codes,
-                    'auditor',
-                    $request->input('qr_codes')
-                );
-            }
-            $listReport->save();
-
-            return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 400);
+        // Simpan / update annotations JSON jika dikirim
+        if ($request->filled('annotations')) {
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                $listReport->Annotations,
+                'auditor',
+                $request->input('annotations')
+            );
+        }
+
+        // Update waktu and Auditor Name & Qr_Codes
+        $listReport->Time_Approved_Auditor = $request->input('timestamp', now()->toDateTimeString());
+        $listReport->Auditor_Name = session('Username_User');
+        if ($request->filled('qr_codes')) {
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                $listReport->Qr_Codes,
+                'auditor',
+                $request->input('qr_codes')
+            );
+        }
+        $listReport->save();
+
+        return response()->json(['success' => true]);
     }
 
     public function destroy_list_report($Id_List_Training)

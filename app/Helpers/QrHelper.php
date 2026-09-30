@@ -65,8 +65,17 @@ class QrHelper
             $current = $existingQrCodes;
         }
 
+        $existingRoleQrs = isset($current[$role]) && is_array($current[$role]) ? $current[$role] : [];
         $sanitized = self::sanitizeQrList($newQrs);
-        $current[$role] = $sanitized;
+
+        // Gabungkan QR yang sudah ada sebelumnya dengan QR baru yang discan (skip jika duplikat)
+        foreach ($sanitized as $qr) {
+            if (!in_array($qr, $existingRoleQrs)) {
+                $existingRoleQrs[] = $qr;
+            }
+        }
+
+        $current[$role] = array_values($existingRoleQrs);
 
         return $current;
     }
@@ -101,4 +110,79 @@ class QrHelper
 
         return $current;
     }
+
+    /**
+     * Add a single QR to a role's array.
+     */
+     public static function addQr($existingQrCodes, string $role, string $rawQr): array
+     {
+         if (is_string($existingQrCodes)) {
+             $current = json_decode($existingQrCodes, true) ?? [];
+         } elseif (is_array($existingQrCodes)) {
+             $current = $existingQrCodes;
+         } else {
+             $current = [];
+         }
+         $roleList = isset($current[$role]) && is_array($current[$role]) ? array_values($current[$role]) : [];
+
+         $parts = explode(';', trim($rawQr));
+         $slice = array_slice($parts, 0, 3);
+         $cleanStr = implode(';', array_map('trim', $slice));
+
+         if ($cleanStr !== '' && !in_array($cleanStr, $roleList)) {
+             $roleList[] = $cleanStr;
+         }
+         $current[$role] = array_values($roleList);
+         return $current;
+     }
+
+     /**
+      * Update a QR code at a specific index for a role.
+      */
+     public static function updateQr($existingQrCodes, string $role, int $index, string $rawQr): array
+     {
+         if (is_string($existingQrCodes)) {
+             $current = json_decode($existingQrCodes, true) ?? [];
+         } elseif (is_array($existingQrCodes)) {
+             $current = $existingQrCodes;
+         } else {
+             $current = [];
+         }
+         $roleList = isset($current[$role]) && is_array($current[$role]) ? array_values($current[$role]) : [];
+
+         $parts = explode(';', trim($rawQr));
+         $slice = array_slice($parts, 0, 3);
+         $cleanStr = implode(';', array_map('trim', $slice));
+
+         if ($cleanStr !== '') {
+             if (isset($roleList[$index])) {
+                 $roleList[$index] = $cleanStr;
+             } else {
+                 $roleList[] = $cleanStr;
+             }
+         }
+         $current[$role] = array_values($roleList);
+         return $current;
+     }
+
+     /**
+      * Delete a QR code at a specific index for a role.
+      */
+     public static function deleteQr($existingQrCodes, string $role, int $index): array
+     {
+         if (is_string($existingQrCodes)) {
+             $current = json_decode($existingQrCodes, true) ?? [];
+         } elseif (is_array($existingQrCodes)) {
+             $current = $existingQrCodes;
+         } else {
+             $current = [];
+         }
+         $roleList = isset($current[$role]) && is_array($current[$role]) ? array_values($current[$role]) : [];
+
+         if (isset($roleList[$index])) {
+             array_splice($roleList, $index, 1);
+         }
+         $current[$role] = array_values($roleList);
+         return $current;
+     }
 }

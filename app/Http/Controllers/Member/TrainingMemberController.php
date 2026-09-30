@@ -96,21 +96,28 @@ class TrainingMemberController extends Controller
 
             // Simpan snapshot member untuk keperluan partial reset
             Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.member.pdf');
-
-            // Update waktu & Qr_Codes
-            $listReport->Time_List_Report = $request->input('timestamp');
-            if ($request->filled('qr_codes')) {
-                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                    $listReport->Qr_Codes,
-                    'member',
-                    $request->input('qr_codes')
-                );
-            }
-            $listReport->save();
-
-            return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 400);
+        // Simpan / update annotations JSON jika dikirim
+        if ($request->filled('annotations')) {
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                $listReport->Annotations,
+                'member',
+                $request->input('annotations')
+            );
+        }
+
+        // Update waktu & Qr_Codes
+        $listReport->Time_List_Report = $request->input('timestamp', now()->toDateTimeString());
+        if ($request->filled('qr_codes')) {
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                $listReport->Qr_Codes,
+                'member',
+                $request->input('qr_codes')
+            );
+        }
+        $listReport->save();
+
+        return response()->json(['success' => true]);
     }
 }

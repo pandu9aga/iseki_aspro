@@ -278,23 +278,30 @@ class TrainingController extends Controller
 
             // Simpan snapshot leader untuk keperluan partial reset
             Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.leader.pdf');
-
-            // Update waktu & Qr_Codes
-            $listReport->Time_Approved_Leader = $request->input('timestamp');
-            $listReport->Leader_Name = session('Username_User');
-            if ($request->filled('qr_codes')) {
-                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                    $listReport->Qr_Codes,
-                    'leader',
-                    $request->input('qr_codes')
-                );
-            }
-            $listReport->save();
-
-            return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 400);
+        // Simpan / update annotations JSON jika dikirim
+        if ($request->filled('annotations')) {
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                $listReport->Annotations,
+                'leader',
+                $request->input('annotations')
+            );
+        }
+
+        // Update waktu & Qr_Codes
+        $listReport->Time_Approved_Leader = $request->input('timestamp', now()->toDateTimeString());
+        $listReport->Leader_Name = session('Username_User');
+        if ($request->filled('qr_codes')) {
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                $listReport->Qr_Codes,
+                'leader',
+                $request->input('qr_codes')
+            );
+        }
+        $listReport->save();
+
+        return response()->json(['success' => true]);
     }
 
     public function createMonthlyTemplate()
@@ -505,6 +512,8 @@ class TrainingController extends Controller
             $listReport->Time_Approved_Auditor = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'auditor');
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::removeRoleAnnotations($listReport->Annotations, 'auditor');
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'training', $listReport->Id_List_Training, 'auditor');
 
         } elseif ($role === 'leader') {
             $memberSnapshot = $basePath . '/' . $procedureName . '.member.pdf';
@@ -519,6 +528,8 @@ class TrainingController extends Controller
             $listReport->Time_Approved_Auditor = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = \App\Helpers\QrHelper::removeRole($listReport->Qr_Codes, 'leader');
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::removeRoleAnnotations($listReport->Annotations, 'leader');
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'training', $listReport->Id_List_Training, 'leader');
 
         } else {
             $sourcePath = 'procedures/' . $listReport->Name_Tractor . '/' . $listReport->Name_Area . '/' . $procedureName . '.pdf';
@@ -535,6 +546,8 @@ class TrainingController extends Controller
             $listReport->Leader_Name = null;
             $listReport->Auditor_Name = null;
             $listReport->Qr_Codes = null;
+            $listReport->Annotations = null;
+            $listReport->Photos = \App\Helpers\PhotoHelper::removeRolePhotos($listReport->Photos, 'training', $listReport->Id_List_Training, 'member');
         }
 
         $listReport->save();

@@ -20,6 +20,7 @@ use App\Http\Controllers\Member\HomeController;
 use App\Http\Controllers\Member\ProfileMemberController;
 use App\Http\Controllers\Member\ReportMemberController;
 use App\Http\Controllers\Member\TrainingMemberController;
+use App\Http\Controllers\ItemManagementController;
 use App\Http\Middleware\AuditorMiddleware;
 use App\Http\Middleware\LeaderMiddleware;
 use App\Http\Middleware\MemberMiddleware;
@@ -262,3 +263,22 @@ Route::middleware(AuditorMiddleware::class)->group(function () {
         Route::get('/area/procedure/{Name_Tractor}/{Name_Area}', [ProcedureAuditorController::class, 'index_procedure'])->name('procedure_auditor.procedure.index');
     });
 });
+
+// ==========================================
+// Item Management (QR Codes, Photos, Annotations)
+// ==========================================
+Route::prefix('item-manage/{type}/{id}')->group(function () {
+    // QR Code CRUD
+    Route::post('/qr/add', [ItemManagementController::class, 'addQr'])->name('item.qr.add');
+    Route::put('/qr/update', [ItemManagementController::class, 'updateQr'])->name('item.qr.update');
+    Route::delete('/qr/delete', [ItemManagementController::class, 'deleteQr'])->name('item.qr.delete');
+
+    // Photo Management
+    Route::post('/photo/upload', [ItemManagementController::class, 'uploadPhoto'])->name('item.photo.upload');
+    Route::delete('/photo/delete', [ItemManagementController::class, 'deletePhoto'])->name('item.photo.delete');
+
+    // Annotations JSON
+    Route::get('/annotations', [ItemManagementController::class, 'getAnnotations'])->name('item.annotations.get');
+    Route::post('/annotations/save', [ItemManagementController::class, 'saveAnnotations'])->name('item.annotations.save');
+});
+

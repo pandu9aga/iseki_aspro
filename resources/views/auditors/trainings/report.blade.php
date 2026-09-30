@@ -61,7 +61,27 @@
                 </div>
                 <br>
 
-                @if (is_null($listReport->Time_Approved_Auditor))
+                <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report ?? '-' }}</span></b></div>
+                <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader ?? '-' }}</span></b></div>
+                <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor ?? '-' }}</span></b></div>
+
+                @include('components.qr-approval-display', [
+                    'itemType' => 'training',
+                    'itemId' => $listReport->Id_List_Training,
+                    'qrCodes' => $listReport->Qr_Codes
+                ])
+
+                <div class="mt-2 mb-3 d-flex align-items-center flex-wrap gap-2">
+                    <button class="btn btn-sm btn-primary mb-0" onclick="downloadPdf()">Download PDF</button>
+                    @if ($listReport->Time_Approved_Auditor)
+                        <form action="{{ route('training_auditor.detail.duplicate', $listReport->Id_List_Training) }}" method="POST" class="d-inline mb-0">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-success mb-0" onclick="return confirm('Apakah Anda yakin ingin menduplikat training member ini?')">Duplicate Training</button>
+                        </form>
+                    @endif
+                </div>
+
+                <div class="mb-3">
                     <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist('check')">
                         <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
                     </button>
@@ -89,27 +109,9 @@
                         <i class="material-symbols-rounded" id="comment-btn-icon">text_fields</i>
                         <!-- Ganti ikon sesuai kebutuhan -->
                     </button>
-                @endif
+                </div>
 
-                @if ($listReport->Time_Approved_Auditor)
-                    <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b>
-                    </div>
-                    <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b>
-                    </div>
-                    <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b>
-                    </div>
-                    @include('components.qr-approval-display', ['qrCodes' => $listReport->Qr_Codes])
-                    <br>
-                    <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
-
-                    <form action="{{ route('training_auditor.detail.duplicate', $listReport->Id_List_Training) }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-success mt-3 ms-2" onclick="return confirm('Apakah Anda yakin ingin menduplikat training member ini?')">Duplicate Training</button>
-                    </form>
-                @endif
-
-                <div id="pdf-container"
-                    style="border:1px solid #ccc; height:100%; overflow:auto; position:relative; width:100%; max-width:100%; left:50%; transform:translateX(-50%);">
+                <div id="pdf-container" style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
                     <canvas id="pdf-canvas"></canvas>
                     <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                 </div>
@@ -139,26 +141,34 @@
                     @endif
                 </div>
 
+                <!-- Dokumentasi Foto Per User di bawah PDF -->
+                @include('components.photo-gallery-display', [
+                    'itemType' => 'training',
+                    'itemId' => $listReport->Id_List_Training,
+                    'photos' => $listReport->Photos,
+                    'currentRole' => 'auditor'
+                ])
+
                 <br>
-                @if (is_null($listReport->Time_Approved_Auditor))
-                    <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
-                    <div class="my-3">
-                        <label class="form-label d-block">Upload Photos</label>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
-                                <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
-                            </button>
-                            <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
-                                <i class="material-symbols-rounded text-sm">collections</i> Gallery
-                            </button>
-                        </div>
-                        <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
+                <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
+                <div class="my-3">
+                    <label class="form-label d-block">Upload Photos</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
+                            <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
+                        </button>
+                        <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
+                            <i class="material-symbols-rounded text-sm">collections</i> Gallery
+                        </button>
                     </div>
-                    <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
-                    <br>
-                    <button onclick="submitReport('submit')" class="btn btn-primary mt-3">Submit Report</button>
-                    <button onclick="submitReport('temuan')" class="btn btn-warning mt-3 ms-9">Submit Temuan</button>
-                @endif
+                    <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
+                </div>
+                <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
+                <br>
+                <button onclick="submitReport('submit')" class="btn btn-primary mt-3">
+                    {{ $listReport->Time_Approved_Auditor ? 'Update Report & Stamp' : 'Submit Report' }}
+                </button>
+                <button onclick="submitReport('temuan')" class="btn btn-warning mt-3 ms-9">Submit Temuan</button>
             </div>
         </section>
     </div>
@@ -173,6 +183,7 @@
 @section('script')
     <script src="{{ asset('assets/js/pdf.min.js') }}"></script>
     <script src="{{ asset('assets/js/pdf-lib.min.js') }}"></script>
+    <script src="{{ asset('assets/js/aspro-annotations.js') }}"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
         // ============================================
@@ -180,6 +191,20 @@
         // ============================================
         const CONFIG = {
             pdfUrl: "{{ asset($pdfPath) }}?t=" + new Date().getTime(),
+            itemType: 'training',
+            itemId: '{{ $listReport->Id_List_Training }}',
+            currentRole: 'auditor',
+            savedAnnotations: @json($listReport->Annotations ?? []),
+            timestamps: {
+                member: '{{ $listReport->Time_List_Report }}',
+                leader: '{{ $listReport->Time_Approved_Leader }}',
+                auditor: '{{ $listReport->Time_Approved_Auditor }}'
+            },
+            names: {
+                member: '{{ $listReport->training->member->Name_Member ?? '' }}',
+                leader: '{{ $listReport->Leader_Name ?? '' }}',
+                auditor: '{{ $user->Name_User ?? ($listReport->Auditor_Name ?? '') }}'
+            },
             pdfScale: 1.5,
             fontSize: {
                 timestamp: 8,
@@ -237,6 +262,24 @@
 
             // Render all pages
             await renderAllPages(pdf, pageData.viewports, ctx);
+
+            // Render saved annotations from JSON onto editor layer
+            if (window.AsproAnnotationEngine && CONFIG.savedAnnotations) {
+                AsproAnnotationEngine.renderSavedAnnotations(
+                    DOM.editorLayer,
+                    CONFIG.savedAnnotations,
+                    'auditor',
+                    (div) => {
+                        setupDraggableEvents(div);
+                        setupSelectionEvents(div);
+                        if (div.contentEditable === 'true') {
+                            div.addEventListener('input', saveState);
+                        }
+                    },
+                    CONFIG.timestamps,
+                    CONFIG.names
+                );
+            }
         }
 
         async function calculatePageDimensions(pdf) {
@@ -542,6 +585,7 @@
         }
 
         function placeAnnotation(element, position) {
+            element.setAttribute('data-role', CONFIG.currentRole || 'auditor');
             DOM.editorLayer.appendChild(element);
 
             const centerX = position.x - (element.offsetWidth / 2);
@@ -616,11 +660,21 @@
         }
 
         // Handle image selection
-        document.getElementById('imageInput').addEventListener('change', function (e) {
+        document.getElementById('imageInput').addEventListener('change', async function (e) {
             for (let file of e.target.files) {
-                STATE.images.push(file);
-                showPreview(file);
+                try {
+                    const resizedBlob = await resizeImage(file, 1600, 1600);
+                    if (!resizedBlob) throw new Error('resize null');
+                    const jpegName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+                    const blobFile = new File([resizedBlob], jpegName, { type: 'image/jpeg' });
+                    STATE.images.push(blobFile);
+                    showPreview(blobFile);
+                } catch (err) {
+                    STATE.images.push(file);
+                    showPreview(file);
+                }
             }
+            e.target.value = '';
         });
 
         // Display preview with delete button
@@ -738,61 +792,105 @@
         };
 
         async function resizeImage(file, maxWidth, maxHeight) {
-            return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
                 const img = new Image();
+                img.onerror = function() { reject(new Error('img load failed')); };
                 img.onload = function () {
                     let width = img.width;
                     let height = img.height;
 
+                    if (width <= maxWidth && height <= maxHeight) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob null')), 'image/jpeg', 0.82);
+                        return;
+                    }
+
                     const scale = Math.min(maxWidth / width, maxHeight / height);
-                    width *= scale;
-                    height *= scale;
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
 
                     const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob(blob => resolve(blob), file.type, 0.7); // 0.7 = quality (for jpeg)
+                    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob null')), 'image/jpeg', 0.82);
                 };
                 img.src = URL.createObjectURL(file);
             });
+        }
+
+        // --- Fungsi Download PDF ---
+        async function downloadPdf() {
+            try {
+                const res = await fetch(`{{ route('item.annotations.get', ['type' => 'training', 'id' => $listReport->Id_List_Training]) }}`);
+                const data = await res.json();
+                const masterUrl = data.master_pdf_url || CONFIG.pdfUrl;
+
+                await AsproAnnotationEngine.downloadAnnotatedPdf({
+                    masterPdfUrl: masterUrl,
+                    downloadFilename: '{{ $listReport->training->member->Name_Member }}-{{ $listReport->display_name }}.pdf',
+                    canvasWidth: DOM.canvas.width,
+                    pageViewportHeights: STATE.pageViewportHeights,
+                    annotations: data.annotations || CONFIG.savedAnnotations,
+                    timestamps: data.timestamps || CONFIG.timestamps,
+                    names: data.names || CONFIG.names
+                });
+            } catch (err) {
+                console.error('Download error:', err);
+                window.open(CONFIG.pdfUrl, '_blank');
+            }
         }
 
         // ============================================
         // SUBMIT REPORT WITH ANNOTATIONS & PHOTOS
         // ============================================
         async function submitReport(type) {
-            // Load existing PDF
-            const existingPdf = await fetch(CONFIG.pdfUrl).then(r => r.arrayBuffer());
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
-            const pages = pdfDoc.getPages();
-            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-
-            // Add timestamp and auditor name
-            addTimestampToFirstPage(pages[0], font);
-
-            // Convert HTML annotations to PDF
-            convertAnnotationsToPDF(pages, font);
-
-            // Create and merge photo PDF
-            const photoPdfBytes = await createPhotoPDF();
-            if (photoPdfBytes) {
-                const imgDoc = await PDFLib.PDFDocument.load(photoPdfBytes);
-                const copiedPages = await pdfDoc.copyPages(imgDoc, imgDoc.getPageIndices());
-                copiedPages.forEach(p => pdfDoc.addPage(p));
-            }
-
-            // Save and submit
-            const mergedBytes = await pdfDoc.save();
+            const currentAnnotations = AsproAnnotationEngine.serializeLayer(DOM.editorLayer, CONFIG.currentRole || 'auditor');
 
             openQrApprovalScanner(async function(scannedQrs) {
+                if (STATE.images && STATE.images.length > 0) {
+                    let uploadErrors = 0;
+                    for (let file of STATE.images) {
+                        const photoForm = new FormData();
+                        photoForm.append('role', 'auditor');
+                        photoForm.append('photo', file, file.name);
+                        try {
+                            const photoRes = await fetch(`{{ route('item.photo.upload', ['type' => 'training', 'id' => $listReport->Id_List_Training]) }}`, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                body: photoForm
+                            });
+                            if (!photoRes.ok) {
+                                uploadErrors++;
+                                const errData = await photoRes.json().catch(() => ({}));
+                                console.warn('Photo upload failed:', photoRes.status, errData);
+                            }
+                        } catch (e) {
+                            uploadErrors++;
+                            console.warn('Failed to upload photo:', e);
+                        }
+                    }
+                    if (uploadErrors > 0) {
+                        alert(`${uploadErrors} foto gagal diupload. Pastikan ukuran foto tidak terlalu besar.`);
+                    }
+                }
+
                 if (type === 'submit') {
-                    console.log('submitReporting');
-                    await uploadToServerReport(mergedBytes, scannedQrs);
+                    await uploadToServerReport(currentAnnotations, scannedQrs);
                 } else if (type === 'temuan') {
-                    console.log('submitTemuan');
-                    await uploadToServerTemuan(mergedBytes, scannedQrs);
+                    const existingPdf = await fetch(CONFIG.pdfUrl).then(r => r.arrayBuffer());
+                    const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
+                    const pages = pdfDoc.getPages();
+                    const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                    addTimestampToFirstPage(pages[0], font);
+                    convertAnnotationsToPDF(pages, font);
+                    const mergedBytes = await pdfDoc.save();
+
+                    await uploadToServerTemuan(mergedBytes, currentAnnotations, scannedQrs);
                 }
             });
         }
@@ -992,15 +1090,15 @@
             return await pdfDoc.save();
         }
 
-        async function uploadToServerReport(pdfBytes, scannedQrs) {
+        async function uploadToServerReport(annotations, scannedQrs) {
             const nowUTC = new Date();
             const offsetWIB = 7 * 60;
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
             const timestamp = localWIB.toISOString().slice(0, 19).replace('T', ' ');
 
             const formData = new FormData();
-            formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
             formData.append('timestamp', timestamp);
+            formData.append('annotations', JSON.stringify(annotations));
             if (scannedQrs) {
                 formData.append('qr_codes', JSON.stringify(scannedQrs));
             }
@@ -1021,31 +1119,40 @@
             }
         }
 
-        async function uploadToServerTemuan(pdfBytes, scannedQrs) {
+        async function uploadToServerTemuan(pdfBytes, annotations, scannedQrs) {
             const nowUTC = new Date();
             const offsetWIB = 7 * 60;
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
             const timestamp = localWIB.toISOString().slice(0, 19).replace('T', ' ');
 
             const formData = new FormData();
-            formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
+            if (pdfBytes) {
+                formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
+            }
             formData.append('comments', JSON.stringify(FINAL_STATE.comments));
+            formData.append('annotations', JSON.stringify(annotations));
             formData.append('Id_List_Training', '{{ $listReport->Id_List_Training }}');
             formData.append('timestamp', timestamp);
             if (scannedQrs) {
                 formData.append('qr_codes', JSON.stringify(scannedQrs));
             }
 
-            const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: formData
-            });
-            if (response.ok) {
-                alert('Report submitted successfully!');
-                location.reload();
-            } else {
-                alert('Failed to submit report');
+            try {
+                const response = await fetch(`{{ route('auditor-report.temuan_submit') }}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                });
+                const resData = await response.json().catch(() => ({}));
+                if (response.ok && (resData.success !== false)) {
+                    alert('Temuan submitted successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to submit temuan: ' + (resData.message || response.statusText || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Submit temuan error:', err);
+                alert('Failed to submit temuan: ' + err.message);
             }
         }
     </script>

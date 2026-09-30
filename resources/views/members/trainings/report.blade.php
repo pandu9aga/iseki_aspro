@@ -51,9 +51,23 @@
                 <h4 class="pt-2">Procedure : <span class="text-primary">{{ $listReport->display_name }}</span></h4>
                 <br>
 
+                <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report ?? '-' }}</span></b></div>
+                <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader ?? '-' }}</span></b></div>
+                <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor ?? '-' }}</span></b></div>
+
+                @include('components.qr-approval-display', [
+                    'itemType' => 'training',
+                    'itemId' => $listReport->Id_List_Training,
+                    'qrCodes' => $listReport->Qr_Codes
+                ])
+
+                <div class="mt-2 mb-3">
+                    <button class="btn btn-sm btn-primary mb-0" onclick="downloadPdf()">Download PDF</button>
+                </div>
+
                 {{-- <button class="btn btn-sm btn-secondary mt-3" onclick="addText()">Add Text</button> --}}
 
-                @if (is_null($listReport->Time_List_Report))
+                <div class="mb-3">
                     <button class="btn btn-primary mt-3" id="checklist-btn" onclick="toggleChecklist('check')">
                         <i class="material-symbols-rounded" id="checklist-btn-icon">edit_off</i>
                     </button>
@@ -81,19 +95,7 @@
                         <i class="material-symbols-rounded" id="comment-btn-icon">text_fields</i>
                         <!-- Ganti ikon sesuai kebutuhan -->
                     </button>
-                @endif
-
-                @if ($listReport->Time_List_Report)
-                    <div><b>Check Member : <span class="text-primary">{{ $listReport->Time_List_Report }}</span></b></div>
-                    <div><b>Leader Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Leader }}</span></b>
-                    </div>
-                    <div><b>Auditor Approvement : <span class="text-primary">{{ $listReport->Time_Approved_Auditor }}</span></b>
-                    </div>
-                    @include('components.qr-approval-display')
-                    <br>
-
-                    <button class="btn btn-sm btn-primary mt-3" onclick="downloadPdf()">Download PDF</button>
-                @endif
+                </div>
 
                 <div id="pdf-container" style="border:1px solid #ccc; height:600px; overflow:auto; position:relative;">
                     <canvas id="pdf-canvas"></canvas>
@@ -125,25 +127,33 @@
                     @endif
                 </div>
 
+                <!-- Dokumentasi Foto Per User di bawah PDF -->
+                @include('components.photo-gallery-display', [
+                    'itemType' => 'training',
+                    'itemId' => $listReport->Id_List_Training,
+                    'photos' => $listReport->Photos,
+                    'currentRole' => 'member'
+                ])
+
                 <br>
-                @if (is_null($listReport->Time_List_Report))
-                    <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
-                    <div class="my-3">
-                        <label class="form-label d-block">Upload Photos</label>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
-                                <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
-                            </button>
-                            <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
-                                <i class="material-symbols-rounded text-sm">collections</i> Gallery
-                            </button>
-                        </div>
-                        <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
+                <h5>Photos for : <span class="text-primary">{{ $listReport->display_name }}</span></h5>
+                <div class="my-3">
+                    <label class="form-label d-block">Upload Photos</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary mb-0" onclick="triggerPhotoInput('camera')">
+                            <i class="material-symbols-rounded text-sm">photo_camera</i> Camera
+                        </button>
+                        <button type="button" class="btn btn-outline-info mb-0" onclick="triggerPhotoInput('gallery')">
+                            <i class="material-symbols-rounded text-sm">collections</i> Gallery
+                        </button>
                     </div>
-                    <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
-                    <br>
-                    <button onclick="submitReport()" class="btn btn-primary mt-3">Submit Report</button>
-                @endif
+                    <input type="file" class="form-control d-none" id="imageInput" multiple accept="image/*">
+                </div>
+                <div id="preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
+                <br>
+                <button onclick="submitReport()" class="btn btn-primary mt-3">
+                    {{ $listReport->Time_List_Report ? 'Update Report & Stamp' : 'Submit Report' }}
+                </button>
             </div>
         </section>
     </div>
@@ -160,6 +170,7 @@
 @section('script')
     <script src="{{ asset('assets/js/pdf.min.js') }}"></script>
     <script src="{{ asset('assets/js/pdf-lib.min.js') }}"></script>
+    <script src="{{ asset('assets/js/aspro-annotations.js') }}"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ asset('assets/js/pdf.worker.min.js') }}";
 
@@ -180,6 +191,20 @@
         const CONFIG = {
             pdfUrl: getPdfUrl("{!! str_replace('\\', '/', $pdfPath) !!}"),
             pdfScale: 1.5,
+            itemType: 'training',
+            itemId: '{{ $listReport->Id_List_Training }}',
+            currentRole: 'member',
+            savedAnnotations: @json($listReport->Annotations ?? []),
+            timestamps: {
+                member: '{{ $listReport->Time_List_Report }}',
+                leader: '{{ $listReport->Time_Approved_Leader }}',
+                auditor: '{{ $listReport->Time_Approved_Auditor }}'
+            },
+            names: {
+                member: '{{ $member->Name_Member ?? ($listReport->training->member->Name_Member ?? '') }}',
+                leader: '{{ $listReport->Leader_Name ?? '' }}',
+                auditor: '{{ $listReport->Auditor_Name ?? '' }}'
+            },
             fontSize: {
                 timestamp: 8,
                 comment: 12,
@@ -258,6 +283,23 @@
                     await page.render({ canvasContext: tempCtx, viewport: vp }).promise;
                     ctx.drawImage(tempCanvas, 0, currentY);
                     currentY += vp.height;
+                }
+
+                // Render saved annotations from JSON onto editor layer
+                if (window.AsproAnnotationEngine && CONFIG.savedAnnotations) {
+                    AsproAnnotationEngine.renderSavedAnnotations(
+                        DOM.editorLayer,
+                        CONFIG.savedAnnotations,
+                        'member',
+                        (div) => {
+                            setupEvents(div);
+                            if (div.contentEditable === 'true') {
+                                div.addEventListener('input', saveState);
+                            }
+                        },
+                        CONFIG.timestamps,
+                        CONFIG.names
+                    );
                 }
             } catch (error) {
                 console.error('RenderPDF error:', error);
@@ -431,6 +473,7 @@
             else if (STATE.currentMode === 'comment') annotation = createEditableComment('');
 
             if (annotation) {
+                annotation.setAttribute('data-role', 'member');
                 DOM.editorLayer.appendChild(annotation);
                 // Center annotation on click
                 annotation.style.left = Math.max(0, x - 10) + 'px';
@@ -491,122 +534,57 @@
         // PDF SUBMISSION & DOWNLOAD
         // ============================================
         async function downloadPdf() {
-            const existingPdfBytes = await fetch(CONFIG.pdfUrl).then(res => res.arrayBuffer());
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = '{{ $listReport->training->member->Name_Member }}-{{ $listReport->display_name }}.pdf';
-            link.click();
+            try {
+                const res = await fetch(`{{ route('item.annotations.get', ['type' => 'training', 'id' => $listReport->Id_List_Training]) }}`);
+                const data = await res.json();
+                const masterUrl = data.master_pdf_url || CONFIG.pdfUrl;
+
+                await AsproAnnotationEngine.downloadAnnotatedPdf({
+                    masterPdfUrl: masterUrl,
+                    downloadFilename: '{{ $listReport->training->member->Name_Member }}-{{ $listReport->display_name }}.pdf',
+                    canvasWidth: DOM.canvas.width,
+                    pageViewportHeights: STATE.pageViewportHeights,
+                    annotations: data.annotations || CONFIG.savedAnnotations,
+                    timestamps: data.timestamps || CONFIG.timestamps,
+                    names: data.names || CONFIG.names
+                });
+            } catch (err) {
+                console.error('Download error:', err);
+                window.open(CONFIG.pdfUrl, '_blank');
+            }
         }
 
         async function submitReport() {
-            const existingPdfBytes = await fetch(CONFIG.pdfUrl).then(res => res.arrayBuffer());
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-            const pages = pdfDoc.getPages();
-            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+            const currentAnnotations = AsproAnnotationEngine.serializeLayer(DOM.editorLayer, 'member');
 
-            // Add timestamp
             const nowUTC = new Date();
             const offsetWIB = 7 * 60;
             const localWIB = new Date(nowUTC.getTime() + offsetWIB * 60 * 1000);
             const now = localWIB.toISOString().slice(0, 19).replace('T', ' ');
-            const lines = [now, "{{ $member->Name_Member }}"];
-            let startY = pages[0].getHeight() - 10;
-            const timestampFontSize = CONFIG.fontSize.timestamp;
-            const lineHeight = timestampFontSize + 2;
 
-            lines.forEach((line, i) => {
-                pages[0].drawText(line, {
-                    x: 200,
-                    y: startY - i * lineHeight,
-                    size: timestampFontSize,
-                    font: font,
-                    color: PDFLib.rgb(0, 0.6, 0), // Member timestamp is green
-                });
-            });
-
-            // Convert HTML annotations to PDF
-            const canvasW = DOM.canvas.width;
-            let yOffsets = [0];
-            for (let i = 0; i < STATE.pageViewportHeights.length - 1; i++) {
-                yOffsets.push(yOffsets[i] + STATE.pageViewportHeights[i]);
-            }
-
-            DOM.editorLayer.querySelectorAll('div').forEach(div => {
-                let x = parseFloat(div.style.left);
-                let y = parseFloat(div.style.top);
-
-                let pageIndex = yOffsets.findIndex((offset, i) => y < offset + STATE.pageViewportHeights[i]);
-                if (pageIndex === -1) pageIndex = pages.length - 1;
-
-                const page = pages[pageIndex];
-                const pageHeight = page.getHeight();
-                const pageWidth = page.getWidth();
-
-                const offsetY = y - yOffsets[pageIndex];
-                const scaleX = pageWidth / canvasW;
-                const scaleY = pageHeight / STATE.pageViewportHeights[pageIndex];
-
-                const finalX = x * scaleX;
-                const finalY = pageHeight - (offsetY * scaleY) - 18;
-
-                if (div.contentEditable === 'true') {
-                    renderCommentToPDF(page, div, finalX, finalY, font);
-                } else {
-                    renderMarkToPDF(page, div, finalX, finalY, font);
-                }
-            });
-
-            // Append uploaded photos (4 per page in landscape format) if any
-            if (STATE.images.length > 0) {
-                const PAGE_WIDTH = 841.89; // A4 landscape
-                const PAGE_HEIGHT = 595.28;
-                const MARGIN = 20;
-                const SLOT_COLS = 2;
-                const SLOT_ROWS = 2;
-                const SLOT_W = (PAGE_WIDTH - MARGIN * 2) / SLOT_COLS;
-                const SLOT_H = (PAGE_HEIGHT - MARGIN * 2) / SLOT_ROWS;
-
-                let photoPage = null;
-                let slotIndex = 0;
-
-                for (let file of STATE.images) {
-                    if (slotIndex % 4 === 0) {
-                        photoPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+            openQrApprovalScanner(async function(scannedQrs) {
+                // 1. Upload photos separately
+                if (STATE.images && STATE.images.length > 0) {
+                    for (let file of STATE.images) {
+                        const photoForm = new FormData();
+                        photoForm.append('role', 'member');
+                        photoForm.append('photo', file);
+                        try {
+                            await fetch(`{{ route('item.photo.upload', ['type' => 'training', 'id' => $listReport->Id_List_Training]) }}`, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                body: photoForm
+                            });
+                        } catch (e) {
+                            console.warn('Failed to upload photo:', e);
+                        }
                     }
-
-                    const resizedBlob = await resizeImage(file, 1000, 1000);
-                    const imgBytes = await resizedBlob.arrayBuffer();
-                    let imgEmbed = file.type.includes('png') ?
-                        await pdfDoc.embedPng(imgBytes) :
-                        await pdfDoc.embedJpg(imgBytes);
-
-                    const { width, height } = imgEmbed.size();
-                    const scale = Math.min(SLOT_W / width, SLOT_H / height);
-                    const col = slotIndex % 2;
-                    const row = Math.floor((slotIndex % 4) / 2);
-                    const x = MARGIN + col * SLOT_W + (SLOT_W - width * scale) / 2;
-                    const y = PAGE_HEIGHT - MARGIN - ((row + 1) * SLOT_H) + (SLOT_H - height * scale) / 2;
-
-                    photoPage.drawImage(imgEmbed, {
-                        x,
-                        y,
-                        width: width * scale,
-                        height: height * scale
-                    });
-
-                    slotIndex++;
                 }
-            }
 
-            const pdfBytes = await pdfDoc.save();
-
-            openQrApprovalScanner(function(scannedQrs) {
+                // 2. Submit training approval with annotations JSON and QR codes
                 const formData = new FormData();
-                formData.append('pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
                 formData.append('timestamp', now);
+                formData.append('annotations', JSON.stringify(currentAnnotations));
                 formData.append('qr_codes', JSON.stringify(scannedQrs));
 
                 fetch(`{{ route('training_list_member.submit', ['Id_List_Training' => $listReport->Id_List_Training]) }}`, {

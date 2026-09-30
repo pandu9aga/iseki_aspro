@@ -31,13 +31,13 @@ class TemuanAuditorController extends Controller
         $isTraining = !empty($data['Id_List_Training']);
         if ($isTraining) {
             $listModel = List_Training::with('training')->findOrFail($data['Id_List_Training']);
-            $id_member = $listModel->training->member->Id_Member;
-            $timeReport = Carbon::parse($listModel->training->Start_Training)->format('Y-m-d');
+            $id_member = $listModel->training->Id_Member ?? ($listModel->training->member->Id_Member ?? null);
+            $timeReport = Carbon::parse($listModel->training->Start_Training ?? now())->format('Y-m-d');
             $folderSource = 'trainings';
         } else {
             $listModel = List_Report::with('report')->findOrFail($data['Id_List_Report']);
-            $id_member = $listModel->report->member->Id_Member;
-            $timeReport = Carbon::parse($listModel->report->Start_Report)->format('Y-m-d');
+            $id_member = $listModel->report->Id_Member ?? ($listModel->report->member->Id_Member ?? null);
+            $timeReport = Carbon::parse($listModel->report->Start_Report ?? now())->format('Y-m-d');
             $folderSource = 'reports';
         }
 
@@ -99,6 +99,13 @@ class TemuanAuditorController extends Controller
                     $temuan->save();
                     $listModel->Time_Approved_Auditor = $request->input('timestamp');
                     $listModel->Auditor_Name = session('Username_User');
+                    if ($request->filled('annotations')) {
+                        $listModel->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                            $listModel->Annotations,
+                            'auditor',
+                            $request->input('annotations')
+                        );
+                    }
                     if ($request->filled('qr_codes')) {
                         $listModel->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
                             $listModel->Qr_Codes,

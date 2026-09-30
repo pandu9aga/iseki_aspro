@@ -4,14 +4,14 @@
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary">
                 <h6 class="modal-title text-white" id="modalQrApprovalScannerTitle">
-                    <i class="material-symbols-rounded text-sm align-middle me-1">qr_code_scanner</i> Wajib Scan QR Code
+                    <i class="material-symbols-rounded text-sm align-middle me-1">qr_code_scanner</i> Scan QR Code (Opsional)
                 </h6>
                 <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close" onclick="cancelQrScanApproval()"></button>
             </div>
             <div class="modal-body p-3">
                 <div class="alert alert-info text-white text-xs py-2 px-3 mb-2" role="alert">
                     <i class="material-symbols-rounded text-xs align-middle">info</i> 
-                    Scan QR code menggunakan kamera HP. Diambil 3 segmen awal pemisah (;). Bisa scan lebih dari 1 QR jika diperlukan.
+                    Scan QR code menggunakan kamera HP jika ada QR baru. Diambil 3 segmen awal pemisah (;). Bisa langsung klik submit jika tidak ada QR baru.
                 </div>
 
                 <!-- Camera Box -->
@@ -27,10 +27,10 @@
                 <!-- List Scanned QR -->
                 <div class="mb-2">
                     <label class="form-label text-xs font-weight-bold text-uppercase mb-1">
-                        QR Yang Sudah Di-Scan (<span id="qrCountBadge">0</span>)
+                        QR Yang Baru Di-Scan (<span id="qrCountBadge">0</span>)
                     </label>
                     <div id="scannedQrListContainer" class="d-flex flex-wrap gap-1 p-2 border rounded bg-light" style="min-height: 50px; max-height: 140px; overflow-y: auto;">
-                        <span class="text-muted text-xs w-100 text-center my-auto" id="noQrPlaceholder">Belum ada QR yang discan</span>
+                        <span class="text-muted text-xs w-100 text-center my-auto" id="noQrPlaceholder">Belum ada QR yang discan (Opsional)</span>
                     </div>
                 </div>
 
@@ -40,7 +40,7 @@
                 <button type="button" class="btn btn-sm btn-secondary mb-0" data-bs-dismiss="modal" onclick="cancelQrScanApproval()">
                     Batal
                 </button>
-                <button type="button" class="btn btn-sm btn-primary mb-0" id="btnConfirmQrApproval" onclick="confirmQrApprovalSubmit()" disabled>
+                <button type="button" class="btn btn-sm btn-primary mb-0" id="btnConfirmQrApproval" onclick="confirmQrApprovalSubmit()">
                     <i class="material-symbols-rounded text-sm align-middle me-1">check_circle</i> Konfirmasi & Submit
                 </button>
             </div>
@@ -168,20 +168,47 @@
         return Promise.resolve();
     }
 
+    document.addEventListener('DOMContentLoaded', function() {
+        const scannerModalEl = document.getElementById('modalQrApprovalScanner');
+        if (scannerModalEl && scannerModalEl.parentElement !== document.body) {
+            document.body.appendChild(scannerModalEl);
+        }
+    });
+
+    function cleanupModalBackdrops() {
+        // Safety net: bersihkan backdrop sisa jika tidak ada modal yang sedang aktif
+        setTimeout(function() {
+            const anyOpenModal = document.querySelector('.modal.show');
+            if (!anyOpenModal) {
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+        }, 150);
+    }
+
     function cancelQrScanApproval() {
         stopQrApprovalCamera();
         scannedQrApprovalList = [];
         onQrApprovalSuccessCallback = null;
 
         const modal = getQrModalInstance();
+        const modalEl = document.getElementById('modalQrApprovalScanner');
         if (modal) {
             modal.hide();
+            if (modalEl) {
+                modalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                    modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                    cleanupModalBackdrops();
+                }, { once: true });
+            }
         } else {
-            const modalEl = document.getElementById('modalQrApprovalScanner');
             if (modalEl) {
                 modalEl.style.display = 'none';
                 modalEl.classList.remove('show');
             }
+            cleanupModalBackdrops();
         }
     }
 
@@ -226,8 +253,8 @@
         container.innerHTML = '';
 
         if (scannedQrApprovalList.length === 0) {
-            container.innerHTML = '<span class="text-muted text-xs w-100 text-center my-auto" id="noQrPlaceholder">Belum ada QR yang discan</span>';
-            if (btnConfirm) btnConfirm.disabled = true;
+            container.innerHTML = '<span class="text-muted text-xs w-100 text-center my-auto" id="noQrPlaceholder">Belum ada QR yang discan (Opsional)</span>';
+            if (btnConfirm) btnConfirm.disabled = false;
             return;
         }
 
@@ -282,27 +309,33 @@
     }
 
     function confirmQrApprovalSubmit() {
-        if (scannedQrApprovalList.length === 0) {
-            alert('Wajib scan minimal 1 QR code sebelum melakukan submit!');
-            return;
-        }
-
         const listToSubmit = [...scannedQrApprovalList];
 
         stopQrApprovalCamera().then(function() {
             const modal = getQrModalInstance();
+            const modalEl = document.getElementById('modalQrApprovalScanner');
+
+            function afterHide() {
+                cleanupModalBackdrops();
+                if (typeof onQrApprovalSuccessCallback === 'function') {
+                    onQrApprovalSuccessCallback(listToSubmit);
+                }
+            }
+
             if (modal) {
+                if (modalEl) {
+                    modalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                        modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                        afterHide();
+                    }, { once: true });
+                }
                 modal.hide();
             } else {
-                const modalEl = document.getElementById('modalQrApprovalScanner');
                 if (modalEl) {
                     modalEl.style.display = 'none';
                     modalEl.classList.remove('show');
                 }
-            }
-
-            if (typeof onQrApprovalSuccessCallback === 'function') {
-                onQrApprovalSuccessCallback(listToSubmit);
+                afterHide();
             }
         });
     }

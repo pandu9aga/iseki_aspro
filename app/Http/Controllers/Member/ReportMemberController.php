@@ -79,6 +79,7 @@ class ReportMemberController extends Controller
         $id_member = $listReport->report->member->Id_Member;
         $timeReport = Carbon::parse($listReport->report->Start_Report)->format('Y-m-d');
 
+        // Jika upload file PDF (backward compatibility)
         if ($request->hasFile('pdf')) {
             $request->validate([
                 'pdf' => 'required|file|mimes:pdf|max:20480',
@@ -93,25 +94,30 @@ class ReportMemberController extends Controller
             }
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
-
-            // Simpan snapshot member untuk keperluan partial reset
             Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.member.pdf');
-
-            // Update waktu & Qr_Codes
-            $listReport->Time_List_Report = $request->input('timestamp');
-            if ($request->filled('qr_codes')) {
-                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                    $listReport->Qr_Codes,
-                    'member',
-                    $request->input('qr_codes')
-                );
-            }
-            $listReport->save();
-
-            return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 400);
+        // Simpan / update annotations JSON jika dikirim
+        if ($request->filled('annotations')) {
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                $listReport->Annotations,
+                'member',
+                $request->input('annotations')
+            );
+        }
+
+        // Update waktu & Qr_Codes
+        $listReport->Time_List_Report = $request->input('timestamp', now()->toDateTimeString());
+        if ($request->filled('qr_codes')) {
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                $listReport->Qr_Codes,
+                'member',
+                $request->input('qr_codes')
+            );
+        }
+        $listReport->save();
+
+        return response()->json(['success' => true]);
     }
 
     public function replacement_index()
@@ -196,23 +202,29 @@ class ReportMemberController extends Controller
 
             Storage::disk('public')->put($targetPath, file_get_contents($request->file('pdf')->getRealPath()));
 
-            // Simpan snapshot member untuk keperluan partial reset
             Storage::disk('public')->copy($targetPath, $path . '/' . $listReport->Name_Procedure . '.member.pdf');
-
-            // Update timestamp & Qr_Codes
-            $listReport->Time_List_Report = $request->input('timestamp');
-            if ($request->filled('qr_codes')) {
-                $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
-                    $listReport->Qr_Codes,
-                    'member',
-                    $request->input('qr_codes')
-                );
-            }
-            $listReport->save();
-
-            return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 400);
+        // Simpan / update annotations JSON jika dikirim
+        if ($request->filled('annotations')) {
+            $listReport->Annotations = \App\Helpers\AnnotationHelper::saveRoleAnnotations(
+                $listReport->Annotations,
+                'member',
+                $request->input('annotations')
+            );
+        }
+
+        // Update timestamp & Qr_Codes
+        $listReport->Time_List_Report = $request->input('timestamp', now()->toDateTimeString());
+        if ($request->filled('qr_codes')) {
+            $listReport->Qr_Codes = \App\Helpers\QrHelper::mergeQrCodes(
+                $listReport->Qr_Codes,
+                'member',
+                $request->input('qr_codes')
+            );
+        }
+        $listReport->save();
+
+        return response()->json(['success' => true]);
     }
 }
