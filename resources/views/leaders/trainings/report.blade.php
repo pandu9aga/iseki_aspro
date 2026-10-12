@@ -102,6 +102,8 @@
                     <div id="editor-layer" style="position:absolute; top:0; left:0;"></div>
                 </div>
 
+                <div id="pdf-history-container" class="mt-4"></div>
+
                 <!-- PDF Navigation Buttons -->
                 <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
                     @if($prevReportId)
@@ -366,6 +368,15 @@
                     CONFIG.timestamps,
                     CONFIG.names
                 );
+                
+                // Render History if available
+                if (Array.isArray(CONFIG.savedAnnotations.history)) {
+                    AsproAnnotationEngine.renderHistoryAnnotations(
+                        CONFIG.savedAnnotations.history,
+                        pdf,
+                        document.getElementById('pdf-history-container')
+                    );
+                }
             }
         }
         renderPDF();

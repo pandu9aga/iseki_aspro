@@ -21,6 +21,7 @@ class Temuan extends Model
         'Time_Temuan',
         'Time_Penanganan',
         'Tipe_Temuan',
+        'Time_Tipe_Changed',
         'Status_Temuan',
     ];
 
@@ -85,5 +86,6 @@ class Temuan extends Model
         'Status_Temuan' => 'boolean',
         'Time_Temuan' => 'datetime',
         'Time_Penanganan' => 'datetime',
+        'Time_Tipe_Changed' => 'datetime',
     ];
 }

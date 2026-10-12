@@ -99,6 +99,9 @@
                                         <div class="mb-3">
                                             <label for="tipe_temuan" class="form-label text-sm font-weight-bold">
                                                 Pilih Tipe Temuan
+                                                @if($temuan->Time_Tipe_Changed)
+                                                    <small class="text-xs text-secondary ms-2 fw-normal">(Terakhir diubah: {{ $temuan->Time_Tipe_Changed->format('d M Y H:i') }})</small>
+                                                @endif
                                             </label>
                                             <select class="form-select" id="tipe_temuan" name="tipe_temuan" required>
                                                 <option value="">-- Pilih Tipe Temuan --</option>
@@ -149,7 +152,12 @@
                                     <i class="material-symbols-rounded text-2xl text-primary me-2">category</i>
                                     <div>
                                         <small class="text-xs text-secondary d-block mb-1">Tipe Temuan</small>
-                                        <h6 class="mb-0">{{ $temuan->Tipe_Temuan }}</h6>
+                                        <h6 class="mb-0">
+                                            {{ $temuan->Tipe_Temuan }}
+                                            @if($temuan->Time_Tipe_Changed)
+                                                <small class="text-xs text-secondary ms-2 fw-normal">(Terakhir diubah: {{ $temuan->Time_Tipe_Changed->format('d M Y H:i') }})</small>
+                                            @endif
+                                        </h6>
                                     </div>
                                 </div>
                             </div>
@@ -233,6 +241,8 @@
                             <canvas id="default-pdf-canvas-temuan"></canvas>
                             <div id="editor-layer-temuan" style="position:absolute; top:0; left:0; pointer-events:none;"></div>
                         </div>
+
+                        <div id="pdf-history-container-temuan" class="mt-4"></div>
 
                         <!-- Dokumentasi Foto Per User (di bawah PDF) -->
                         <div class="mb-4">
@@ -638,6 +648,15 @@
                             TEMUAN_DATA.timestamps,
                             TEMUAN_DATA.names
                         );
+                        
+                        // Render History if available
+                        if (canvasId === 'default-pdf-canvas-temuan' && Array.isArray(TEMUAN_DATA.savedAnnotations.history)) {
+                            AsproAnnotationEngine.renderHistoryAnnotations(
+                                TEMUAN_DATA.savedAnnotations.history,
+                                pdf,
+                                document.getElementById('pdf-history-container-temuan')
+                            );
+                        }
                     }
                 } catch (error) {
                     console.error('RenderPDF error:', error, canvasId);

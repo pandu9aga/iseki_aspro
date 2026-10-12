@@ -38,7 +38,18 @@
                     </td>
                     <td class="align-middle text-center">
                         @if($temuan->Tipe_Temuan)
-                            <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">{{ $temuan->Tipe_Temuan }}</span>
+                            <div>
+                                <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">{{ $temuan->Tipe_Temuan }}</span>
+                            </div>
+                            @if($temuan->Time_Tipe_Changed) 
+                                <div class="mt-1">
+                                    <small class="text-xs text-secondary" style="font-size: 10px;">{{ $temuan->Time_Tipe_Changed->format('d/m/Y H:i') }}</small>
+                                </div>
+                            @else
+                                <div class="mt-1">
+                                    <small class="text-xs text-secondary" style="font-size: 10px;">Belum tercatat</small>
+                                </div>
+                            @endif
                         @else
                             <span class="badge badge-sm bg-gradient-secondary" style="font-size: 0.65rem;">-</span>
                         @endif

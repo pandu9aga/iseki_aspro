@@ -135,11 +135,13 @@ class TemuanLeaderController extends Controller
 
         $temuan = Temuan::findOrFail($Id_Temuan);
 
-        // If "Lain-lain" is selected, use custom input
-        if ($data['tipe_temuan'] === 'Lain-lain' && ! empty($data['tipe_temuan_custom'])) {
-            $temuan->Tipe_Temuan = $data['tipe_temuan_custom'];
-        } else {
-            $temuan->Tipe_Temuan = $data['tipe_temuan'];
+        $newTipe = ($data['tipe_temuan'] === 'Lain-lain' && ! empty($data['tipe_temuan_custom'])) 
+            ? $data['tipe_temuan_custom'] 
+            : $data['tipe_temuan'];
+
+        if ($temuan->Tipe_Temuan !== $newTipe) {
+            $temuan->Tipe_Temuan = $newTipe;
+            $temuan->Time_Tipe_Changed = \Carbon\Carbon::now();
         }
 
         // Auto set status selesai jika "Tidak perlu penanganan"

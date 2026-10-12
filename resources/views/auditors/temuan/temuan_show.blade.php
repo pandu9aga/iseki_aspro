@@ -156,6 +156,8 @@
                             <canvas id="default-pdf-canvas-temuan"></canvas>
                             <div id="editor-layer-temuan" style="position:absolute; top:0; left:0; pointer-events:none;"></div>
                         </div>
+                        
+                        <div id="pdf-history-container-temuan" class="mt-4"></div>
 
                         <!-- Dokumentasi Foto Per User (di bawah PDF) -->
                         <div class="mb-4">
@@ -631,6 +633,15 @@
                             TEMUAN_DATA.timestamps,
                             TEMUAN_DATA.names
                         );
+                        
+                        // Render History if available
+                        if (canvasId === 'default-pdf-canvas-temuan' && Array.isArray(TEMUAN_DATA.savedAnnotations.history)) {
+                            AsproAnnotationEngine.renderHistoryAnnotations(
+                                TEMUAN_DATA.savedAnnotations.history,
+                                pdf,
+                                document.getElementById('pdf-history-container-temuan')
+                            );
+                        }
                     }
                 } catch (error) {
                     console.error('RenderPDF error:', error, canvasId);

@@ -56,10 +56,21 @@
                             <button class="btn btn-sm btn-link p-0 m-0"
                                 onclick="openTipeTemuanModal('{{ $temuan->Id_Temuan }}', '{{ $temuan->Tipe_Temuan }}')">
                                 @if($temuan->Tipe_Temuan)
-                                    <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">
-                                        {{ $temuan->Tipe_Temuan }}
-                                        <i class="material-symbols-rounded text-xxs ms-1">edit</i>
-                                    </span>
+                                    <div>
+                                        <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">
+                                            {{ $temuan->Tipe_Temuan }}
+                                            <i class="material-symbols-rounded text-xxs ms-1">edit</i>
+                                        </span>
+                                    </div>
+                                    @if($temuan->Time_Tipe_Changed) 
+                                        <div class="mt-1">
+                                            <small class="text-xs text-secondary" style="font-size: 10px;">{{ $temuan->Time_Tipe_Changed->format('d/m/Y H:i') }}</small>
+                                        </div>
+                                    @else
+                                        <div class="mt-1">
+                                            <small class="text-xs text-secondary" style="font-size: 10px;">Belum tercatat</small>
+                                        </div>
+                                    @endif
                                 @else
                                     <span class="badge badge-sm bg-gradient-secondary" style="font-size: 0.65rem;">
                                         Set
@@ -69,7 +80,18 @@
                             </button>
                         @else
                             @if($temuan->Tipe_Temuan)
-                                <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">{{ $temuan->Tipe_Temuan }}</span>
+                                <div>
+                                    <span class="badge badge-sm bg-gradient-info" style="font-size: 0.65rem;">{{ $temuan->Tipe_Temuan }}</span>
+                                </div>
+                                @if($temuan->Time_Tipe_Changed) 
+                                    <div class="mt-1">
+                                        <small class="text-xs text-secondary" style="font-size: 10px;">{{ $temuan->Time_Tipe_Changed->format('d/m/Y H:i') }}</small>
+                                    </div>
+                                @else
+                                    <div class="mt-1">
+                                        <small class="text-xs text-secondary" style="font-size: 10px;">Belum tercatat</small>
+                                    </div>
+                                @endif
                             @else
                                 <span class="badge badge-sm bg-gradient-secondary" style="font-size: 0.65rem;">-</span>
                             @endif

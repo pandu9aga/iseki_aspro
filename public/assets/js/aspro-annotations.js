@@ -85,13 +85,30 @@ window.AsproAnnotationEngine = (function () {
         return items;
     }
 
-    function renderSavedAnnotations(editorLayer, annotationsData, currentRole, onSetupElement, timestamps, names) {
+    function renderSavedAnnotations(editorLayer, annotationsData, currentRole, onSetupElement, timestamps, names, prevAnnotationsData = null) {
         if (!editorLayer) return;
         editorLayer.innerHTML = '';
 
         const roles = ['member', 'leader', 'auditor'];
+        // Handle new structured format {current: {...}, history: [...]} vs old flat format
+        const actualData = (annotationsData && annotationsData.current) ? annotationsData.current : (annotationsData || {});
+        
+        // Build a set of signatures from previous version (if exists)
+        const prevSignatures = new Set();
+        if (prevAnnotationsData) {
+            const prevActualData = (prevAnnotationsData.current) ? prevAnnotationsData.current : prevAnnotationsData;
+            roles.forEach(role => {
+                const prevRoleAnns = prevActualData[role];
+                if (Array.isArray(prevRoleAnns)) {
+                    prevRoleAnns.forEach(ann => {
+                        prevSignatures.add(`${role}_${ann.type}_${(ann.text||'').trim()}_${ann.left}_${ann.top}`);
+                    });
+                }
+            });
+        }
+        
         roles.forEach(role => {
-            const roleAnnotations = annotationsData[role];
+            const roleAnnotations = actualData[role];
             if (!Array.isArray(roleAnnotations)) return;
 
             const isEditable = (role === currentRole);
@@ -110,14 +127,23 @@ window.AsproAnnotationEngine = (function () {
                     el.setAttribute('data-saved', 'true');
                     el.contentEditable = isEditable ? 'true' : 'false';
                     el.innerText = item.text || '';
+                    let bgColor = roleCfg.comment.bg;
+                    let fontColor = roleCfg.comment.text;
+                    let borderStyle = 'none';
+                    if (prevAnnotationsData && !prevSignatures.has(`${role}_${item.type}_${rawText}_${item.left}_${item.top}`)) {
+                        bgColor = '#ffea00'; // Kuning menyala
+                        fontColor = '#000000';
+                        borderStyle = '2px solid #ff9100';
+                    }
+
                     Object.assign(el.style, {
                         position: 'absolute',
                         left: (item.left || 0) + 'px',
                         top: (item.top || 0) + 'px',
                         cursor: isEditable ? 'move' : 'default',
-                        color: roleCfg.comment.text,
-                        backgroundColor: roleCfg.comment.bg,
-                        border: 'none',
+                        color: fontColor,
+                        backgroundColor: bgColor,
+                        border: borderStyle,
                         minWidth: '80px',
                         minHeight: '20px',
                         whiteSpace: 'pre-wrap',
@@ -134,18 +160,27 @@ window.AsproAnnotationEngine = (function () {
                     const markText = rawText || 'V';
                     el.textContent = markText;
                     const markCfg = roleCfg.markColors[markText] || roleCfg.markColors['V'];
+                    let markBg = markCfg.bg;
+                    let markTextCol = markCfg.text;
+                    let markBorder = '1px solid transparent';
+                    if (prevAnnotationsData && !prevSignatures.has(`${role}_${item.type}_${rawText}_${item.left}_${item.top}`)) {
+                        markBg = '#ffea00'; // Kuning menyala
+                        markTextCol = '#000000';
+                        markBorder = '2px solid #ff9100';
+                    }
+
                     Object.assign(el.style, {
                         position: 'absolute',
                         left: (item.left || 0) + 'px',
                         top: (item.top || 0) + 'px',
                         cursor: isEditable ? 'move' : 'default',
-                        color: markCfg.text,
-                        backgroundColor: markCfg.bg,
+                        color: markTextCol,
+                        backgroundColor: markBg,
                         padding: '2px 5px',
                         fontSize: (markText === 'V' || markText === 'X' || markText === 'NG') ? '22px' : '14px',
                         fontWeight: 'bold',
                         userSelect: 'none',
-                        border: '1px solid transparent',
+                        border: markBorder,
                         borderRadius: '2px'
                     });
                 }
@@ -437,10 +472,99 @@ window.AsproAnnotationEngine = (function () {
         });
     }
 
+    async function renderHistoryAnnotations(historyArray, pdfDoc, parentContainer) {
+        if (!Array.isArray(historyArray) || historyArray.length === 0) return;
+        if (!parentContainer) return;
+
+        // Calculate total dimensions for multi-page PDF
+        let totalHeight = 0;
+        let maxWidth = 0;
+        const viewports = [];
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const viewport = page.getViewport({ scale: 1.5 });
+            viewports.push(viewport);
+            totalHeight += viewport.height;
+            maxWidth = Math.max(maxWidth, viewport.width);
+        }
+
+        const accordionId = 'historyAccordion_' + Math.random().toString(36).substr(2, 9);
+        parentContainer.innerHTML = `
+            <div class="accordion" id="${accordionId}">
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header" id="heading_${accordionId}">
+                        <button class="accordion-button collapsed bg-light font-weight-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_${accordionId}" aria-expanded="false" aria-controls="collapse_${accordionId}">
+                            <i class="material-symbols-rounded text-sm align-middle me-2">history</i> Tampilkan Riwayat (${historyArray.length} Versi)
+                        </button>
+                    </h2>
+                    <div id="collapse_${accordionId}" class="accordion-collapse collapse" aria-labelledby="heading_${accordionId}" data-bs-parent="#${accordionId}">
+                        <div class="accordion-body p-3 bg-white" id="history-body-${accordionId}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        const historyBody = document.getElementById(`history-body-${accordionId}`);
+            
+        for (let i = 0; i < historyArray.length; i++) {
+            const histItem = historyArray[i];
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card mb-4 shadow-sm border-0';
+            wrapper.innerHTML = `
+                <div class="card-header bg-light py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-sm font-weight-bold text-dark">
+                            <i class="material-symbols-rounded align-middle me-1 text-sm">history</i> 
+                            Versi ${histItem.version} - ${histItem.timestamp}
+                        </span>
+                        <span class="badge bg-secondary">${histItem.role} (${histItem.name}) ${histItem.action === 'remove' ? ' - Removed' : ' - Updated'}</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div style="position:relative; overflow:auto; background:#f5f5f5; display:flex; justify-content:center;">
+                        <canvas class="history-pdf-canvas"></canvas>
+                        <div class="history-editor-layer" style="position:absolute; top:0; left:50%; transform:translateX(-50%); pointer-events:none;"></div>
+                    </div>
+                </div>
+            `;
+            historyBody.appendChild(wrapper);
+
+            const canvas = wrapper.querySelector('.history-pdf-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.height = totalHeight;
+            canvas.width = maxWidth;
+
+            const editorLayer = wrapper.querySelector('.history-editor-layer');
+            editorLayer.style.width = maxWidth + 'px';
+            editorLayer.style.height = totalHeight + 'px';
+
+            // Render all pages vertically
+            let currentY = 0;
+            for (let p = 1; p <= pdfDoc.numPages; p++) {
+                const page = await pdfDoc.getPage(p);
+                const viewport = viewports[p - 1];
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport,
+                    transform: [1, 0, 0, 1, 0, currentY]
+                };
+                await page.render(renderContext).promise;
+                currentY += viewport.height;
+            }
+
+            // Determine previous annotations to highlight new ones
+            const prevAnnotationsData = i > 0 ? historyArray[i - 1].annotations : null;
+
+            // Render Annotations
+            renderSavedAnnotations(editorLayer, histItem.annotations, null, null, null, null, prevAnnotationsData);
+        }
+    }
+
     return {
         ROLE_CONFIG,
         serializeLayer,
         renderSavedAnnotations,
+        renderHistoryAnnotations,
         renderHeaderStamps,
         downloadAnnotatedPdf
     };
